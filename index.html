@@ -213,6 +213,10 @@
     <div class="msg err" id="msg-err"></div>
     <div class="msg warn" id="msg-warn"></div>
     <div class="msg info" id="msg-info"></div>
+    <div id="debug-panel" style="display:none;margin-top:10px;padding:12px;background:#1a1f2e;border:1px solid #E8C547;font-size:11px;color:#a0f0ff;border-radius:3px">
+      <div style="font-size:9px;letter-spacing:2px;color:#E8C547;margin-bottom:8px">DEBUG — ¿POR QUÉ NO SE DETECTÓ EL DISTRITO?</div>
+      <div id="debug-log"></div>
+    </div>
   </div>
 
   <div id="results">
@@ -273,7 +277,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v4.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v5.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -570,7 +574,7 @@ let _centroids = null;
 
 async function loadDistricts() {
   if (_districts) return _districts;
-  const r = await fetch('./cpu_districts.json?v=4');
+  const r = await fetch('./cpu_districts.json?v=5');
   _districts = await r.json();
   return _districts;
 }
@@ -578,7 +582,7 @@ async function loadDistricts() {
 async function loadCentroids() {
   if (_centroids) return _centroids;
   try {
-    const r = await fetch('./cur_centroids.json?v=4');
+    const r = await fetch('./cur_centroids.json?v=5');
     _centroids = await r.json();
   } catch(e) { _centroids = []; }
   return _centroids;
@@ -612,43 +616,59 @@ function findByNearest(lng, lat, centroids) {
 }
 
 async function getDistrito(lat, lng) {
-  // ── Método 1: API oficial GCBA datos_utiles (1KB, CORS abierto) ──
+  const log = [];
+
+  // ── Método 1: API oficial GCBA datos_utiles ──
   try {
     const url = `https://ws.usig.buenosaires.gob.ar/datos_utiles?x=${lng}&y=${lat}`;
     const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
     if (r.ok) {
       const d = await r.json();
       const raw = d.codigo_de_planeamiento_urbano || '';
+      log.push(`M1 datos_utiles: "${raw || '(vacío)'}" — ${raw ? 'OK' : 'sin código CPU'}`);
       if (raw && raw.trim()) {
-        // "APH 51" → "APH", "R2b II" → "R2b", "C2" → "C2"
         const code = raw.trim().split(/\s+/)[0];
         return cleanDistrito(code);
       }
+    } else {
+      log.push(`M1 datos_utiles: HTTP ${r.status}`);
     }
-  } catch(e) { /* método 2 */ }
+  } catch(e) { log.push(`M1 datos_utiles: ERROR ${e.message}`); }
 
-  // ── Método 2: CPU PIP local (344KB, primer load lento) ───────────
+  // ── Método 2: CPU PIP local ──
   try {
     const feats = await loadDistricts();
+    log.push(`M2 cpu_districts: ${feats ? feats.length+' features cargadas' : 'null'}`);
     if (feats && feats.length) {
       const d = findByPip(lng, lat, feats);
+      log.push(`M2 PIP result: "${d || 'null'}"`);
       if (d) return cleanDistrito(d);
     }
-  } catch(e) { console.warn('PIP:', e.message); }
+  } catch(e) { log.push(`M2 PIP: ERROR ${e.message}`); }
 
-  // ── Método 3: Nearest centroid (fallback) ────────────────────────
+  // ── Método 3: Nearest centroid ──
   try {
     const cents = await loadCentroids();
+    log.push(`M3 centroids: ${cents ? cents.length+' cargados' : 'null'}`);
     if (cents && cents.length) {
       const d = findByNearest(lng, lat, cents);
+      log.push(`M3 NN result: "${d || 'null'}"`);
       if (d) return cleanDistrito(d);
     }
-  } catch(e) { /* nada */ }
+  } catch(e) { log.push(`M3 NN: ERROR ${e.message}`); }
 
+  // Mostrar debug
+  const dp = eid('debug-panel');
+  const dl = eid('debug-log');
+  if (dp && dl) {
+    dl.innerHTML = log.map(l => `<div style="margin-bottom:3px">▸ ${l}</div>`).join('');
+    dp.style.display = 'block';
+  }
+  log.forEach(l => console.warn('[NORM·AR]', l));
   return null;
 }
 
-// ── MAPA────────────────────────────────────────────────
+// ── MAPA──────────────────────────────────────
 let map = null, marker = null;
 
 function initMap(lat, lng, addr) {
