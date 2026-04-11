@@ -273,7 +273,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v2.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v3.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -547,7 +547,7 @@ let _centroids = null;
 
 async function loadDistricts() {
   if (_districts) return _districts;
-  const r = await fetch('./cpu_districts.json');
+  const r = await fetch('./cpu_districts.json?v=3');
   _districts = await r.json();
   return _districts;
 }
@@ -555,7 +555,7 @@ async function loadDistricts() {
 async function loadCentroids() {
   if (_centroids) return _centroids;
   try {
-    const r = await fetch('./cur_centroids.json');
+    const r = await fetch('./cur_centroids.json?v=3');
     _centroids = await r.json();
   } catch(e) { _centroids = []; }
   return _centroids;
