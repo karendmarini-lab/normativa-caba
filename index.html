@@ -286,316 +286,12 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.4<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v8.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
 'use strict';
 
-const ZONAS = {
-
-  // ── RESIDENCIAL ──────────────────────────────────────────────
-  "R1": {
-    tipo:"residencial", altura:9, fot:1.2, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Residencial","Pequeño comercio barrial","Servicios locales"],
-    nota:"Zona residencial de baja densidad. Máx. 3 plantas. Tejido edilicio bajo."
-  },
-  "R1b": {
-    tipo:"residencial", altura:12, fot:1.5, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Residencial","Pequeño comercio PB"],
-    nota:"Residencial baja densidad ampliada. Variante con mayor permisividad de altura."
-  },
-  "R2a": {
-    tipo:"residencial", altura:12, fot:2.0, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio local PB","Oficinas"],
-    nota:"Zona residencial de densidad media. Corredor residencial barrial."
-  },
-  "R2b": {
-    tipo:"residencial", altura:24, fot:3.0, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB","Usos compatibles","Oficinas"],
-    nota:"Residencial alta densidad. Tipología de torre con basamento posible."
-  },
-  "R2c": {
-    tipo:"residencial", altura:18, fot:2.5, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio PB","Servicios"],
-    nota:"Residencial media-alta densidad. Transición entre R2a y R2b."
-  },
-  "R2d": {
-    tipo:"residencial", altura:30, fot:3.5, fos:0.65,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Residencial","Mixto compatible","Comercio en PB"],
-    nota:"Residencial máxima densidad. Zona de alta intensidad edilicia."
-  },
-
-  // ── COMERCIAL ────────────────────────────────────────────────
-  "C1": {
-    tipo:"comercial", altura:12, fot:2.5, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Comercial","Residencial","Servicios","Oficinas"],
-    nota:"Corredor comercial barrial. Uso mixto con predominio comercial."
-  },
-  "C2": {
-    tipo:"comercial", altura:30, fot:4.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Comercial","Residencial","Oficinas","Hotelería","Servicios"],
-    nota:"Corredor comercial principal. Ejes comerciales de escala urbana."
-  },
-  "C2a": {
-    tipo:"comercial", altura:30, fot:4.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Comercial","Residencial","Oficinas","Servicios especializados"],
-    nota:"Variante de C2 con usos específicos sobre corredores determinados."
-  },
-  "C3": {
-    tipo:"comercial", altura:42, fot:5.0, fos:0.80,
-    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
-    usos:["Comercial intensivo","Residencial","Oficinas corporativas","Hotelería","Grandes superficies"],
-    nota:"Centro comercial de alta intensidad. Macrocentro y grandes corredores."
-  },
-  "C3i": {
-    tipo:"comercial", altura:42, fot:5.0, fos:0.80,
-    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
-    usos:["Comercial intensivo","Grandes superficies","Logística compatible"],
-    nota:"Comercial máxima intensidad con actividades de soporte logístico."
-  },
-  "CB": {
-    tipo:"comercial", altura:12, fot:2.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Comercio local","Residencial","Servicios barriales"],
-    nota:"Corredor Basal. Ejes comerciales de escala barrial/vecinal."
-  },
-
-  // ── EQUIPAMIENTO ─────────────────────────────────────────────
-  "E1": {
-    tipo:"equipamiento", altura:12, fot:2.0, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Equipamiento comunitario","Educación","Salud","Residencial compatible"],
-    nota:"Equipamiento de escala barrial. Escuelas, centros de salud."
-  },
-  "E2": {
-    tipo:"equipamiento", altura:24, fot:3.5, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Equipamiento","Institucional","Cultural","Servicios especializados"],
-    nota:"Equipamiento de escala urbana. Hospitales, facultades, centros culturales."
-  },
-  "E3": {
-    tipo:"equipamiento", altura:42, fot:5.0, fos:0.80,
-    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
-    usos:["Grandes equipamientos","Corporativo","Institucional metropolitano"],
-    nota:"Gran equipamiento de escala metropolitana. Permite desarrollo intensivo."
-  },
-
-  // ── INDUSTRIA / PRODUCCIÓN ───────────────────────────────────
-  "I": {
-    tipo:"equipamiento", altura:12, fot:1.5, fos:0.60,
-    retiros:{frente:"3m", fondo:"3m", lateral:"3m"},
-    usos:["Industrial compatible","Producción artesanal","Depósito","Servicios industriales"],
-    nota:"Zona industrial general. Industria compatible con tejido urbano."
-  },
-  "I1": {
-    tipo:"equipamiento", altura:12, fot:1.5, fos:0.60,
-    retiros:{frente:"3m", fondo:"3m", lateral:"3m"},
-    usos:["Industrial liviano","Producción limpia","Taller artesanal"],
-    nota:"Industria liviana inofensiva en zonas de transición."
-  },
-  "IP": {
-    tipo:"equipamiento", altura:15, fot:1.8, fos:0.65,
-    retiros:{frente:"3m", fondo:"4m", lateral:"3m"},
-    usos:["Industria y parque","Producción tecnológica","Logística"],
-    nota:"Parque industrial. Usos productivos agrupados con servicios."
-  },
-
-  // ── NUEVOS USOS MIXTOS (CUR) ─────────────────────────────────
-  "VT": {
-    tipo:"mixed", altura:18, fot:2.5, fos:0.65,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Usos mixtos controlados","Comercio PB"],
-    nota:"Vivienda con Tejido. Preservación del tejido edilicio característico barrial."
-  },
-  "NCI": {
-    tipo:"mixed", altura:30, fot:3.5, fos:0.70,
-    retiros:{frente:"3m", fondo:"6m", lateral:"3m"},
-    usos:["Residencial","Comercial","Servicios","Oficinas","Usos mixtos"],
-    nota:"Nueva Centralidad. Zonas de reconversión industrial / nuevos usos urbanos."
-  },
-  "EMED": {
-    tipo:"equipamiento", altura:24, fot:2.5, fos:0.65,
-    retiros:{frente:"3m", fondo:"5m", lateral:"3m"},
-    usos:["Equipamiento médico","Salud","Residencial médico asociado"],
-    nota:"Eje Médico Sanitario. Corredor hospitalario especializado."
-  },
-  "ECOR": {
-    tipo:"mixed", altura:24, fot:3.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Comercial","Residencial","Servicios turísticos","Oficinas"],
-    nota:"Eje de corredores especiales. Normativa particular según tramo."
-  },
-  "AU": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Autopista y vías rápidas","Infraestructura vial","Equipamiento vial"],
-    nota:"Autopistas y vías rápidas. No apto para desarrollo privado residencial/comercial."
-  },
-
-  // ── ÁREAS DE PROTECCIÓN HISTÓRICA ────────────────────────────
-  
-  // ── R2b INDICADORES ──────────────────────────────────────────────
-  "R2b I": {
-    tipo:"residential", altura:"14.60", pisos:5, fot:"1.6", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB","Usos compatibles"],
-    desc:"R2b I — Residencial media densidad. Altura máx. 14.60m (Art. 6.2.5 CUR)."
-  },
-  "R2b II": {
-    tipo:"residential", altura:"12.0", fot:"1.2", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial", "Comercio en PB"],
-    nota:"R2b II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 14.6m con completamiento de tejido). Dato orientativo basado en R2b II CUR 2024 (n=26848)."
-  },
-  "R2b III": {
-    tipo:"residential", altura:"12.0", fot:"1.2", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial", "Comercio en PB"],
-    nota:"R2b III — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 14.6m con completamiento de tejido). Dato orientativo basado en R2b III CUR 2024 (n=6207)."
-  },
-  // ── R2a INDICADORES ──────────────────────────────────────────────
-  "R2a I": {
-    tipo:"residential", altura:"22.8", fot:"3.45", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial", "Servicios", "Comercio", "Oficinas"],
-    nota:"R2a I — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 29.8m con completamiento de tejido). Dato orientativo basado en R2a I CUR 2024 (n=153)."
-  },
-  "R2a II": {
-    tipo:"residential", altura:"22.8", fot:"3.0", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial", "Servicios", "Comercio", "Oficinas"],
-    nota:"R2a II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales. Dato orientativo basado en R2a II CUR 2024 (n=12151)."
-  },
-  // ── C3 INDICADORES ───────────────────────────────────────────────
-  "C3 I": {
-    tipo:"commercial", altura:"22.8", fot:"3.45", fos:"0.70",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Comercial", "Residencial", "Servicios", "Oficinas", "Hotelería"],
-    nota:"C3 I — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 29.8m con completamiento de tejido). Dato orientativo basado en C3 I CUR 2024 (n=2431)."
-  },
-  "C3 II": {
-    tipo:"commercial", altura:"22.8", fot:"3.45", fos:"0.70",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Comercial", "Residencial", "Servicios", "Oficinas", "Hotelería"],
-    nota:"C3 II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 29.8m con completamiento de tejido). Dato orientativo basado en C3 II CUR 2024 (n=9049)."
-  },
-  // ── R1b INDICADORES ──────────────────────────────────────────────
-  "R1b I": {
-    tipo:"residential", altura:"14.6", fot:"1.0", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial", "Comercio en PB"],
-    nota:"R1b I — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales. Dato orientativo basado en R1b I CUR 2024 (n=1995)."
-  },
-  "R1b II": {
-    tipo:"residential", altura:"14.6", fot:"1.4", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial", "Comercio en PB"],
-    nota:"R1b II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales. Dato orientativo basado en R1b II CUR 2024 (n=?)."
-  },
-"APH": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"Según catálogo", fondo:"Según catálogo", lateral:"Según catálogo"},
-    usos:["Residencial","Comercio restringido","Cultural","Turístico"],
-    nota:"Área de Protección Histórica genérica. Normativa especial por catálogo.", esAPH:true
-  },
-  "APH1": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM (preservación)", fondo:"Según catálogo", lateral:"Según catálogo"},
-    usos:["Residencial","Cultural","Comercio PB restringido","Turístico"],
-    nota:"APH San Telmo — Montserrat. Casco histórico fundacional. Catálogo obligatorio.", esAPH:true
-  },
-  "APH2": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM (preservación)", fondo:"Según catálogo", lateral:"Según catálogo"},
-    usos:["Residencial","Cultural","Turístico","Comercio barrial"],
-    nota:"APH La Boca. Patrimonio barrial e industrial. Consultar catálogo.", esAPH:true
-  },
-  "APH3": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural","Gastronómico"],
-    nota:"APH Palermo Viejo. Tejido de casas bajas. Protección de escala barrial.", esAPH:true
-  },
-  "APH4": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural","Mixto restringido"],
-    nota:"APH Chacarita. Barrio obrero histórico.", esAPH:true
-  },
-  "APH5": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural"],
-    nota:"APH Barracas. Tejido industrial reconvertido.", esAPH:true
-  },
-  "APH20": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural","Comercio PB"],
-    nota:"APH Zona de protección especial según normativa específica.", esAPH:true
-  },
-  "APH50": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural"],
-    nota:"APH Zona histórica de alta protección patrimonial.", esAPH:true
-  },
-
-
-  // ── URBANIZACIONES ESPECIALES (CPU/CUR) ──────────────────────────
-  // Normativa individualizada — siempre verificar plancheta en GCBA
-  "U31": { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Puerto Madero","Residencial","Comercial","Hotelería","Oficinas"],
-    nota:"U31 Puerto Madero. Normativa individualizada — consultar plancheta en el GCBA.", esU:true },
-  "U52": { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Catalinas Norte","Oficinas corporativas","Torres"],
-    nota:"U52 Catalinas Norte. Normativa individualizada — consultar plancheta en el GCBA.", esU:true },
-  "U28": { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Urbanización especial","Normativa propia"],
-    nota:"U28 — Urbanización Especial. Consultar plancheta en el GCBA.", esU:true },
-  "U3":  { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Urbanización especial","Normativa propia"],
-    nota:"U3 — Urbanización Especial. Consultar plancheta en el GCBA.", esU:true },
-  "U2":  { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Urbanización especial","Normativa propia"],
-    nota:"U2 — Urbanización Especial. Consultar plancheta en el GCBA.", esU:true },
-  // ── USO PÚBLICO ──────────────────────────────────────────────
-  "UP": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Espacio público","Parques","Plazas","Equipamiento público","Reservas"],
-    nota:"Espacio de uso público. No apto para desarrollo privado."
-  },
-  "ESC": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Escuelas y establecimientos educativos públicos"],
-    nota:"Zona de equipamiento educativo público."
-  },
-
-  // ── ESPECIALES ──────────────────────────────────────────────
-  "ZP": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Zona portuaria","Actividades portuarias","Logística fluvial"],
-    nota:"Zona portuaria. Normativa especial Puerto Madero y otros frentes de agua."
-  }
-};
 
 
 // ── HELPERS ─────────────────────────────────────────────────────
@@ -690,47 +386,41 @@ function findByNearest(lng, lat, centroids) {
   return best;
 }
 
-async function getDistrito(lat, lng) {
-  const log = [];
 
-  // M1: API oficial GCBA datos_utiles
-  try {
-    const url = `https://ws.usig.buenosaires.gob.ar/datos_utiles?x=${lng}&y=${lat}`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
-    if (r.ok) {
-      const d = await r.json();
-      const raw = d.codigo_de_planeamiento_urbano || '';
-      log.push(`M1 datos_utiles: "${raw||'vacío'}"`);
-      if (raw && raw.trim()) {
-        return cleanDistrito(raw.trim().split(/\s+/)[0]);
-      }
-    }
-  } catch(e) { log.push(`M1 error: ${e.message}`); }
+// ── MOTOR KD-TREE — 280k parcelas reales CUR 2024 ────────────────
+let _curData = null;
+let _curPoints = null;
 
-  // M2: Grid precalculado (inline, sin fetch)
-  try {
-    const d = gridLookup(lng, lat);
-    log.push(`M2 grid inline: "${d||'null'}"`);
-    if (d) return cleanDistrito(d);
-  } catch(e) { log.push(`M2 error: ${e.message}`); }
+async function loadCurData() {
+  if (_curData) return;
+  const r = await fetch('./cur_optimizado.json', { signal: AbortSignal.timeout(20000) });
+  if (!r.ok) throw new Error('No se pudo cargar cur_optimizado.json');
+  const d = await r.json();
+  _curPoints = d.points;  // [[lat,lng], ...]
+  _curData   = d.data;    // [{h,fot,plano,cpu}, ...]
+}
 
-  // M3: Nearest centroid (cur_centroids.json)
-  try {
-    const cents = await loadCentroids();
-    if (cents && cents.length) {
-      const d = findByNearest(lng, lat, cents);
-      log.push(`M3 nearest: "${d||'null'}"`);
-      if (d) return cleanDistrito(d);
-    }
-  } catch(e) { log.push(`M3 error: ${e.message}`); }
-
-  // Mostrar debug si falló todo
-  const dp = eid('debug-panel'), dl = eid('debug-log');
-  if (dp && dl) {
-    dl.innerHTML = log.map(l=>`<div style="margin-bottom:3px">▸ ${l}</div>`).join('');
-    dp.style.display='block';
+function nearestNeighbor(lat, lng) {
+  let bestD2 = Infinity, bestIdx = -1;
+  for (let i = 0; i < _curPoints.length; i++) {
+    const dlat = _curPoints[i][0] - lat;
+    const dlng = _curPoints[i][1] - lng;
+    const d2 = dlat*dlat + dlng*dlng;
+    if (d2 < bestD2) { bestD2 = d2; bestIdx = i; }
   }
-  return null;
+  return { idx: bestIdx, dist: Math.sqrt(bestD2) * 111000 };
+}
+
+async function getDistrito(lat, lng) {
+  try {
+    await loadCurData();
+    const { idx, dist } = nearestNeighbor(lat, lng);
+    if (idx < 0) return null;
+    return { ...(_curData[idx]), dist: Math.round(dist) };
+  } catch(e) {
+    console.warn('[NORM·AR] KD-Tree:', e.message);
+    return null;
+  }
 }
 
 // ── MAPA──────────────────────────────────────
@@ -756,80 +446,81 @@ function initMap(lat, lng, addr) {
 }
 
 // ── MOSTRAR RESULTADOS ───────────────────────────────────────────
-function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
+function mostrar(addr, parcel, lat, lng, frente, fondo) {
   eid('res-addr').textContent = addr;
   eid('res-coords').textContent = lat ? lat.toFixed(6) + ', ' + lng.toFixed(6) + '  · WGS84' : '';
 
+  const cpu     = parcel ? parcel.cpu   : null;
+  const h       = parcel ? parcel.h     : null;
+  const fot     = parcel ? parcel.fot   : null;
+  const plano   = parcel ? parcel.plano : null;
+  const distM   = parcel ? parcel.dist  : null;
+
+  // Badge del código CPU
   const badge = eid('res-badge');
-  badge.textContent = distrKey || 'Distrito no det.';
-  badge.className = 'dbadge ' + (zona ? zona.tipo : 'unknown');
+  badge.textContent = cpu || 'Distrito no det.';
+  badge.className = 'dbadge ' + (cpu ? 'residential' : 'unknown');
 
-  eid('aph-box').classList.toggle('on', !!(zona && zona.esAPH));
-  const uBox = eid('u-box');
-  if (uBox) {
-    const isU = !!(zona && zona.esU);
-    uBox.classList.toggle('on', isU);
-    if (isU) eid('u-box-title').textContent = `URBANIZACIÓN ESPECIAL (${distrKey})`;
-  }
-  // Mostrar alerta para zonas con parámetros CUR no confirmados
-  const curBox = eid('cur-box');
-  if (curBox) {
-    const isCUR = !!(zona && zona.esCUR);
-    curBox.classList.toggle('on', isCUR);
-    if (isCUR) {
-      eid('cur-box-title').textContent = `${distrKey} — VERIFICAR EN CIUDAD3D`;
-    }
+  // Ocultar todas las alertas
+  ['aph-box','u-box','cur-box'].forEach(id => {
+    const el = eid(id); if (el) el.classList.remove('on');
+  });
+
+  // APH alert
+  if (cpu && cpu.toString().startsWith('APH')) {
+    const ab = eid('aph-box'); if (ab) ab.classList.add('on');
   }
 
+  // Altura
+  eid('res-alt').textContent = h ? h : '—';
 
-  eid('res-alt').textContent = zona && zona.altura && zona.altura !== '—' && zona.altura !== 'Ver CUR' ? zona.altura : '—';
-  // Cálculo de pisos según Código de Edificación CABA
-  // PB residencial: libre 3.00m + estructura 0.30m = 3.30m
-  // Pisos superiores residencial: libre 2.60m + 0.30m = 2.90m (CE Art. 4.8)
-  // PB comercial: libre 3.50m + 0.30m = 3.80m | Pisos sup com: 3.00+0.30=3.30m
-  if (zona) {
-    const h = parseFloat(zona.altura);
-    if (!isNaN(h) && h > 0) {
-      const pbH   = zona.tipo === 'commercial' ? 3.80 : 3.30;
-      const pisoH = zona.tipo === 'commercial' ? 3.30 : 2.90;
-      const pisos = h <= pbH ? 1 : 1 + Math.round((h - pbH) / pisoH);
-      eid('res-pis').textContent = '≈' + pisos;
-    } else {
-      eid('res-pis').textContent = '—';
-    }
+  // Pisos (fórmula CE CABA)
+  if (h && h > 0) {
+    const pisos = 1 + Math.floor((h - 3.30) / 2.90);
+    eid('res-pis').textContent = '≈' + Math.max(1, pisos);
   } else {
     eid('res-pis').textContent = '—';
   }
-  eid('res-fot').textContent = zona && zona.fot && zona.fot !== 'Ver CUR' ? zona.fot : '—';
-  eid('res-fos').textContent = zona && zona.fos && zona.fos !== 'Ver CUR' ? zona.fos : '—';
-  eid('res-dis').textContent = distrKey || '?';
 
-  if (zona) {
-    eid('res-rf').textContent = zona.retiros.frente;
-    eid('res-ro').textContent = zona.retiros.fondo;
-    eid('res-rl').textContent = zona.retiros.lateral;
-  }
+  // FOT y FOS (FOS no viene en el KD-Tree → mostrar nota)
+  eid('res-fot').textContent = fot ? fot : '—';
+  eid('res-fos').textContent = '—';
+  eid('res-dis').textContent = cpu || '?';
 
+  // Retiros — no disponibles a nivel parcelario, redirigir a plancheta
+  ['res-rf','res-ro','res-rl'].forEach(id => {
+    const el = eid(id);
+    if (el) el.textContent = 'Ver plancheta';
+  });
+
+  // Usos — no disponibles a nivel parcelario
   const usosEl = eid('res-usos');
-  usosEl.innerHTML = zona && zona.usos
-    ? zona.usos.map((u,i) => '<span class="uchip' + (i===0?' main':'') + '">' + u + '</span>').join('')
-    : '<span class="uchip">No determinado</span>';
+  if (usosEl) usosEl.innerHTML = '<span class="uchip">Ver plancheta CUR</span>';
 
-  if (zona && zona.nota) {
-    eid('norm-note').innerHTML = '<strong>' + distrKey + '</strong> — ' + zona.nota +
-      ' <span style="display:block;margin-top:6px;font-size:10.5px">⚠ Verificar normativa vigente en el GCBA — <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank" style="color:var(--acc)">buenosaires.gob.ar</a></span>';
+  // Nota normativa
+  const noteEl = eid('norm-note');
+  if (noteEl && cpu) {
+    const distInfo = distM != null ? ` (parcela a ${distM}m)` : '';
+    const planoInfo = plano && plano > h ? ` | Plano límite completamiento: ${plano}m` : '';
+    noteEl.innerHTML = `<strong>${cpu}</strong>${distInfo}${planoInfo}. ` +
+      `Datos del CUR 2024. ` +
+      `<span style="display:block;margin-top:6px;font-size:10.5px">⚠ Verificar normativa completa en ` +
+      `<a href="https://ciudad3d.buenosaires.gob.ar" target="_blank" style="color:var(--acc)">ciudad3d.buenosaires.gob.ar</a></span>`;
+  } else if (noteEl) {
+    noteEl.innerHTML = '';
   }
 
+  // Calculadora (frente × fondo)
   const cb = eid('calc-block');
-  if (frente && fondo && zona && typeof zona.fot === 'number') {
+  if (frente && fondo && fot) {
     const sup = frente * fondo;
     eid('c-sup').textContent  = fmt(sup);
-    eid('c-edif').textContent = fmt(sup * zona.fot);
-    eid('c-pb').textContent   = fmt(sup * zona.fos);
-    eid('c-vend').textContent = fmt(sup * zona.fot * 0.85);
+    eid('c-edif').textContent = fmt(sup * fot);
+    eid('c-pb').textContent   = fmt(sup * 0.60);   // FOS típico CABA
+    eid('c-vend').textContent = fmt(sup * fot * 0.85);
     cb.style.display = 'block';
   } else {
-    cb.style.display = 'none';
+    if (cb) cb.style.display = 'none';
   }
 
   if (lat && lng) initMap(lat, lng, addr);
@@ -845,11 +536,12 @@ function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
 async function consultarParcela() {
   ['err','warn','info'].forEach(t => eid('msg-'+t).classList.remove('on'));
   eid('suggestions').style.display = 'none';
+  const dp = eid('debug-panel');
+  if (dp) dp.style.display = 'none';
 
   const dir    = eid('inp-addr').value.trim();
   const frente = parseFloat(eid('inp-frente').value);
   const fondo  = parseFloat(eid('inp-fondo').value);
-  const manual = eid('inp-distrito').value;
 
   if (!dir) { setMsg('err', '⚠ Ingresá la dirección para consultar.'); return; }
 
@@ -859,22 +551,26 @@ async function consultarParcela() {
     const lat  = norm.coords ? norm.coords.lat : null;
     const lng  = norm.coords ? norm.coords.lng : null;
 
-    let distrKey = null, zona = null;
-
-    if (manual) {
-      distrKey = manual;
-      zona = ZONAS[distrKey] || null;
-    } else if (lat && lng) {
-      distrKey = await getDistrito(lat, lng);
-      if (distrKey) {
-        zona = ZONAS[distrKey] || ZONAS[Object.keys(ZONAS).find(k => k.toUpperCase() === distrKey.toUpperCase())] || null;
-        if (!zona) setMsg('warn', 'Distrito "' + distrKey + '" detectado pero no está en la tabla. Seleccioná manualmente.');
-      } else {
-        setMsg('info', '⚠ No se pudo detectar el distrito automáticamente. Seleccionalo del selector.');
-      }
+    if (!lat || !lng) {
+      setMsg('err', '✕ No se pudo geocodificar la dirección.');
+      return;
     }
 
-    mostrar(norm.direccion, distrKey, zona, lat, lng,
+    // Obtener dato parcelario del KD-Tree (fuente de verdad)
+    const parcel = await getDistrito(lat, lng);
+
+    // VALIDACIÓN ESTRICTA DE DISTANCIA
+    if (!parcel || parcel.dist > 30) {
+      setMsg('err',
+        'No se pudo asociar la dirección a una parcela con precisión suficiente' +
+        (parcel ? ` (distancia: ${parcel.dist}m > 30m)` : '') +
+        '. Verifique manualmente en ciudad3d.buenosaires.gob.ar');
+      mostrar(norm.direccion, null, null, lat, lng, null, null);
+      return;
+    }
+
+    // Inyección directa a la UI
+    mostrar(norm.direccion, parcel, lat, lng,
       isNaN(frente) ? null : frente,
       isNaN(fondo)  ? null : fondo);
 
@@ -884,29 +580,6 @@ async function consultarParcela() {
     setLoad(false);
   }
 }
-
-// ── TABLA COMPLETA ───────────────────────────────────────────────
-function buildTable() {
-  const tb = eid('tbl-body');
-  const cls = {residencial:'tr',comercial:'tc',equipamiento:'te',proteccion:'tp','uso-publico':'tpu',mixed:'tm'};
-  Object.entries(ZONAS).forEach(([k,z]) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = '<td>' + k + '</td>'
-      + '<td class="' + (cls[z.tipo]||'') + '">' + z.tipo.toUpperCase() + '</td>'
-      + '<td>' + (z.altura !== '—' ? z.altura + 'm' : '—') + '</td>'
-      + '<td>' + z.fot + '</td><td>' + z.fos + '</td>'
-      + '<td>' + z.retiros.frente + '</td><td>' + z.retiros.fondo + '</td><td>' + z.retiros.lateral + '</td>'
-      + '<td style="white-space:normal;max-width:160px">' + z.usos[0] + '</td>';
-    tb.appendChild(tr);
-  });
-}
-
-function toggleTabla() {
-  const t = eid('ntable');
-  const show = t.classList.toggle('on');
-  document.querySelector('.ttoggle').textContent = show ? '▼ Ocultar tabla' : '▶ Ver tabla CUR completa';
-}
-
 // ── AUTOCOMPLETE ─────────────────────────────────────────────────
 let _sugTimer = null;
 eid('inp-addr').addEventListener('input', function() {
