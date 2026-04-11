@@ -1224,6 +1224,1303 @@ async function normalizarDir(dir) {
 }
 
 // ================================================================
+// NEAREST-NEIGHBOR por centroides CUR oficial 2024
+// ================================================================
+let _curData = null;
+let _curLoading = null;
+
+async function cargarCurData() {
+  if (_curData) return _curData;
+  if (_curLoading) return _curLoading;
+  _curLoading = fetch('./cur_centroids.json')
+    .then(r => r.json())
+    .then(data => { _curData = data; _curLoading = null; return data; })
+    .catch(e => { _curLoading = null; console.warn('CUR data no disponible:', e); return null; });
+  return _curLoading;
+}
+
+function nearestDistrict(lng, lat, data) {
+  // Buscar los 5 más cercanos dentro de 0.003 grados (~300m)
+  const MAX_D2 = 0.003 * 0.003;
+  const nearby = [];
+  for (const c of data) {
+    const d2 = (c[0]-lng)*(c[0]-lng) + (c[1]-lat)*(c[1]-lat);
+    if (d2 < MAX_D2) nearby.push([d2, c[2], c[3]]);
+  }
+  if (nearby.length === 0) return null;
+  nearby.sort((a,b) => a[0]-b[0]);
+  const top5 = nearby.slice(0,5);
+  // Votación: el distrito más frecuente entre los 5 más cercanos
+  const votes = {};
+  for (const [,d] of top5) votes[d] = (votes[d]||0) + 1;
+  const winner = Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
+  // Si el más cercano está a < 150m, confiar en él directamente
+  const nearestDist = Math.sqrt(top5[0][0]) * 111000;
+  if (nearestDist < 150) return top5[0][1];
+  // Sino usar votación
+  return winner ? winner[0] : top5[0][1];
+}
+
+// ================================================================
+// OBTENER DISTRITO — GeoJSON centroides CUR + fallback API
+// ================================================================
+async function obtenerDistrito(lat, lng) {
+  // Intento 1: centroides CUR oficial (principal)
+  try {
+    const data = await cargarCurData();
+    if (data) {
+      const dist = nearestDistrict(lng, lat, data);
+      if (dist) return limpiarDistrito(dist);
+    }
+  } catch(e) { console.warn('CUR nearest error:', e); }
+
+  // Intento 2: ArcGIS REST de USIG (fallback)
+  try {
+    const url = `https://ws.usig.buenosaires.gob.ar/arcgis/rest/services/Zonificacion/`
+      + `Distritos_Zonificacion/MapServer/0/query`
+      + `?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326`
+      + `&spatialRel=esriSpatialRelIntersects&outFields=*&f=json`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) {
+      const data = await r.json();
+      if (data.features && data.features.length > 0) {
+        const attr = data.features[0].attributes;
+        for (const k of ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa']) {
+          if (attr[k]) return limpiarDistrito(attr[k]);
+        }
+      }
+    }
+  } catch(e) { /* sin API */ }
+
+  return null;
+}
+
+>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NORM·AR — Consulta Normativa Urbanística CABA</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <style>
+    /* =============================================
+       VARIABLES Y RESET
+    ============================================= */
+    :root {
+      --bg:           #0d1117;
+      --bg-panel:     #13181f;
+      --bg-card:      #161c26;
+      --bg-card-h:    #1c2436;
+      --acc:          #E8C547;
+      --acc-dim:      rgba(232,197,71,0.12);
+      --acc-glow:     rgba(232,197,71,0.25);
+      --text:         #e0e6f0;
+      --text-muted:   #5a6478;
+      --text-dim:     #8a96aa;
+      --border:       rgba(232,197,71,0.18);
+      --border-dim:   rgba(255,255,255,0.06);
+      --border-mid:   rgba(255,255,255,0.10);
+      --res:  #4a9eff;
+      --com:  #ff8c42;
+      --equ:  #3ecf7e;
+      --pro:  #ff5a6e;
+      --pub:  #b06eff;
+      --mix:  #22d3ee;
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+      --r:    3px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      /* Blueprint grid */
+      background-image:
+        linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
+      background-size: 44px 44px;
+      background-attachment: fixed;
+    }
+
+    /* =============================================
+       HEADER
+    ============================================= */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      background: rgba(13,17,23,0.92);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 28px;
+      height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-box {
+      width: 34px; height: 34px;
+      border: 2px solid var(--acc);
+      display: grid;
+      place-items: center;
+      font-size: 13px; font-weight: 700;
+      color: var(--acc);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .logo-box::after {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px solid var(--acc);
+      opacity: 0.3;
+    }
+
+    .logo-name {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--acc);
+      letter-spacing: 5px;
+      line-height: 1;
+    }
+    .logo-sub {
+      font-size: 9px;
+      color: var(--text-muted);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pill {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 4px 10px;
+      border: 1px solid var(--border-dim);
+      color: var(--text-muted);
+      border-radius: 2px;
+    }
+    .pill.live {
+      border-color: var(--equ);
+      color: var(--equ);
+      background: rgba(62,207,126,0.07);
+    }
+    .pill.live::before {
+      content: '● ';
+      animation: blink 1.8s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* =============================================
+       MAIN LAYOUT
+    ============================================= */
+    main {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+    }
+
+    .section-label {
+      font-size: 9px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .section-label::before {
+      content: '';
+      width: 18px; height: 1px;
+      background: var(--acc);
+      flex-shrink: 0;
+    }
+
+    /* =============================================
+       SEARCH AREA
+    ============================================= */
+    .search-block {
+      margin-bottom: 44px;
+    }
+
+    .search-row {
+      display: grid;
+      grid-template-columns: 1fr 110px 110px 110px auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    @media (max-width: 720px) {
+      .search-row {
+        grid-template-columns: 1fr 1fr;
+      }
+      .search-row .field:first-child { grid-column: 1/-1; }
+      .btn-search { grid-column: 1/-1; }
+    }
+
+    .field { display: flex; flex-direction: column; gap: 7px; }
+
+    .field-label {
+      font-size: 9px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .field-label em {
+      font-style: normal;
+      color: var(--acc);
+    }
+
+    input[type=text], input[type=number] {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      padding: 11px 15px;
+      outline: none;
+      width: 100%;
+      transition: border-color .2s, background .2s;
+      border-radius: var(--r);
+    }
+    input:focus {
+      border-color: var(--acc);
+      background: var(--bg-card-h);
+      box-shadow: 0 0 0 3px var(--acc-dim);
+    }
+    input::placeholder { color: var(--text-muted); opacity: .7; }
+    input[type=number] { -moz-appearance: textfield; }
+    input[type=number]::-webkit-outer-spin-button,
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .btn-search {
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      background: var(--acc);
+      color: #0d1117;
+      border: none;
+      padding: 11px 22px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      border-radius: var(--r);
+    }
+    .btn-search:hover { background: #f5d55a; transform: translateY(-1px); box-shadow: 0 6px 20px var(--acc-glow); }
+    .btn-search:active { transform: translateY(0); }
+    .btn-search:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* Loading bar */
+    .load-track {
+      height: 2px;
+      background: var(--border-dim);
+      margin-top: 10px;
+      border-radius: 2px;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+    .load-track.on { opacity: 1; }
+    .load-fill {
+      height: 100%;
+      width: 35%;
+      background: linear-gradient(90deg, transparent, var(--acc), transparent);
+      animation: loadslide 1.1s ease-in-out infinite;
+    }
+    @keyframes loadslide {
+      0%   { transform: translateX(-200%); }
+      100% { transform: translateX(500%); }
+    }
+
+    /* Messages */
+    .msg {
+      font-size: 12px;
+      line-height: 1.5;
+      padding: 11px 15px;
+      border-left: 3px solid;
+      margin-top: 12px;
+      border-radius: 0 var(--r) var(--r) 0;
+      display: none;
+    }
+    .msg.on { display: block; }
+    .msg.err  { border-color: var(--pro); background: rgba(255,90,110,.07); color: #ffb3bb; }
+    .msg.warn { border-color: var(--com); background: rgba(255,140,66,.07); color: #ffd1a8; }
+    .msg.info { border-color: var(--mix); background: rgba(34,211,238,.07); color: #a0f0ff; }
+
+    /* =============================================
+       RESULTS
+    ============================================= */
+    #results {
+      display: none;
+    }
+    #results.on {
+      display: block;
+      animation: risein .4s ease-out both;
+    }
+    @keyframes risein {
+      from { opacity: 0; transform: translateY(22px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Address banner */
+    .addr-banner {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 18px 22px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    .addr-banner::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--acc-dim);
+      pointer-events: none;
+    }
+
+    .addr-main {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--acc);
+      letter-spacing: .5px;
+    }
+    .addr-coords {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+
+    .dist-badge {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      padding: 6px 14px;
+      border: 1px solid currentColor;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+    .dist-badge.residencial { color: var(--res); background: rgba(74,158,255,.1); }
+    .dist-badge.comercial   { color: var(--com); background: rgba(255,140,66,.1); }
+    .dist-badge.equipamiento{ color: var(--equ); background: rgba(62,207,126,.1); }
+    .dist-badge.proteccion  { color: var(--pro); background: rgba(255,90,110,.1); }
+    .dist-badge.uso-publico { color: var(--pub); background: rgba(176,110,255,.1); }
+    .dist-badge.mixed       { color: var(--mix); background: rgba(34,211,238,.1); }
+    .dist-badge.unknown     { color: var(--text-dim); background: var(--border-dim); }
+
+    /* APH alert */
+    .aph-alert {
+      display: none;
+      align-items: flex-start;
+      gap: 12px;
+      border: 1px solid var(--pro);
+      background: rgba(255,90,110,.07);
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      border-radius: var(--r);
+      font-size: 12px;
+      color: #ffb3bb;
+      line-height: 1.6;
+    }
+    .aph-alert.on { display: flex; }
+
+    /* =============================================
+       PARAM CARDS
+    ============================================= */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 900px) {
+      .cards-row { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .cards-row { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    .pcard {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      padding: 18px 16px;
+      border-radius: var(--r);
+      transition: border-color .2s, transform .2s;
+      animation: risein .35s ease-out both;
+    }
+    .pcard:hover { border-color: var(--border); transform: translateY(-2px); }
+    .pcard:nth-child(1) { animation-delay: .04s; }
+    .pcard:nth-child(2) { animation-delay: .08s; }
+    .pcard:nth-child(3) { animation-delay: .12s; }
+    .pcard:nth-child(4) { animation-delay: .16s; }
+    .pcard:nth-child(5) { animation-delay: .20s; }
+
+    .pcard-icon  { font-size: 16px; margin-bottom: 10px; opacity: .7; }
+    .pcard-label {
+      font-size: 8.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .pcard-value {
+      font-size: 30px;
+      font-weight: 700;
+      color: var(--acc);
+      line-height: 1;
+      margin-bottom: 4px;
+      letter-spacing: -1px;
+    }
+    .pcard-value.sm { font-size: 20px; letter-spacing: 0; }
+    .pcard-unit { font-size: 10px; color: var(--text-dim); }
+
+    /* =============================================
+       RETIROS + USOS
+    ============================================= */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1.6fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+    .info-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      padding: 18px;
+      border-radius: var(--r);
+    }
+    .info-box-label {
+      font-size: 8.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+
+    .retiros-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .retiro {
+      text-align: center;
+      padding: 10px 6px;
+      border: 1px solid var(--border-dim);
+      border-radius: 2px;
+    }
+    .retiro-lbl { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+    .retiro-val { font-size: 13px; font-weight: 500; color: var(--text); }
+
+    .uses-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+    }
+    .use-chip {
+      font-size: 11px;
+      padding: 4px 12px;
+      border: 1px solid var(--border-dim);
+      color: var(--text-dim);
+      border-radius: 2px;
+    }
+    .use-chip.main {
+      border-color: var(--acc);
+      color: var(--acc);
+      background: var(--acc-dim);
+    }
+
+    /* =============================================
+       CÁLCULOS
+    ============================================= */
+    #calc-block {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--acc);
+      padding: 22px 24px;
+      border-radius: var(--r);
+      margin-bottom: 14px;
+      position: relative;
+    }
+    #calc-block::before {
+      content: 'CÁLCULOS DEL LOTE';
+      position: absolute;
+      top: -1px; right: 20px;
+      font-size: 8px;
+      letter-spacing: 3px;
+      font-weight: 700;
+      background: var(--acc);
+      color: #0d1117;
+      padding: 2px 10px;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 640px) { .calc-grid { grid-template-columns: 1fr 1fr; } }
+
+    .calc-item {
+      border-left: 2px solid var(--acc);
+      padding-left: 14px;
+    }
+    .calc-label {
+      font-size: 8.5px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 7px;
+    }
+    .calc-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--acc);
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+    .calc-unit { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
+
+    /* =============================================
+       MAPA
+    ============================================= */
+    #map-wrap { margin-bottom: 14px; }
+    #map {
+      height: 340px;
+      border: 1px solid var(--border-dim);
+      border-radius: var(--r);
+      filter: saturate(.3) brightness(.75) contrast(1.1);
+      transition: filter .4s;
+    }
+    #map:hover { filter: saturate(.5) brightness(.85) contrast(1.1); }
+
+    .leaflet-popup-content-wrapper {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      color: var(--acc);
+      font-family: var(--mono);
+      font-size: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.5);
+    }
+    .leaflet-popup-tip { background: var(--bg-card); }
+
+    /* Normativa note */
+    .norm-note {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-left: 3px solid var(--border);
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      border-radius: 0 var(--r) var(--r) 0;
+      margin-bottom: 14px;
+    }
+    .norm-note strong { color: var(--text-dim); }
+
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 36px 0; }
+
+    /* =============================================
+       TABLA COMPLETA
+    ============================================= */
+    .table-toggle {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      padding: 9px 18px;
+      cursor: pointer;
+      margin-bottom: 14px;
+      border-radius: var(--r);
+      transition: all .2s;
+    }
+    .table-toggle:hover { border-color: var(--acc); color: var(--acc); }
+
+    .norm-table { display: none; overflow-x: auto; }
+    .norm-table.on { display: block; animation: risein .3s ease-out both; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      padding: 9px 13px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      font-size: 8px; letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      text-align: left;
+      white-space: nowrap;
+      position: sticky; top: 58px;
+    }
+    td {
+      padding: 8px 13px;
+      border: 1px solid rgba(255,255,255,0.035);
+      color: var(--text-dim);
+      white-space: nowrap;
+      font-size: 11.5px;
+    }
+    tr:nth-child(even) td { background: rgba(255,255,255,0.018); }
+    tr:hover td { background: var(--bg-card); }
+    td:first-child { font-weight: 600; color: var(--text); }
+    .td-res { color: var(--res); }
+    .td-com { color: var(--com); }
+    .td-equ { color: var(--equ); }
+    .td-pro { color: var(--pro); }
+    .td-pub { color: var(--pub); }
+    .td-mix { color: var(--mix); }
+
+    /* =============================================
+       FOOTER
+    ============================================= */
+    footer {
+      border-top: 1px solid var(--border-dim);
+      padding: 28px 24px;
+      text-align: center;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+    .footer-warn {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--acc);
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    .footer-note {
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: .5px;
+      line-height: 1.8;
+    }
+
+    /* =============================================
+       AUTOCOMPLETE DROPDOWN
+    ============================================= */
+    .autocomplete-wrap { position: relative; }
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--bg-card-h);
+      border: 1px solid var(--acc);
+      z-index: 500;
+      max-height: 200px;
+      overflow-y: auto;
+      border-radius: 0 0 var(--r) var(--r);
+    }
+    .sug-item {
+      padding: 10px 15px;
+      font-size: 12px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border-dim);
+      transition: background .15s;
+      color: var(--text-dim);
+    }
+    .sug-item:last-child { border-bottom: none; }
+    .sug-item:hover { background: var(--acc-dim); color: var(--acc); }
+  </style>
+</head>
+<body>
+
+<!-- ============================================================
+     HEADER
+============================================================ -->
+<header>
+  <div class="logo">
+    <div class="logo-box">N</div>
+    <div>
+      <div class="logo-name">NORM·AR</div>
+      <div class="logo-sub">Consulta Normativa Urbanística · CABA</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="pill live">USIG Online</span>
+    <span class="pill">CUR · Ley 6099/2018</span>
+  </div>
+</header>
+
+<!-- ============================================================
+     MAIN
+============================================================ -->
+<main>
+
+  <!-- SEARCH -->
+  <div class="search-block">
+    <div class="section-label">Consulta de Parcela</div>
+
+    <div class="search-row">
+      <!-- Dirección -->
+      <div class="field autocomplete-wrap">
+        <label class="field-label">Dirección <em>*</em></label>
+        <input type="text" id="inp-addr"
+          placeholder="Ej: Corrientes 1234  ·  Av. Santa Fe 2500  ·  Estomba 3569"
+          autocomplete="off" />
+        <div class="suggestions" id="suggestions" style="display:none"></div>
+      </div>
+
+      <!-- Frente -->
+      <div class="field">
+        <label class="field-label">Frente <span style="color:var(--text-muted)">opt.</span></label>
+        <input type="number" id="inp-frente" placeholder="m" min="0" step="0.01" />
+      </div>
+
+      <!-- Fondo -->
+      <div class="field">
+        <label class="field-label">Fondo <span style="color:var(--text-muted)">opt.</span></label>
+        <input type="number" id="inp-fondo" placeholder="m" min="0" step="0.01" />
+      </div>
+
+      <!-- Distrito manual -->
+      <div class="field">
+        <label class="field-label">Distrito <span style="color:var(--text-muted)">manual</span></label>
+        <select id="inp-distrito" style="font-family:var(--mono);font-size:12px;color:var(--text);background:var(--bg-card);border:1px solid var(--border-dim);padding:11px 12px;outline:none;width:100%;cursor:pointer;border-radius:var(--r)">
+          <option value="" style="background:#161c26">— auto —</option>
+          <optgroup label="RESIDENCIAL" style="background:#161c26">
+            <option value="R1">R1</option><option value="R1b">R1b</option>
+            <option value="R2a">R2a</option><option value="R2b">R2b</option>
+            <option value="R2c">R2c</option><option value="R2d">R2d</option>
+          </optgroup>
+          <optgroup label="COMERCIAL" style="background:#161c26">
+            <option value="C1">C1</option><option value="C2">C2</option>
+            <option value="C2a">C2a</option><option value="C3">C3</option>
+            <option value="C3i">C3i</option><option value="CB">CB</option>
+          </optgroup>
+          <optgroup label="EQUIPAMIENTO" style="background:#161c26">
+            <option value="E1">E1</option><option value="E2">E2</option>
+            <option value="E3">E3</option>
+          </optgroup>
+          <optgroup label="INDUSTRIAL" style="background:#161c26">
+            <option value="I">I</option><option value="I1">I1</option><option value="IP">IP</option>
+          </optgroup>
+          <optgroup label="MIXTO / ESPECIAL" style="background:#161c26">
+            <option value="VT">VT</option><option value="NCI">NCI</option>
+            <option value="EMED">EMED</option><option value="ECOR">ECOR</option>
+          </optgroup>
+          <optgroup label="APH" style="background:#161c26">
+            <option value="APH">APH (genérico)</option><option value="APH1">APH1</option>
+            <option value="APH2">APH2</option><option value="APH3">APH3</option>
+            <option value="APH4">APH4</option><option value="APH5">APH5</option>
+          </optgroup>
+          <optgroup label="USO PÚBLICO" style="background:#161c26">
+            <option value="UP">UP</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Botón -->
+      <button class="btn-search" id="btn-buscar" onclick="consultarParcela()">
+        ↗ CONSULTAR
+      </button>
+    </div>
+
+    <div class="load-track" id="load-track"><div class="load-fill"></div></div>
+    <div class="msg err"  id="msg-err"></div>
+    <div class="msg warn" id="msg-warn"></div>
+    <div class="msg info" id="msg-info"></div>
+  </div>
+
+  <!-- ============================================================
+       RESULTS
+  ============================================================ -->
+  <div id="results">
+
+    <!-- Banner dirección -->
+    <div class="addr-banner">
+      <div>
+        <div style="font-size:8.5px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
+        <div class="addr-main" id="res-addr">—</div>
+        <div class="addr-coords" id="res-coords">—</div>
+      </div>
+      <span class="dist-badge" id="res-badge">—</span>
+    </div>
+
+    <!-- APH Alert -->
+    <div class="aph-alert" id="aph-alert">
+      ⚠️
+      <div>
+        <strong>ÁREA DE PROTECCIÓN HISTÓRICA (APH)</strong><br>
+        Este predio se encuentra en un distrito con restricciones especiales de altura, retiros y materialidad.
+        Consultar el <strong>Catálogo de Inmuebles Catalogados</strong> del GCBA y la normativa específica del APH antes de proyectar.
+        Pueden existir limitaciones al FOT y FOS indicados.
+      </div>
+    </div>
+
+    <!-- Cards parámetros -->
+    <div class="section-label">Parámetros Normativos</div>
+    <div class="cards-row">
+      <div class="pcard">
+        <div class="pcard-icon">↕</div>
+        <div class="pcard-label">Altura Máx.</div>
+        <div class="pcard-value" id="res-altura">—</div>
+        <div class="pcard-unit">metros</div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-icon">⬜</div>
+        <div class="pcard-label">Pisos Est.</div>
+        <div class="pcard-value" id="res-pisos">—</div>
+        <div class="pcard-unit">plantas (~3m c/u)</div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-icon">∑</div>
+        <div class="pcard-label">F.O.T.</div>
+        <div class="pcard-value" id="res-fot">—</div>
+        <div class="pcard-unit">factor ocup. total</div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-icon">▣</div>
+        <div class="pcard-label">F.O.S.</div>
+        <div class="pcard-value" id="res-fos">—</div>
+        <div class="pcard-unit">factor ocup. suelo</div>
+      </div>
+      <div class="pcard">
+        <div class="pcard-icon">◈</div>
+        <div class="pcard-label">Distrito</div>
+        <div class="pcard-value sm" id="res-dist">—</div>
+        <div class="pcard-unit">zonificación CUR</div>
+      </div>
+    </div>
+
+    <!-- Retiros + Usos -->
+    <div class="two-col">
+      <div class="info-box">
+        <div class="info-box-label">Retiros Mínimos</div>
+        <div class="retiros-grid">
+          <div class="retiro">
+            <div class="retiro-lbl">↑ Frente</div>
+            <div class="retiro-val" id="res-ret-fr">—</div>
+          </div>
+          <div class="retiro">
+            <div class="retiro-lbl">↓ Fondo</div>
+            <div class="retiro-val" id="res-ret-fo">—</div>
+          </div>
+          <div class="retiro">
+            <div class="retiro-lbl">↔ Lateral</div>
+            <div class="retiro-val" id="res-ret-la">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <div class="info-box-label">Usos Permitidos</div>
+        <div class="uses-wrap" id="res-usos">—</div>
+      </div>
+    </div>
+
+    <!-- Cálculos del lote -->
+    <div id="calc-block">
+      <div class="calc-grid">
+        <div class="calc-item">
+          <div class="calc-label">Sup. del Lote</div>
+          <div class="calc-value" id="calc-sup">—</div>
+          <div class="calc-unit">m²</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">M² Edificables (FOT)</div>
+          <div class="calc-value" id="calc-edif">—</div>
+          <div class="calc-unit">m² cubiertos totales</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">M² PB Máx. (FOS)</div>
+          <div class="calc-value" id="calc-pb">—</div>
+          <div class="calc-unit">m² en planta baja</div>
+        </div>
+        <div class="calc-item">
+          <div class="calc-label">M² Vendibles Est.</div>
+          <div class="calc-value" id="calc-vend">—</div>
+          <div class="calc-unit">× 0.85 eficiencia</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mapa -->
+    <div class="section-label">Ubicación en Mapa</div>
+    <div id="map-wrap">
+      <div id="map"></div>
+    </div>
+
+    <!-- Nota normativa -->
+    <div class="norm-note" id="norm-note">
+      Datos orientativos basados en el Código Urbanístico de CABA (Ley 6099/2018) y modificaciones vigentes.
+    </div>
+
+    <div class="divider"></div>
+  </div>
+
+  <!-- TABLA COMPLETA -->
+  <div>
+    <div class="section-label">Referencia Normativa Completa</div>
+    <button class="table-toggle" id="tbl-toggle" onclick="toggleTabla()">▶ Ver tabla CUR completa</button>
+    <div class="norm-table" id="norm-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Distrito</th>
+            <th>Tipo</th>
+            <th>Alt. Máx.</th>
+            <th>FOT</th>
+            <th>FOS</th>
+            <th>Retiro Frente</th>
+            <th>Retiro Fondo</th>
+            <th>Ret. Lateral</th>
+            <th>Uso Principal</th>
+            <th>Nota</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ============================================================
+     FOOTER
+============================================================ -->
+<footer>
+  <div class="footer-warn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
+  <div class="footer-note">
+    Basado en CUR CABA · Ley 6099/2018 y modificaciones (Ley 6461/2021) · Fuentes: USIG / GCBA · NORM·AR v1.2<br>
+    No reemplaza la consulta oficial ante el organismo competente. Uso exclusivamente referencial.<br>
+    Desarrollado para uso profesional en oficina técnica — Datos geocodificados via USIG Buenos Aires
+  </div>
+</footer>
+
+<!-- ============================================================
+     JAVASCRIPT
+============================================================ -->
+<script>
+'use strict';
+
+// ================================================================
+// TABLA NORMATIVA CUR 2018 + MODIFICACIONES
+// Fuente: Ley 6099/2018, modificaciones Ley 6461/2021
+// Nota: siempre verificar en el GCBA para normativa vigente
+// ================================================================
+const ZONAS = {
+
+  // ── RESIDENCIAL ──────────────────────────────────────────────
+  "R1": {
+    tipo:"residencial", altura:9, fot:1.2, fos:0.60,
+    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
+    usos:["Residencial","Pequeño comercio barrial","Servicios locales"],
+    nota:"Zona residencial de baja densidad. Máx. 3 plantas. Tejido edilicio bajo."
+  },
+  "R1b": {
+    tipo:"residencial", altura:12, fot:1.5, fos:0.60,
+    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
+    usos:["Residencial","Pequeño comercio PB"],
+    nota:"Residencial baja densidad ampliada. Variante con mayor permisividad de altura."
+  },
+  "R2a": {
+    tipo:"residencial", altura:12, fot:2.0, fos:0.60,
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial","Comercio local PB","Oficinas"],
+    nota:"Zona residencial de densidad media. Corredor residencial barrial."
+  },
+  "R2b": {
+    tipo:"residencial", altura:24, fot:3.0, fos:0.60,
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial","Comercio en PB","Usos compatibles","Oficinas"],
+    nota:"Residencial alta densidad. Tipología de torre con basamento posible."
+  },
+  "R2c": {
+    tipo:"residencial", altura:18, fot:2.5, fos:0.60,
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial","Comercio PB","Servicios"],
+    nota:"Residencial media-alta densidad. Transición entre R2a y R2b."
+  },
+  "R2d": {
+    tipo:"residencial", altura:30, fot:3.5, fos:0.65,
+    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
+    usos:["Residencial","Mixto compatible","Comercio en PB"],
+    nota:"Residencial máxima densidad. Zona de alta intensidad edilicia."
+  },
+
+  // ── COMERCIAL ────────────────────────────────────────────────
+  "C1": {
+    tipo:"comercial", altura:12, fot:2.5, fos:0.70,
+    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
+    usos:["Comercial","Residencial","Servicios","Oficinas"],
+    nota:"Corredor comercial barrial. Uso mixto con predominio comercial."
+  },
+  "C2": {
+    tipo:"comercial", altura:30, fot:4.0, fos:0.70,
+    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
+    usos:["Comercial","Residencial","Oficinas","Hotelería","Servicios"],
+    nota:"Corredor comercial principal. Ejes comerciales de escala urbana."
+  },
+  "C2a": {
+    tipo:"comercial", altura:30, fot:4.0, fos:0.70,
+    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
+    usos:["Comercial","Residencial","Oficinas","Servicios especializados"],
+    nota:"Variante de C2 con usos específicos sobre corredores determinados."
+  },
+  "C3": {
+    tipo:"comercial", altura:42, fot:5.0, fos:0.80,
+    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
+    usos:["Comercial intensivo","Residencial","Oficinas corporativas","Hotelería","Grandes superficies"],
+    nota:"Centro comercial de alta intensidad. Macrocentro y grandes corredores."
+  },
+  "C3i": {
+    tipo:"comercial", altura:42, fot:5.0, fos:0.80,
+    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
+    usos:["Comercial intensivo","Grandes superficies","Logística compatible"],
+    nota:"Comercial máxima intensidad con actividades de soporte logístico."
+  },
+  "CB": {
+    tipo:"comercial", altura:12, fot:2.0, fos:0.70,
+    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
+    usos:["Comercio local","Residencial","Servicios barriales"],
+    nota:"Corredor Basal. Ejes comerciales de escala barrial/vecinal."
+  },
+
+  // ── EQUIPAMIENTO ─────────────────────────────────────────────
+  "E1": {
+    tipo:"equipamiento", altura:12, fot:2.0, fos:0.60,
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Equipamiento comunitario","Educación","Salud","Residencial compatible"],
+    nota:"Equipamiento de escala barrial. Escuelas, centros de salud."
+  },
+  "E2": {
+    tipo:"equipamiento", altura:24, fot:3.5, fos:0.70,
+    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
+    usos:["Equipamiento","Institucional","Cultural","Servicios especializados"],
+    nota:"Equipamiento de escala urbana. Hospitales, facultades, centros culturales."
+  },
+  "E3": {
+    tipo:"equipamiento", altura:42, fot:5.0, fos:0.80,
+    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
+    usos:["Grandes equipamientos","Corporativo","Institucional metropolitano"],
+    nota:"Gran equipamiento de escala metropolitana. Permite desarrollo intensivo."
+  },
+
+  // ── INDUSTRIA / PRODUCCIÓN ───────────────────────────────────
+  "I": {
+    tipo:"equipamiento", altura:12, fot:1.5, fos:0.60,
+    retiros:{frente:"3m", fondo:"3m", lateral:"3m"},
+    usos:["Industrial compatible","Producción artesanal","Depósito","Servicios industriales"],
+    nota:"Zona industrial general. Industria compatible con tejido urbano."
+  },
+  "I1": {
+    tipo:"equipamiento", altura:12, fot:1.5, fos:0.60,
+    retiros:{frente:"3m", fondo:"3m", lateral:"3m"},
+    usos:["Industrial liviano","Producción limpia","Taller artesanal"],
+    nota:"Industria liviana inofensiva en zonas de transición."
+  },
+  "IP": {
+    tipo:"equipamiento", altura:15, fot:1.8, fos:0.65,
+    retiros:{frente:"3m", fondo:"4m", lateral:"3m"},
+    usos:["Industria y parque","Producción tecnológica","Logística"],
+    nota:"Parque industrial. Usos productivos agrupados con servicios."
+  },
+
+  // ── NUEVOS USOS MIXTOS (CUR) ─────────────────────────────────
+  "VT": {
+    tipo:"mixed", altura:18, fot:2.5, fos:0.65,
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial","Usos mixtos controlados","Comercio PB"],
+    nota:"Vivienda con Tejido. Preservación del tejido edilicio característico barrial."
+  },
+  "NCI": {
+    tipo:"mixed", altura:30, fot:3.5, fos:0.70,
+    retiros:{frente:"3m", fondo:"6m", lateral:"3m"},
+    usos:["Residencial","Comercial","Servicios","Oficinas","Usos mixtos"],
+    nota:"Nueva Centralidad. Zonas de reconversión industrial / nuevos usos urbanos."
+  },
+  "EMED": {
+    tipo:"equipamiento", altura:24, fot:2.5, fos:0.65,
+    retiros:{frente:"3m", fondo:"5m", lateral:"3m"},
+    usos:["Equipamiento médico","Salud","Residencial médico asociado"],
+    nota:"Eje Médico Sanitario. Corredor hospitalario especializado."
+  },
+  "ECOR": {
+    tipo:"mixed", altura:24, fot:3.0, fos:0.70,
+    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
+    usos:["Comercial","Residencial","Servicios turísticos","Oficinas"],
+    nota:"Eje de corredores especiales. Normativa particular según tramo."
+  },
+  "AU": {
+    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
+    retiros:{frente:"—", fondo:"—", lateral:"—"},
+    usos:["Autopista y vías rápidas","Infraestructura vial","Equipamiento vial"],
+    nota:"Autopistas y vías rápidas. No apto para desarrollo privado residencial/comercial."
+  },
+
+  // ── ÁREAS DE PROTECCIÓN HISTÓRICA ────────────────────────────
+  "APH": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"Según catálogo", fondo:"Según catálogo", lateral:"Según catálogo"},
+    usos:["Residencial","Comercio restringido","Cultural","Turístico"],
+    nota:"Área de Protección Histórica genérica. Normativa especial por catálogo.", esAPH:true
+  },
+  "APH1": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM (preservación)", fondo:"Según catálogo", lateral:"Según catálogo"},
+    usos:["Residencial","Cultural","Comercio PB restringido","Turístico"],
+    nota:"APH San Telmo — Montserrat. Casco histórico fundacional. Catálogo obligatorio.", esAPH:true
+  },
+  "APH2": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM (preservación)", fondo:"Según catálogo", lateral:"Según catálogo"},
+    usos:["Residencial","Cultural","Turístico","Comercio barrial"],
+    nota:"APH La Boca. Patrimonio barrial e industrial. Consultar catálogo.", esAPH:true
+  },
+  "APH3": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
+    usos:["Residencial","Cultural","Gastronómico"],
+    nota:"APH Palermo Viejo. Tejido de casas bajas. Protección de escala barrial.", esAPH:true
+  },
+  "APH4": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
+    usos:["Residencial","Cultural","Mixto restringido"],
+    nota:"APH Chacarita. Barrio obrero histórico.", esAPH:true
+  },
+  "APH5": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
+    usos:["Residencial","Cultural"],
+    nota:"APH Barracas. Tejido industrial reconvertido.", esAPH:true
+  },
+  "APH20": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
+    usos:["Residencial","Cultural","Comercio PB"],
+    nota:"APH Zona de protección especial según normativa específica.", esAPH:true
+  },
+  "APH50": {
+    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
+    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
+    usos:["Residencial","Cultural"],
+    nota:"APH Zona histórica de alta protección patrimonial.", esAPH:true
+  },
+
+  // ── USO PÚBLICO ──────────────────────────────────────────────
+  "UP": {
+    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
+    retiros:{frente:"—", fondo:"—", lateral:"—"},
+    usos:["Espacio público","Parques","Plazas","Equipamiento público","Reservas"],
+    nota:"Espacio de uso público. No apto para desarrollo privado."
+  },
+  "ESC": {
+    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
+    retiros:{frente:"—", fondo:"—", lateral:"—"},
+    usos:["Escuelas y establecimientos educativos públicos"],
+    nota:"Zona de equipamiento educativo público."
+  },
+
+  // ── ESPECIALES ──────────────────────────────────────────────
+  "ZP": {
+    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
+    retiros:{frente:"—", fondo:"—", lateral:"—"},
+    usos:["Zona portuaria","Actividades portuarias","Logística fluvial"],
+    nota:"Zona portuaria. Normativa especial Puerto Madero y otros frentes de agua."
+  }
+};
+
+// ================================================================
+// HELPERS UI
+// ================================================================
+const $ = id => document.getElementById(id);
+
+function setLoading(on) {
+  $('load-track').classList.toggle('on', on);
+  $('btn-buscar').disabled = on;
+}
+
+function setMsg(type, text) {
+  ['err','warn','info'].forEach(t => {
+    const el = $('msg-' + t);
+    if (t === type && text) { el.textContent = text; el.classList.add('on'); }
+    else { el.classList.remove('on'); }
+  });
+}
+
+function clearMsgs() {
+  ['err','warn','info'].forEach(t => $('msg-' + t).classList.remove('on'));
+}
+
+function fmt(n) { return Math.round(n).toLocaleString('es-AR'); }
+
+// ================================================================
+// USIG — Normalizar dirección
+// ================================================================
+async function normalizarDir(dir) {
+  const url = `https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion=${encodeURIComponent(dir)}&geocodificar=true`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error('No se pudo conectar con el servicio USIG. Verificar conexión a internet.');
+
+  const data = await r.json();
+  if (!data.direccionesNormalizadas || data.direccionesNormalizadas.length === 0)
+    throw new Error('Dirección no encontrada en CABA. Verificar calle y número.');
+
+  const dn = data.direccionesNormalizadas[0];
+
+  // Validar que sea CABA
+  const partido = (dn.partido || '').toUpperCase();
+  if (partido && !partido.includes('BUENOS AIRES') && !partido.includes('CABA') && !partido.includes('CIUDAD'))
+    throw new Error('La dirección parece estar fuera de CABA. Esta herramienta cubre exclusivamente la Ciudad Autónoma de Buenos Aires.');
+
+  let coords = null;
+  if (dn.coordenadas && dn.coordenadas.x && dn.coordenadas.y) {
+    // USIG devuelve x=lng, y=lat en WGS84
+    coords = { lat: parseFloat(dn.coordenadas.y), lng: parseFloat(dn.coordenadas.x) };
+  }
+
+  return {
+    direccion: dn.direccion || dir,
+    smp: dn.smp || null,
+    coords,
+    raw: dn
+  };
+}
+
+// ================================================================
 // GEOJSON CUR — point-in-polygon
 // ================================================================
 let _curData = null;
