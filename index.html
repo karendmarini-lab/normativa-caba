@@ -286,7 +286,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.3<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.4<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -452,55 +452,55 @@ const ZONAS = {
     desc:"R2b I — Residencial media densidad. Altura máx. 14.60m (Art. 6.2.5 CUR)."
   },
   "R2b II": {
-    tipo:"residential", altura:"24", pisos:8, fot:"3", fos:"0.60",
+    tipo:"residential", altura:"12.0", fot:"1.2", fos:"0.60",
     retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB","Usos compatibles","Oficinas"],
-    desc:"R2b II — Residencial alta densidad. Torre con basamento posible."
+    usos:["Residencial", "Comercio en PB"],
+    nota:"R2b II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 14.6m con completamiento de tejido). Dato orientativo basado en R2b II CUR 2024 (n=26848)."
   },
   "R2b III": {
-    tipo:"residential", altura:"36", pisos:12, fot:"5", fos:"0.60",
+    tipo:"residential", altura:"12.0", fot:"1.2", fos:"0.60",
     retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB","Usos compatibles","Oficinas"],
-    desc:"R2b III — Residencial alta densidad máxima. Verificar normativa en GCBA."
+    usos:["Residencial", "Comercio en PB"],
+    nota:"R2b III — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 14.6m con completamiento de tejido). Dato orientativo basado en R2b III CUR 2024 (n=6207)."
   },
   // ── R2a INDICADORES ──────────────────────────────────────────────
   "R2a I": {
-    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Residencial","Servicios","Comercio"],
-    nota:"R2a I — La altura varía por parcela según el CUR (puede ser U.S.A.A. 22.80m, U.S.A.M. 17.20m u otra). Verificar en ciudad3D.", esCUR:true
+    tipo:"residential", altura:"22.8", fot:"3.45", fos:"0.60",
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial", "Servicios", "Comercio", "Oficinas"],
+    nota:"R2a I — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 29.8m con completamiento de tejido). Dato orientativo basado en R2a I CUR 2024 (n=153)."
   },
   "R2a II": {
-    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Residencial","Servicios","Comercio"],
-    nota:"R2a II — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
+    tipo:"residential", altura:"22.8", fot:"3.0", fos:"0.60",
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial", "Servicios", "Comercio", "Oficinas"],
+    nota:"R2a II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales. Dato orientativo basado en R2a II CUR 2024 (n=12151)."
   },
   // ── C3 INDICADORES ───────────────────────────────────────────────
   "C3 I": {
-    tipo:"commercial", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Comercial","Residencial","Servicios","Oficinas","Hotelería"],
-    nota:"C3 I — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
+    tipo:"commercial", altura:"22.8", fot:"3.45", fos:"0.70",
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Comercial", "Residencial", "Servicios", "Oficinas", "Hotelería"],
+    nota:"C3 I — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 29.8m con completamiento de tejido). Dato orientativo basado en C3 I CUR 2024 (n=2431)."
   },
   "C3 II": {
-    tipo:"commercial", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Comercial","Residencial","Servicios","Oficinas","Hotelería"],
-    nota:"C3 II — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
+    tipo:"commercial", altura:"22.8", fot:"3.45", fos:"0.70",
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Comercial", "Residencial", "Servicios", "Oficinas", "Hotelería"],
+    nota:"C3 II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales (plano límite hasta 29.8m con completamiento de tejido). Dato orientativo basado en C3 II CUR 2024 (n=9049)."
   },
   // ── R1b INDICADORES ──────────────────────────────────────────────
   "R1b I": {
-    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Residencial","Comercio en PB"],
-    nota:"R1b I — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
+    tipo:"residential", altura:"14.6", fot:"1.0", fos:"0.60",
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial", "Comercio en PB"],
+    nota:"R1b I — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales. Dato orientativo basado en R1b I CUR 2024 (n=1995)."
   },
   "R1b II": {
-    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
-    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
-    usos:["Residencial","Comercio en PB"],
-    nota:"R1b II — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
+    tipo:"residential", altura:"14.6", fot:"1.4", fos:"0.60",
+    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    usos:["Residencial", "Comercio en PB"],
+    nota:"R1b II — altura dominante según CUR 2024. Verificar en ciudad3D si existen condiciones especiales. Dato orientativo basado en R1b II CUR 2024 (n=?)."
   },
 "APH": {
     tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
