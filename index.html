@@ -273,7 +273,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v3.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v4.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -479,6 +479,29 @@ const ZONAS = {
     nota:"APH Zona histórica de alta protección patrimonial.", esAPH:true
   },
 
+
+  // ── URBANIZACIONES ESPECIALES (CPU/CUR) ──────────────────────────
+  // Normativa individualizada — siempre verificar plancheta en GCBA
+  "U31": { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Puerto Madero","Residencial","Comercial","Hotelería","Oficinas"],
+    nota:"U31 Puerto Madero. Normativa individualizada — consultar plancheta en el GCBA.", esU:true },
+  "U52": { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Catalinas Norte","Oficinas corporativas","Torres"],
+    nota:"U52 Catalinas Norte. Normativa individualizada — consultar plancheta en el GCBA.", esU:true },
+  "U28": { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Urbanización especial","Normativa propia"],
+    nota:"U28 — Urbanización Especial. Consultar plancheta en el GCBA.", esU:true },
+  "U3":  { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Urbanización especial","Normativa propia"],
+    nota:"U3 — Urbanización Especial. Consultar plancheta en el GCBA.", esU:true },
+  "U2":  { tipo:"mixed", altura:"Ver norm.", fot:"Ver norm.", fos:"Ver norm.",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Urbanización especial","Normativa propia"],
+    nota:"U2 — Urbanización Especial. Consultar plancheta en el GCBA.", esU:true },
   // ── USO PÚBLICO ──────────────────────────────────────────────
   "UP": {
     tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
@@ -547,7 +570,7 @@ let _centroids = null;
 
 async function loadDistricts() {
   if (_districts) return _districts;
-  const r = await fetch('./cpu_districts.json?v=3');
+  const r = await fetch('./cpu_districts.json?v=4');
   _districts = await r.json();
   return _districts;
 }
@@ -555,7 +578,7 @@ async function loadDistricts() {
 async function loadCentroids() {
   if (_centroids) return _centroids;
   try {
-    const r = await fetch('./cur_centroids.json?v=3');
+    const r = await fetch('./cur_centroids.json?v=4');
     _centroids = await r.json();
   } catch(e) { _centroids = []; }
   return _centroids;
@@ -589,28 +612,43 @@ function findByNearest(lng, lat, centroids) {
 }
 
 async function getDistrito(lat, lng) {
-  // Método 1: PIP con polígonos de distrito CPU/CUR
+  // ── Método 1: API oficial GCBA datos_utiles (1KB, CORS abierto) ──
+  try {
+    const url = `https://ws.usig.buenosaires.gob.ar/datos_utiles?x=${lng}&y=${lat}`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (r.ok) {
+      const d = await r.json();
+      const raw = d.codigo_de_planeamiento_urbano || '';
+      if (raw && raw.trim()) {
+        // "APH 51" → "APH", "R2b II" → "R2b", "C2" → "C2"
+        const code = raw.trim().split(/\s+/)[0];
+        return cleanDistrito(code);
+      }
+    }
+  } catch(e) { /* método 2 */ }
+
+  // ── Método 2: CPU PIP local (344KB, primer load lento) ───────────
   try {
     const feats = await loadDistricts();
-    if (feats) {
+    if (feats && feats.length) {
       const d = findByPip(lng, lat, feats);
       if (d) return cleanDistrito(d);
     }
-  } catch(e) { console.warn('PIP error:', e); }
+  } catch(e) { console.warn('PIP:', e.message); }
 
-  // Método 2: Nearest-neighbor centroides CUR (fallback)
+  // ── Método 3: Nearest centroid (fallback) ────────────────────────
   try {
     const cents = await loadCentroids();
     if (cents && cents.length) {
       const d = findByNearest(lng, lat, cents);
       if (d) return cleanDistrito(d);
     }
-  } catch(e) { console.warn('NN error:', e); }
+  } catch(e) { /* nada */ }
 
   return null;
 }
 
-// ── MAPA ─────────────────────────────────────────────────────────
+// ── MAPA────────────────────────────────────────────────
 let map = null, marker = null;
 
 function initMap(lat, lng, addr) {
@@ -642,6 +680,12 @@ function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
   badge.className = 'dbadge ' + (zona ? zona.tipo : 'unknown');
 
   eid('aph-box').classList.toggle('on', !!(zona && zona.esAPH));
+  const uBox = eid('u-box');
+  if (uBox) {
+    const isU = !!(zona && zona.esU);
+    uBox.classList.toggle('on', isU);
+    if (isU) eid('u-box-title').textContent = `URBANIZACIÓN ESPECIAL (${distrKey})`;
+  }
 
   eid('res-alt').textContent = zona && zona.altura !== '—' ? zona.altura : '—';
   eid('res-pis').textContent = zona && typeof zona.altura === 'number' ? Math.floor(zona.altura / 3) : '—';
