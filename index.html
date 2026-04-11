@@ -4,674 +4,165 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NORM·AR — Consulta Normativa Urbanística CABA</title>
-
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-
-  <!-- Leaflet -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
   <style>
-    /* =============================================
-       VARIABLES Y RESET
-    ============================================= */
     :root {
-      --bg:           #0d1117;
-      --bg-panel:     #13181f;
-      --bg-card:      #161c26;
-      --bg-card-h:    #1c2436;
-      --acc:          #E8C547;
-      --acc-dim:      rgba(232,197,71,0.12);
-      --acc-glow:     rgba(232,197,71,0.25);
-      --text:         #e0e6f0;
-      --text-muted:   #5a6478;
-      --text-dim:     #8a96aa;
-      --border:       rgba(232,197,71,0.18);
-      --border-dim:   rgba(255,255,255,0.06);
-      --border-mid:   rgba(255,255,255,0.10);
-      --res:  #4a9eff;
-      --com:  #ff8c42;
-      --equ:  #3ecf7e;
-      --pro:  #ff5a6e;
-      --pub:  #b06eff;
-      --mix:  #22d3ee;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-      --r:    3px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--mono);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-      /* Blueprint grid */
-      background-image:
-        linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
-      background-size: 44px 44px;
-      background-attachment: fixed;
-    }
-
-    /* =============================================
-       HEADER
-    ============================================= */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 999;
-      background: rgba(13,17,23,0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 58px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .logo-box {
-      width: 34px; height: 34px;
-      border: 2px solid var(--acc);
-      display: grid;
-      place-items: center;
-      font-size: 13px; font-weight: 700;
-      color: var(--acc);
-      position: relative;
-      flex-shrink: 0;
-    }
-    .logo-box::after {
-      content: '';
-      position: absolute;
-      inset: 3px;
-      border: 1px solid var(--acc);
-      opacity: 0.3;
-    }
-
-    .logo-name {
-      font-size: 19px;
-      font-weight: 700;
-      color: var(--acc);
-      letter-spacing: 5px;
-      line-height: 1;
-    }
-    .logo-sub {
-      font-size: 9px;
-      color: var(--text-muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pill {
-      font-size: 9px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border: 1px solid var(--border-dim);
-      color: var(--text-muted);
-      border-radius: 2px;
-    }
-    .pill.live {
-      border-color: var(--equ);
-      color: var(--equ);
-      background: rgba(62,207,126,0.07);
-    }
-    .pill.live::before {
-      content: '● ';
-      animation: blink 1.8s ease-in-out infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* =============================================
-       MAIN LAYOUT
-    ============================================= */
-    main {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 40px 24px 100px;
-    }
-
-    .section-label {
-      font-size: 9px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .section-label::before {
-      content: '';
-      width: 18px; height: 1px;
-      background: var(--acc);
-      flex-shrink: 0;
-    }
-
-    /* =============================================
-       SEARCH AREA
-    ============================================= */
-    .search-block {
-      margin-bottom: 44px;
-    }
-
-    .search-row {
-      display: grid;
-      grid-template-columns: 1fr 110px 110px 110px auto;
-      gap: 10px;
-      align-items: end;
-    }
-
-    @media (max-width: 720px) {
-      .search-row {
-        grid-template-columns: 1fr 1fr;
-      }
-      .search-row .field:first-child { grid-column: 1/-1; }
-      .btn-search { grid-column: 1/-1; }
-    }
-
-    .field { display: flex; flex-direction: column; gap: 7px; }
-
-    .field-label {
-      font-size: 9px;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-    .field-label em {
-      font-style: normal;
-      color: var(--acc);
-    }
-
-    input[type=text], input[type=number] {
-      font-family: var(--mono);
-      font-size: 13px;
-      color: var(--text);
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 11px 15px;
-      outline: none;
-      width: 100%;
-      transition: border-color .2s, background .2s;
-      border-radius: var(--r);
-    }
-    input:focus {
-      border-color: var(--acc);
-      background: var(--bg-card-h);
-      box-shadow: 0 0 0 3px var(--acc-dim);
-    }
-    input::placeholder { color: var(--text-muted); opacity: .7; }
-    input[type=number] { -moz-appearance: textfield; }
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-    .btn-search {
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      background: var(--acc);
-      color: #0d1117;
-      border: none;
-      padding: 11px 22px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      white-space: nowrap;
-      transition: background .2s, transform .15s, box-shadow .2s;
-      border-radius: var(--r);
-    }
-    .btn-search:hover { background: #f5d55a; transform: translateY(-1px); box-shadow: 0 6px 20px var(--acc-glow); }
-    .btn-search:active { transform: translateY(0); }
-    .btn-search:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    /* Loading bar */
-    .load-track {
-      height: 2px;
-      background: var(--border-dim);
-      margin-top: 10px;
-      border-radius: 2px;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity .3s;
-    }
-    .load-track.on { opacity: 1; }
-    .load-fill {
-      height: 100%;
-      width: 35%;
-      background: linear-gradient(90deg, transparent, var(--acc), transparent);
-      animation: loadslide 1.1s ease-in-out infinite;
-    }
-    @keyframes loadslide {
-      0%   { transform: translateX(-200%); }
-      100% { transform: translateX(500%); }
-    }
-
-    /* Messages */
-    .msg {
-      font-size: 12px;
-      line-height: 1.5;
-      padding: 11px 15px;
-      border-left: 3px solid;
-      margin-top: 12px;
-      border-radius: 0 var(--r) var(--r) 0;
-      display: none;
-    }
-    .msg.on { display: block; }
-    .msg.err  { border-color: var(--pro); background: rgba(255,90,110,.07); color: #ffb3bb; }
-    .msg.warn { border-color: var(--com); background: rgba(255,140,66,.07); color: #ffd1a8; }
-    .msg.info { border-color: var(--mix); background: rgba(34,211,238,.07); color: #a0f0ff; }
-
-    /* =============================================
-       RESULTS
-    ============================================= */
-    #results {
-      display: none;
-    }
-    #results.on {
-      display: block;
-      animation: risein .4s ease-out both;
-    }
-    @keyframes risein {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Address banner */
-    .addr-banner {
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 18px 22px;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-    .addr-banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--acc-dim);
-      pointer-events: none;
-    }
-
-    .addr-main {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--acc);
-      letter-spacing: .5px;
-    }
-    .addr-coords {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    .dist-badge {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      padding: 6px 14px;
-      border: 1px solid currentColor;
-      border-radius: 2px;
-      white-space: nowrap;
-    }
-    .dist-badge.residencial { color: var(--res); background: rgba(74,158,255,.1); }
-    .dist-badge.comercial   { color: var(--com); background: rgba(255,140,66,.1); }
-    .dist-badge.equipamiento{ color: var(--equ); background: rgba(62,207,126,.1); }
-    .dist-badge.proteccion  { color: var(--pro); background: rgba(255,90,110,.1); }
-    .dist-badge.uso-publico { color: var(--pub); background: rgba(176,110,255,.1); }
-    .dist-badge.mixed       { color: var(--mix); background: rgba(34,211,238,.1); }
-    .dist-badge.unknown     { color: var(--text-dim); background: var(--border-dim); }
-
-    /* APH alert */
-    .aph-alert {
-      display: none;
-      align-items: flex-start;
-      gap: 12px;
-      border: 1px solid var(--pro);
-      background: rgba(255,90,110,.07);
-      padding: 14px 18px;
-      margin-bottom: 18px;
-      border-radius: var(--r);
-      font-size: 12px;
-      color: #ffb3bb;
-      line-height: 1.6;
-    }
-    .aph-alert.on { display: flex; }
-
-    /* =============================================
-       PARAM CARDS
-    ============================================= */
-    .cards-row {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    @media (max-width: 900px) {
-      .cards-row { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (max-width: 540px) {
-      .cards-row { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    .pcard {
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 18px 16px;
-      border-radius: var(--r);
-      transition: border-color .2s, transform .2s;
-      animation: risein .35s ease-out both;
-    }
-    .pcard:hover { border-color: var(--border); transform: translateY(-2px); }
-    .pcard:nth-child(1) { animation-delay: .04s; }
-    .pcard:nth-child(2) { animation-delay: .08s; }
-    .pcard:nth-child(3) { animation-delay: .12s; }
-    .pcard:nth-child(4) { animation-delay: .16s; }
-    .pcard:nth-child(5) { animation-delay: .20s; }
-
-    .pcard-icon  { font-size: 16px; margin-bottom: 10px; opacity: .7; }
-    .pcard-label {
-      font-size: 8.5px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .pcard-value {
-      font-size: 30px;
-      font-weight: 700;
-      color: var(--acc);
-      line-height: 1;
-      margin-bottom: 4px;
-      letter-spacing: -1px;
-    }
-    .pcard-value.sm { font-size: 20px; letter-spacing: 0; }
-    .pcard-unit { font-size: 10px; color: var(--text-dim); }
-
-    /* =============================================
-       RETIROS + USOS
-    ============================================= */
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1.6fr;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
-
-    .info-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 18px;
-      border-radius: var(--r);
-    }
-    .info-box-label {
-      font-size: 8.5px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .retiros-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .retiro {
-      text-align: center;
-      padding: 10px 6px;
-      border: 1px solid var(--border-dim);
-      border-radius: 2px;
-    }
-    .retiro-lbl { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
-    .retiro-val { font-size: 13px; font-weight: 500; color: var(--text); }
-
-    .uses-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-    .use-chip {
-      font-size: 11px;
-      padding: 4px 12px;
-      border: 1px solid var(--border-dim);
-      color: var(--text-dim);
-      border-radius: 2px;
-    }
-    .use-chip.main {
-      border-color: var(--acc);
-      color: var(--acc);
-      background: var(--acc-dim);
-    }
-
-    /* =============================================
-       CÁLCULOS
-    ============================================= */
-    #calc-block {
-      display: none;
-      background: var(--bg-card);
-      border: 1px solid var(--acc);
-      padding: 22px 24px;
-      border-radius: var(--r);
-      margin-bottom: 14px;
-      position: relative;
-    }
-    #calc-block::before {
-      content: 'CÁLCULOS DEL LOTE';
-      position: absolute;
-      top: -1px; right: 20px;
-      font-size: 8px;
-      letter-spacing: 3px;
-      font-weight: 700;
-      background: var(--acc);
-      color: #0d1117;
-      padding: 2px 10px;
-      border-radius: 0 0 3px 3px;
-    }
-
-    .calc-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-    @media (max-width: 640px) { .calc-grid { grid-template-columns: 1fr 1fr; } }
-
-    .calc-item {
-      border-left: 2px solid var(--acc);
-      padding-left: 14px;
-    }
-    .calc-label {
-      font-size: 8.5px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 7px;
-    }
-    .calc-value {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--acc);
-      letter-spacing: -1px;
-      line-height: 1;
-    }
-    .calc-unit { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
-
-    /* =============================================
-       MAPA
-    ============================================= */
-    #map-wrap { margin-bottom: 14px; }
-    #map {
-      height: 340px;
-      border: 1px solid var(--border-dim);
-      border-radius: var(--r);
-      filter: saturate(.3) brightness(.75) contrast(1.1);
-      transition: filter .4s;
-    }
-    #map:hover { filter: saturate(.5) brightness(.85) contrast(1.1); }
-
-    .leaflet-popup-content-wrapper {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      color: var(--acc);
-      font-family: var(--mono);
-      font-size: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,.5);
-    }
-    .leaflet-popup-tip { background: var(--bg-card); }
-
-    /* Normativa note */
-    .norm-note {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-dim);
-      border-left: 3px solid var(--border);
-      padding: 12px 16px;
-      font-size: 11px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      border-radius: 0 var(--r) var(--r) 0;
-      margin-bottom: 14px;
-    }
-    .norm-note strong { color: var(--text-dim); }
-
-    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 36px 0; }
-
-    /* =============================================
-       TABLA COMPLETA
-    ============================================= */
-    .table-toggle {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 9px 18px;
-      cursor: pointer;
-      margin-bottom: 14px;
-      border-radius: var(--r);
-      transition: all .2s;
-    }
-    .table-toggle:hover { border-color: var(--acc); color: var(--acc); }
-
-    .norm-table { display: none; overflow-x: auto; }
-    .norm-table.on { display: block; animation: risein .3s ease-out both; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th {
-      padding: 9px 13px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border-dim);
-      font-size: 8px; letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-align: left;
-      white-space: nowrap;
-      position: sticky; top: 58px;
-    }
-    td {
-      padding: 8px 13px;
-      border: 1px solid rgba(255,255,255,0.035);
-      color: var(--text-dim);
-      white-space: nowrap;
-      font-size: 11.5px;
-    }
-    tr:nth-child(even) td { background: rgba(255,255,255,0.018); }
-    tr:hover td { background: var(--bg-card); }
-    td:first-child { font-weight: 600; color: var(--text); }
-    .td-res { color: var(--res); }
-    .td-com { color: var(--com); }
-    .td-equ { color: var(--equ); }
-    .td-pro { color: var(--pro); }
-    .td-pub { color: var(--pub); }
-    .td-mix { color: var(--mix); }
-
-    /* =============================================
-       FOOTER
-    ============================================= */
-    footer {
-      border-top: 1px solid var(--border-dim);
-      padding: 28px 24px;
-      text-align: center;
-      max-width: 1180px;
-      margin: 0 auto;
-    }
-    .footer-warn {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--acc);
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-    .footer-note {
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: .5px;
-      line-height: 1.8;
-    }
-
-    /* =============================================
-       AUTOCOMPLETE DROPDOWN
-    ============================================= */
-    .autocomplete-wrap { position: relative; }
-    .suggestions {
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0; right: 0;
-      background: var(--bg-card-h);
-      border: 1px solid var(--acc);
-      z-index: 500;
-      max-height: 200px;
-      overflow-y: auto;
-      border-radius: 0 0 var(--r) var(--r);
-    }
-    .sug-item {
-      padding: 10px 15px;
-      font-size: 12px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border-dim);
-      transition: background .15s;
-      color: var(--text-dim);
-    }
-    .sug-item:last-child { border-bottom: none; }
-    .sug-item:hover { background: var(--acc-dim); color: var(--acc); }
+      --bg:#0d1117; --bg-panel:#13181f; --bg-card:#161c26; --bg-card-h:#1c2436;
+      --acc:#E8C547; --acc-dim:rgba(232,197,71,0.12); --acc-glow:rgba(232,197,71,0.25);
+      --text:#e0e6f0; --muted:#5a6478; --dim:#8a96aa;
+      --border:rgba(232,197,71,0.18); --bdim:rgba(255,255,255,0.06);
+      --res:#4a9eff; --com:#ff8c42; --equ:#3ecf7e; --pro:#ff5a6e; --pub:#b06eff; --mix:#22d3ee;
+      --mono:'IBM Plex Mono',monospace; --r:3px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--mono);background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;
+      background-image:linear-gradient(rgba(232,197,71,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(232,197,71,.025) 1px,transparent 1px);
+      background-size:44px 44px;background-attachment:fixed}
+    header{position:sticky;top:0;z-index:999;background:rgba(13,17,23,.92);backdrop-filter:blur(16px);
+      border-bottom:1px solid var(--border);padding:0 28px;height:58px;display:flex;align-items:center;justify-content:space-between}
+    .logo{display:flex;align-items:center;gap:14px}
+    .logo-box{width:34px;height:34px;border:2px solid var(--acc);display:grid;place-items:center;
+      font-size:13px;font-weight:700;color:var(--acc);position:relative;flex-shrink:0}
+    .logo-box::after{content:'';position:absolute;inset:3px;border:1px solid var(--acc);opacity:.3}
+    .logo-name{font-size:19px;font-weight:700;color:var(--acc);letter-spacing:5px;line-height:1}
+    .logo-sub{font-size:9px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:2px}
+    .pill{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:4px 10px;border:1px solid var(--bdim);color:var(--muted);border-radius:2px}
+    .pill.live{border-color:var(--equ);color:var(--equ);background:rgba(62,207,126,.07)}
+    .pill.live::before{content:'● ';animation:blink 1.8s ease-in-out infinite}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    main{max-width:1180px;margin:0 auto;padding:40px 24px 100px}
+    .slabel{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);
+      display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .slabel::before{content:'';width:18px;height:1px;background:var(--acc);flex-shrink:0}
+    .srow{display:grid;grid-template-columns:1fr 110px 110px 160px auto;gap:10px;align-items:end}
+    @media(max-width:800px){.srow{grid-template-columns:1fr 1fr}.srow .f1{grid-column:1/-1}.btn-q{grid-column:1/-1}}
+    .field{display:flex;flex-direction:column;gap:7px}
+    .flabel{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted)}
+    .flabel em{font-style:normal;color:var(--acc)}
+    input[type=text],input[type=number],select{
+      font-family:var(--mono);font-size:13px;color:var(--text);background:var(--bg-card);
+      border:1px solid var(--bdim);padding:11px 15px;outline:none;width:100%;
+      transition:border-color .2s,background .2s;border-radius:var(--r)}
+    select{cursor:pointer;padding:11px 12px}
+    input:focus,select:focus{border-color:var(--acc);background:var(--bg-card-h);box-shadow:0 0 0 3px var(--acc-dim)}
+    input::placeholder{color:var(--muted);opacity:.7}
+    input[type=number]{-moz-appearance:textfield}
+    input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+    .btn-q{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+      background:var(--acc);color:#0d1117;border:none;padding:11px 22px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;
+      transition:background .2s,transform .15s,box-shadow .2s;border-radius:var(--r)}
+    .btn-q:hover{background:#f5d55a;transform:translateY(-1px);box-shadow:0 6px 20px var(--acc-glow)}
+    .btn-q:active{transform:translateY(0)}
+    .btn-q:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+    .ltrack{height:2px;background:var(--bdim);margin-top:10px;border-radius:2px;overflow:hidden;opacity:0;transition:opacity .3s}
+    .ltrack.on{opacity:1}
+    .lfill{height:100%;width:35%;background:linear-gradient(90deg,transparent,var(--acc),transparent);animation:lslide 1.1s ease-in-out infinite}
+    @keyframes lslide{0%{transform:translateX(-200%)}100%{transform:translateX(500%)}}
+    .msg{font-size:12px;line-height:1.5;padding:11px 15px;border-left:3px solid;margin-top:12px;border-radius:0 var(--r) var(--r) 0;display:none}
+    .msg.on{display:block}
+    .msg.err{border-color:var(--pro);background:rgba(255,90,110,.07);color:#ffb3bb}
+    .msg.warn{border-color:var(--com);background:rgba(255,140,66,.07);color:#ffd1a8}
+    .msg.info{border-color:var(--mix);background:rgba(34,211,238,.07);color:#a0f0ff}
+    #results{display:none}
+    #results.on{display:block;animation:rise .4s ease-out both}
+    @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+    .abanner{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--r);
+      padding:18px 22px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;
+      flex-wrap:wrap;gap:12px;position:relative;overflow:hidden}
+    .abanner::before{content:'';position:absolute;inset:0;background:var(--acc-dim);pointer-events:none}
+    .addr-main{font-size:15px;font-weight:600;color:var(--acc);letter-spacing:.5px}
+    .addr-coords{font-size:11px;color:var(--muted);margin-top:3px}
+    .dbadge{font-size:12px;font-weight:700;letter-spacing:3px;padding:6px 14px;border:1px solid currentColor;border-radius:2px;white-space:nowrap}
+    .dbadge.residencial{color:var(--res);background:rgba(74,158,255,.1)}
+    .dbadge.comercial{color:var(--com);background:rgba(255,140,66,.1)}
+    .dbadge.equipamiento{color:var(--equ);background:rgba(62,207,126,.1)}
+    .dbadge.proteccion{color:var(--pro);background:rgba(255,90,110,.1)}
+    .dbadge.uso-publico{color:var(--pub);background:rgba(176,110,255,.1)}
+    .dbadge.mixed{color:var(--mix);background:rgba(34,211,238,.1)}
+    .dbadge.unknown{color:var(--dim);background:var(--bdim)}
+    .aph-box{display:none;align-items:flex-start;gap:12px;border:1px solid var(--pro);
+      background:rgba(255,90,110,.07);padding:14px 18px;margin-bottom:18px;
+      border-radius:var(--r);font-size:12px;color:#ffb3bb;line-height:1.6}
+    .aph-box.on{display:flex}
+    .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+    @media(max-width:900px){.cards{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:540px){.cards{grid-template-columns:repeat(2,1fr)}}
+    .card{background:var(--bg-card);border:1px solid var(--bdim);padding:18px 16px;border-radius:var(--r);
+      transition:border-color .2s,transform .2s;animation:rise .35s ease-out both}
+    .card:hover{border-color:var(--border);transform:translateY(-2px)}
+    .card:nth-child(1){animation-delay:.04s}.card:nth-child(2){animation-delay:.08s}
+    .card:nth-child(3){animation-delay:.12s}.card:nth-child(4){animation-delay:.16s}.card:nth-child(5){animation-delay:.20s}
+    .card-ico{font-size:16px;margin-bottom:10px;opacity:.7}
+    .card-lbl{font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+    .card-val{font-size:30px;font-weight:700;color:var(--acc);line-height:1;margin-bottom:4px;letter-spacing:-1px}
+    .card-val.sm{font-size:20px;letter-spacing:0}
+    .card-unit{font-size:10px;color:var(--dim)}
+    .twocol{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;margin-bottom:14px}
+    @media(max-width:640px){.twocol{grid-template-columns:1fr}}
+    .ibox{background:var(--bg-card);border:1px solid var(--bdim);padding:18px;border-radius:var(--r)}
+    .ibox-lbl{font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+    .rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .retiro{text-align:center;padding:10px 6px;border:1px solid var(--bdim);border-radius:2px}
+    .ret-lbl{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .ret-val{font-size:13px;font-weight:500;color:var(--text)}
+    .uwrap{display:flex;flex-wrap:wrap;gap:7px}
+    .uchip{font-size:11px;padding:4px 12px;border:1px solid var(--bdim);color:var(--dim);border-radius:2px}
+    .uchip.main{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
+    #calc-block{display:none;background:var(--bg-card);border:1px solid var(--acc);padding:22px 24px;
+      border-radius:var(--r);margin-bottom:14px;position:relative}
+    #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:20px;
+      font-size:8px;letter-spacing:3px;font-weight:700;background:var(--acc);color:#0d1117;
+      padding:2px 10px;border-radius:0 0 3px 3px}
+    .cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    @media(max-width:640px){.cgrid{grid-template-columns:1fr 1fr}}
+    .citem{border-left:2px solid var(--acc);padding-left:14px}
+    .clbl{font-size:8.5px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+    .cval{font-size:26px;font-weight:700;color:var(--acc);letter-spacing:-1px;line-height:1}
+    .cunit{font-size:10px;color:var(--dim);margin-top:3px}
+    #map-wrap{margin-bottom:14px}
+    #map{height:340px;border:1px solid var(--bdim);border-radius:var(--r);
+      filter:saturate(.3)brightness(.75)contrast(1.1);transition:filter .4s}
+    #map:hover{filter:saturate(.5)brightness(.85)contrast(1.1)}
+    .leaflet-popup-content-wrapper{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r);
+      color:var(--acc);font-family:var(--mono);font-size:12px;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+    .leaflet-popup-tip{background:var(--bg-card)}
+    .nnote{background:var(--bg-panel);border:1px solid var(--bdim);border-left:3px solid var(--border);
+      padding:12px 16px;font-size:11px;color:var(--muted);line-height:1.6;
+      border-radius:0 var(--r) var(--r) 0;margin-bottom:14px}
+    .nnote strong{color:var(--dim)}
+    .divider{height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);margin:36px 0}
+    .ttoggle{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;
+      color:var(--muted);background:var(--bg-card);border:1px solid var(--bdim);padding:9px 18px;
+      cursor:pointer;margin-bottom:14px;border-radius:var(--r);transition:all .2s}
+    .ttoggle:hover{border-color:var(--acc);color:var(--acc)}
+    .ntable{display:none;overflow-x:auto}
+    .ntable.on{display:block;animation:rise .3s ease-out both}
+    table{width:100%;border-collapse:collapse;font-size:12px}
+    th{padding:9px 13px;background:var(--bg-panel);border:1px solid var(--bdim);
+      font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);
+      text-align:left;white-space:nowrap;position:sticky;top:58px}
+    td{padding:8px 13px;border:1px solid rgba(255,255,255,.035);color:var(--dim);white-space:nowrap;font-size:11.5px}
+    tr:nth-child(even) td{background:rgba(255,255,255,.018)}
+    tr:hover td{background:var(--bg-card)}
+    td:first-child{font-weight:600;color:var(--text)}
+    .tr{color:var(--res)}.tc{color:var(--com)}.te{color:var(--equ)}.tp{color:var(--pro)}.tpu{color:var(--pub)}.tm{color:var(--mix)}
+    footer{border-top:1px solid var(--bdim);padding:28px 24px;text-align:center;max-width:1180px;margin:0 auto}
+    .fwarn{font-size:11px;font-weight:700;color:var(--acc);letter-spacing:1px;margin-bottom:8px}
+    .fnote{font-size:10px;color:var(--muted);letter-spacing:.5px;line-height:1.8}
+    .acwrap{position:relative}
+    .sugg{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--bg-card-h);
+      border:1px solid var(--acc);z-index:500;max-height:200px;overflow-y:auto;border-radius:0 0 var(--r) var(--r)}
+    .si{padding:10px 15px;font-size:12px;cursor:pointer;border-bottom:1px solid var(--bdim);transition:background .15s;color:var(--dim)}
+    .si:last-child{border-bottom:none}
+    .si:hover{background:var(--acc-dim);color:var(--acc)}
   </style>
 </head>
 <body>
 
-<!-- ============================================================
-     HEADER
-============================================================ -->
 <header>
   <div class="logo">
     <div class="logo-box">N</div>
@@ -680,1194 +171,114 @@
       <div class="logo-sub">Consulta Normativa Urbanística · CABA</div>
     </div>
   </div>
-  <div class="header-right">
+  <div style="display:flex;align-items:center;gap:10px">
     <span class="pill live">USIG Online</span>
     <span class="pill">CUR · Ley 6099/2018</span>
   </div>
 </header>
 
-<!-- ============================================================
-     MAIN
-============================================================ -->
 <main>
-
-  <!-- SEARCH -->
-  <div class="search-block">
-    <div class="section-label">Consulta de Parcela</div>
-
-    <div class="search-row">
-      <!-- Dirección -->
-      <div class="field autocomplete-wrap">
-        <label class="field-label">Dirección <em>*</em></label>
-        <input type="text" id="inp-addr"
-          placeholder="Ej: Corrientes 1234  ·  Av. Santa Fe 2500  ·  Estomba 3569"
-          autocomplete="off" />
-        <div class="suggestions" id="suggestions" style="display:none"></div>
+  <div style="margin-bottom:44px">
+    <div class="slabel">Consulta de Parcela</div>
+    <div class="srow">
+      <div class="field f1 acwrap">
+        <label class="flabel">Dirección <em>*</em></label>
+        <input type="text" id="inp-addr" placeholder="Ej: Corrientes 1234  ·  Av. Santa Fe 2500  ·  Estomba 3569" autocomplete="off"/>
+        <div class="sugg" id="suggestions" style="display:none"></div>
       </div>
-
-      <!-- Frente -->
       <div class="field">
-        <label class="field-label">Frente <span style="color:var(--text-muted)">opt.</span></label>
-        <input type="number" id="inp-frente" placeholder="m" min="0" step="0.01" />
+        <label class="flabel">Frente <span style="color:var(--muted)">opt.</span></label>
+        <input type="number" id="inp-frente" placeholder="m" min="0" step="0.01"/>
       </div>
-
-      <!-- Fondo -->
       <div class="field">
-        <label class="field-label">Fondo <span style="color:var(--text-muted)">opt.</span></label>
-        <input type="number" id="inp-fondo" placeholder="m" min="0" step="0.01" />
+        <label class="flabel">Fondo <span style="color:var(--muted)">opt.</span></label>
+        <input type="number" id="inp-fondo" placeholder="m" min="0" step="0.01"/>
       </div>
-
-      <!-- Distrito manual -->
       <div class="field">
-        <label class="field-label">Distrito <span style="color:var(--text-muted)">manual</span></label>
-        <select id="inp-distrito" style="font-family:var(--mono);font-size:12px;color:var(--text);background:var(--bg-card);border:1px solid var(--border-dim);padding:11px 12px;outline:none;width:100%;cursor:pointer;border-radius:var(--r)">
-          <option value="" style="background:#161c26">— auto —</option>
-          <optgroup label="RESIDENCIAL" style="background:#161c26">
-            <option value="R1">R1</option><option value="R1b">R1b</option>
-            <option value="R2a">R2a</option><option value="R2b">R2b</option>
-            <option value="R2c">R2c</option><option value="R2d">R2d</option>
-          </optgroup>
-          <optgroup label="COMERCIAL" style="background:#161c26">
-            <option value="C1">C1</option><option value="C2">C2</option>
-            <option value="C2a">C2a</option><option value="C3">C3</option>
-            <option value="C3i">C3i</option><option value="CB">CB</option>
-          </optgroup>
-          <optgroup label="EQUIPAMIENTO" style="background:#161c26">
-            <option value="E1">E1</option><option value="E2">E2</option>
-            <option value="E3">E3</option>
-          </optgroup>
-          <optgroup label="INDUSTRIAL" style="background:#161c26">
-            <option value="I">I</option><option value="I1">I1</option><option value="IP">IP</option>
-          </optgroup>
-          <optgroup label="MIXTO / ESPECIAL" style="background:#161c26">
-            <option value="VT">VT</option><option value="NCI">NCI</option>
-            <option value="EMED">EMED</option><option value="ECOR">ECOR</option>
-          </optgroup>
-          <optgroup label="APH" style="background:#161c26">
-            <option value="APH">APH (genérico)</option><option value="APH1">APH1</option>
-            <option value="APH2">APH2</option><option value="APH3">APH3</option>
-            <option value="APH4">APH4</option><option value="APH5">APH5</option>
-          </optgroup>
-          <optgroup label="USO PÚBLICO" style="background:#161c26">
-            <option value="UP">UP</option>
-          </optgroup>
+        <label class="flabel">Distrito <span style="color:var(--muted)">manual</span></label>
+        <select id="inp-distrito">
+          <option value="">— auto —</option>
+          <optgroup label="RESIDENCIAL"><option value="R1">R1</option><option value="R1b">R1b</option><option value="R2a">R2a</option><option value="R2b">R2b</option><option value="R2c">R2c</option><option value="R2d">R2d</option></optgroup>
+          <optgroup label="COMERCIAL"><option value="C1">C1</option><option value="C2">C2</option><option value="C2a">C2a</option><option value="C3">C3</option><option value="C3i">C3i</option><option value="CB">CB</option></optgroup>
+          <optgroup label="EQUIPAMIENTO"><option value="E1">E1</option><option value="E2">E2</option><option value="E3">E3</option></optgroup>
+          <optgroup label="INDUSTRIAL"><option value="I">I</option><option value="I1">I1</option></optgroup>
+          <optgroup label="MIXTO"><option value="VT">VT</option><option value="NCI">NCI</option></optgroup>
+          <optgroup label="APH"><option value="APH">APH</option><option value="APH1">APH1</option><option value="APH2">APH2</option><option value="APH3">APH3</option><option value="APH4">APH4</option><option value="APH5">APH5</option></optgroup>
+          <optgroup label="USO PÚBLICO"><option value="UP">UP</option></optgroup>
         </select>
       </div>
-
-      <!-- Botón -->
-      <button class="btn-search" id="btn-buscar" onclick="consultarParcela()">
-        ↗ CONSULTAR
-      </button>
+      <button class="btn-q" id="btn-q" onclick="consultarParcela()">↗ CONSULTAR</button>
     </div>
-
-    <div class="load-track" id="load-track"><div class="load-fill"></div></div>
-    <div class="msg err"  id="msg-err"></div>
+    <div class="ltrack" id="ltrack"><div class="lfill"></div></div>
+    <div class="msg err" id="msg-err"></div>
     <div class="msg warn" id="msg-warn"></div>
     <div class="msg info" id="msg-info"></div>
   </div>
 
-  <!-- ============================================================
-       RESULTS
-  ============================================================ -->
   <div id="results">
-
-    <!-- Banner dirección -->
-    <div class="addr-banner">
+    <div class="abanner">
       <div>
-        <div style="font-size:8.5px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
+        <div style="font-size:8.5px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
         <div class="addr-main" id="res-addr">—</div>
         <div class="addr-coords" id="res-coords">—</div>
       </div>
-      <span class="dist-badge" id="res-badge">—</span>
+      <span class="dbadge" id="res-badge">—</span>
     </div>
-
-    <!-- APH Alert -->
-    <div class="aph-alert" id="aph-alert">
-      ⚠️
-      <div>
-        <strong>ÁREA DE PROTECCIÓN HISTÓRICA (APH)</strong><br>
-        Este predio se encuentra en un distrito con restricciones especiales de altura, retiros y materialidad.
-        Consultar el <strong>Catálogo de Inmuebles Catalogados</strong> del GCBA y la normativa específica del APH antes de proyectar.
-        Pueden existir limitaciones al FOT y FOS indicados.
-      </div>
+    <div class="aph-box" id="aph-box">⚠️
+      <div><strong>ÁREA DE PROTECCIÓN HISTÓRICA (APH)</strong><br>
+      Restricciones especiales de altura, retiros y materialidad. Consultar catálogo GCBA antes de proyectar.</div>
     </div>
-
-    <!-- Cards parámetros -->
-    <div class="section-label">Parámetros Normativos</div>
-    <div class="cards-row">
-      <div class="pcard">
-        <div class="pcard-icon">↕</div>
-        <div class="pcard-label">Altura Máx.</div>
-        <div class="pcard-value" id="res-altura">—</div>
-        <div class="pcard-unit">metros</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">⬜</div>
-        <div class="pcard-label">Pisos Est.</div>
-        <div class="pcard-value" id="res-pisos">—</div>
-        <div class="pcard-unit">plantas (~3m c/u)</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">∑</div>
-        <div class="pcard-label">F.O.T.</div>
-        <div class="pcard-value" id="res-fot">—</div>
-        <div class="pcard-unit">factor ocup. total</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">▣</div>
-        <div class="pcard-label">F.O.S.</div>
-        <div class="pcard-value" id="res-fos">—</div>
-        <div class="pcard-unit">factor ocup. suelo</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">◈</div>
-        <div class="pcard-label">Distrito</div>
-        <div class="pcard-value sm" id="res-dist">—</div>
-        <div class="pcard-unit">zonificación CUR</div>
-      </div>
+    <div class="slabel">Parámetros Normativos</div>
+    <div class="cards">
+      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Máx.</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">plantas (~3m c/u)</div></div>
+      <div class="card"><div class="card-ico">∑</div><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
+      <div class="card"><div class="card-ico">▣</div><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
+      <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div>
     </div>
-
-    <!-- Retiros + Usos -->
-    <div class="two-col">
-      <div class="info-box">
-        <div class="info-box-label">Retiros Mínimos</div>
-        <div class="retiros-grid">
-          <div class="retiro">
-            <div class="retiro-lbl">↑ Frente</div>
-            <div class="retiro-val" id="res-ret-fr">—</div>
-          </div>
-          <div class="retiro">
-            <div class="retiro-lbl">↓ Fondo</div>
-            <div class="retiro-val" id="res-ret-fo">—</div>
-          </div>
-          <div class="retiro">
-            <div class="retiro-lbl">↔ Lateral</div>
-            <div class="retiro-val" id="res-ret-la">—</div>
-          </div>
+    <div class="twocol">
+      <div class="ibox">
+        <div class="ibox-lbl">Retiros Mínimos</div>
+        <div class="rgrid">
+          <div class="retiro"><div class="ret-lbl">↑ Frente</div><div class="ret-val" id="res-rf">—</div></div>
+          <div class="retiro"><div class="ret-lbl">↓ Fondo</div><div class="ret-val" id="res-ro">—</div></div>
+          <div class="retiro"><div class="ret-lbl">↔ Lateral</div><div class="ret-val" id="res-rl">—</div></div>
         </div>
       </div>
-
-      <div class="info-box">
-        <div class="info-box-label">Usos Permitidos</div>
-        <div class="uses-wrap" id="res-usos">—</div>
-      </div>
+      <div class="ibox"><div class="ibox-lbl">Usos Permitidos</div><div class="uwrap" id="res-usos">—</div></div>
     </div>
-
-    <!-- Cálculos del lote -->
     <div id="calc-block">
-      <div class="calc-grid">
-        <div class="calc-item">
-          <div class="calc-label">Sup. del Lote</div>
-          <div class="calc-value" id="calc-sup">—</div>
-          <div class="calc-unit">m²</div>
-        </div>
-        <div class="calc-item">
-          <div class="calc-label">M² Edificables (FOT)</div>
-          <div class="calc-value" id="calc-edif">—</div>
-          <div class="calc-unit">m² cubiertos totales</div>
-        </div>
-        <div class="calc-item">
-          <div class="calc-label">M² PB Máx. (FOS)</div>
-          <div class="calc-value" id="calc-pb">—</div>
-          <div class="calc-unit">m² en planta baja</div>
-        </div>
-        <div class="calc-item">
-          <div class="calc-label">M² Vendibles Est.</div>
-          <div class="calc-value" id="calc-vend">—</div>
-          <div class="calc-unit">× 0.85 eficiencia</div>
-        </div>
+      <div class="cgrid">
+        <div class="citem"><div class="clbl">Sup. del Lote</div><div class="cval" id="c-sup">—</div><div class="cunit">m²</div></div>
+        <div class="citem"><div class="clbl">M² Edificables (FOT)</div><div class="cval" id="c-edif">—</div><div class="cunit">m² totales</div></div>
+        <div class="citem"><div class="clbl">M² PB Máx. (FOS)</div><div class="cval" id="c-pb">—</div><div class="cunit">m² planta baja</div></div>
+        <div class="citem"><div class="clbl">M² Vendibles Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">× 0.85 efic.</div></div>
       </div>
     </div>
-
-    <!-- Mapa -->
-    <div class="section-label">Ubicación en Mapa</div>
-    <div id="map-wrap">
-      <div id="map"></div>
-    </div>
-
-    <!-- Nota normativa -->
-    <div class="norm-note" id="norm-note">
-      Datos orientativos basados en el Código Urbanístico de CABA (Ley 6099/2018) y modificaciones vigentes.
-    </div>
-
+    <div class="slabel">Ubicación en Mapa</div>
+    <div id="map-wrap"><div id="map"></div></div>
+    <div class="nnote" id="norm-note">Datos orientativos basados en el CUR CABA (Ley 6099/2018) y modificaciones vigentes.</div>
     <div class="divider"></div>
   </div>
 
-  <!-- TABLA COMPLETA -->
   <div>
-    <div class="section-label">Referencia Normativa Completa</div>
-    <button class="table-toggle" id="tbl-toggle" onclick="toggleTabla()">▶ Ver tabla CUR completa</button>
-    <div class="norm-table" id="norm-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Distrito</th>
-            <th>Tipo</th>
-            <th>Alt. Máx.</th>
-            <th>FOT</th>
-            <th>FOS</th>
-            <th>Retiro Frente</th>
-            <th>Retiro Fondo</th>
-            <th>Ret. Lateral</th>
-            <th>Uso Principal</th>
-            <th>Nota</th>
-          </tr>
-        </thead>
-        <tbody id="tbl-body"></tbody>
-      </table>
+    <div class="slabel">Referencia Normativa Completa</div>
+    <button class="ttoggle" onclick="toggleTabla()">▶ Ver tabla CUR completa</button>
+    <div class="ntable" id="ntable">
+      <table><thead><tr><th>Distrito</th><th>Tipo</th><th>Alt.Máx</th><th>FOT</th><th>FOS</th><th>Ret.Frente</th><th>Ret.Fondo</th><th>Ret.Lateral</th><th>Uso Principal</th></tr></thead>
+      <tbody id="tbl-body"></tbody></table>
     </div>
   </div>
-
 </main>
 
-<!-- ============================================================
-     FOOTER
-============================================================ -->
 <footer>
-  <div class="footer-warn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="footer-note">
-    Basado en CUR CABA · Ley 6099/2018 y modificaciones (Ley 6461/2021) · Fuentes: USIG / GCBA · NORM·AR v1.2<br>
-    No reemplaza la consulta oficial ante el organismo competente. Uso exclusivamente referencial.<br>
-    Desarrollado para uso profesional en oficina técnica — Datos geocodificados via USIG Buenos Aires
-  </div>
+  <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v2.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
-<!-- ============================================================
-     JAVASCRIPT
-============================================================ -->
-
-
-  <style>
-    /* =============================================
-       VARIABLES Y RESET
-    ============================================= */
-    :root {
-      --bg:           #0d1117;
-      --bg-panel:     #13181f;
-      --bg-card:      #161c26;
-      --bg-card-h:    #1c2436;
-      --acc:          #E8C547;
-      --acc-dim:      rgba(232,197,71,0.12);
-      --acc-glow:     rgba(232,197,71,0.25);
-      --text:         #e0e6f0;
-      --text-muted:   #5a6478;
-      --text-dim:     #8a96aa;
-      --border:       rgba(232,197,71,0.18);
-      --border-dim:   rgba(255,255,255,0.06);
-      --border-mid:   rgba(255,255,255,0.10);
-      --res:  #4a9eff;
-      --com:  #ff8c42;
-      --equ:  #3ecf7e;
-      --pro:  #ff5a6e;
-      --pub:  #b06eff;
-      --mix:  #22d3ee;
-      --mono: 'IBM Plex Mono', monospace;
-      --sans: 'IBM Plex Sans', sans-serif;
-      --r:    3px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      font-family: var(--mono);
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      overflow-x: hidden;
-      /* Blueprint grid */
-      background-image:
-        linear-gradient(rgba(232,197,71,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(232,197,71,0.025) 1px, transparent 1px);
-      background-size: 44px 44px;
-      background-attachment: fixed;
-    }
-
-    /* =============================================
-       HEADER
-    ============================================= */
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 999;
-      background: rgba(13,17,23,0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      padding: 0 28px;
-      height: 58px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .logo-box {
-      width: 34px; height: 34px;
-      border: 2px solid var(--acc);
-      display: grid;
-      place-items: center;
-      font-size: 13px; font-weight: 700;
-      color: var(--acc);
-      position: relative;
-      flex-shrink: 0;
-    }
-    .logo-box::after {
-      content: '';
-      position: absolute;
-      inset: 3px;
-      border: 1px solid var(--acc);
-      opacity: 0.3;
-    }
-
-    .logo-name {
-      font-size: 19px;
-      font-weight: 700;
-      color: var(--acc);
-      letter-spacing: 5px;
-      line-height: 1;
-    }
-    .logo-sub {
-      font-size: 9px;
-      color: var(--text-muted);
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .pill {
-      font-size: 9px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      padding: 4px 10px;
-      border: 1px solid var(--border-dim);
-      color: var(--text-muted);
-      border-radius: 2px;
-    }
-    .pill.live {
-      border-color: var(--equ);
-      color: var(--equ);
-      background: rgba(62,207,126,0.07);
-    }
-    .pill.live::before {
-      content: '● ';
-      animation: blink 1.8s ease-in-out infinite;
-    }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-
-    /* =============================================
-       MAIN LAYOUT
-    ============================================= */
-    main {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 40px 24px 100px;
-    }
-
-    .section-label {
-      font-size: 9px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    .section-label::before {
-      content: '';
-      width: 18px; height: 1px;
-      background: var(--acc);
-      flex-shrink: 0;
-    }
-
-    /* =============================================
-       SEARCH AREA
-    ============================================= */
-    .search-block {
-      margin-bottom: 44px;
-    }
-
-    .search-row {
-      display: grid;
-      grid-template-columns: 1fr 110px 110px 110px auto;
-      gap: 10px;
-      align-items: end;
-    }
-
-    @media (max-width: 720px) {
-      .search-row {
-        grid-template-columns: 1fr 1fr;
-      }
-      .search-row .field:first-child { grid-column: 1/-1; }
-      .btn-search { grid-column: 1/-1; }
-    }
-
-    .field { display: flex; flex-direction: column; gap: 7px; }
-
-    .field-label {
-      font-size: 9px;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-    }
-    .field-label em {
-      font-style: normal;
-      color: var(--acc);
-    }
-
-    input[type=text], input[type=number] {
-      font-family: var(--mono);
-      font-size: 13px;
-      color: var(--text);
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 11px 15px;
-      outline: none;
-      width: 100%;
-      transition: border-color .2s, background .2s;
-      border-radius: var(--r);
-    }
-    input:focus {
-      border-color: var(--acc);
-      background: var(--bg-card-h);
-      box-shadow: 0 0 0 3px var(--acc-dim);
-    }
-    input::placeholder { color: var(--text-muted); opacity: .7; }
-    input[type=number] { -moz-appearance: textfield; }
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
-
-    .btn-search {
-      font-family: var(--mono);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      background: var(--acc);
-      color: #0d1117;
-      border: none;
-      padding: 11px 22px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      white-space: nowrap;
-      transition: background .2s, transform .15s, box-shadow .2s;
-      border-radius: var(--r);
-    }
-    .btn-search:hover { background: #f5d55a; transform: translateY(-1px); box-shadow: 0 6px 20px var(--acc-glow); }
-    .btn-search:active { transform: translateY(0); }
-    .btn-search:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
-
-    /* Loading bar */
-    .load-track {
-      height: 2px;
-      background: var(--border-dim);
-      margin-top: 10px;
-      border-radius: 2px;
-      overflow: hidden;
-      opacity: 0;
-      transition: opacity .3s;
-    }
-    .load-track.on { opacity: 1; }
-    .load-fill {
-      height: 100%;
-      width: 35%;
-      background: linear-gradient(90deg, transparent, var(--acc), transparent);
-      animation: loadslide 1.1s ease-in-out infinite;
-    }
-    @keyframes loadslide {
-      0%   { transform: translateX(-200%); }
-      100% { transform: translateX(500%); }
-    }
-
-    /* Messages */
-    .msg {
-      font-size: 12px;
-      line-height: 1.5;
-      padding: 11px 15px;
-      border-left: 3px solid;
-      margin-top: 12px;
-      border-radius: 0 var(--r) var(--r) 0;
-      display: none;
-    }
-    .msg.on { display: block; }
-    .msg.err  { border-color: var(--pro); background: rgba(255,90,110,.07); color: #ffb3bb; }
-    .msg.warn { border-color: var(--com); background: rgba(255,140,66,.07); color: #ffd1a8; }
-    .msg.info { border-color: var(--mix); background: rgba(34,211,238,.07); color: #a0f0ff; }
-
-    /* =============================================
-       RESULTS
-    ============================================= */
-    #results {
-      display: none;
-    }
-    #results.on {
-      display: block;
-      animation: risein .4s ease-out both;
-    }
-    @keyframes risein {
-      from { opacity: 0; transform: translateY(22px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Address banner */
-    .addr-banner {
-      background: var(--bg-panel);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      padding: 18px 22px;
-      margin-bottom: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 12px;
-      position: relative;
-      overflow: hidden;
-    }
-    .addr-banner::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: var(--acc-dim);
-      pointer-events: none;
-    }
-
-    .addr-main {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--acc);
-      letter-spacing: .5px;
-    }
-    .addr-coords {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 3px;
-    }
-
-    .dist-badge {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 3px;
-      padding: 6px 14px;
-      border: 1px solid currentColor;
-      border-radius: 2px;
-      white-space: nowrap;
-    }
-    .dist-badge.residencial { color: var(--res); background: rgba(74,158,255,.1); }
-    .dist-badge.comercial   { color: var(--com); background: rgba(255,140,66,.1); }
-    .dist-badge.equipamiento{ color: var(--equ); background: rgba(62,207,126,.1); }
-    .dist-badge.proteccion  { color: var(--pro); background: rgba(255,90,110,.1); }
-    .dist-badge.uso-publico { color: var(--pub); background: rgba(176,110,255,.1); }
-    .dist-badge.mixed       { color: var(--mix); background: rgba(34,211,238,.1); }
-    .dist-badge.unknown     { color: var(--text-dim); background: var(--border-dim); }
-
-    /* APH alert */
-    .aph-alert {
-      display: none;
-      align-items: flex-start;
-      gap: 12px;
-      border: 1px solid var(--pro);
-      background: rgba(255,90,110,.07);
-      padding: 14px 18px;
-      margin-bottom: 18px;
-      border-radius: var(--r);
-      font-size: 12px;
-      color: #ffb3bb;
-      line-height: 1.6;
-    }
-    .aph-alert.on { display: flex; }
-
-    /* =============================================
-       PARAM CARDS
-    ============================================= */
-    .cards-row {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    @media (max-width: 900px) {
-      .cards-row { grid-template-columns: repeat(3, 1fr); }
-    }
-    @media (max-width: 540px) {
-      .cards-row { grid-template-columns: repeat(2, 1fr); }
-    }
-
-    .pcard {
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 18px 16px;
-      border-radius: var(--r);
-      transition: border-color .2s, transform .2s;
-      animation: risein .35s ease-out both;
-    }
-    .pcard:hover { border-color: var(--border); transform: translateY(-2px); }
-    .pcard:nth-child(1) { animation-delay: .04s; }
-    .pcard:nth-child(2) { animation-delay: .08s; }
-    .pcard:nth-child(3) { animation-delay: .12s; }
-    .pcard:nth-child(4) { animation-delay: .16s; }
-    .pcard:nth-child(5) { animation-delay: .20s; }
-
-    .pcard-icon  { font-size: 16px; margin-bottom: 10px; opacity: .7; }
-    .pcard-label {
-      font-size: 8.5px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 8px;
-    }
-    .pcard-value {
-      font-size: 30px;
-      font-weight: 700;
-      color: var(--acc);
-      line-height: 1;
-      margin-bottom: 4px;
-      letter-spacing: -1px;
-    }
-    .pcard-value.sm { font-size: 20px; letter-spacing: 0; }
-    .pcard-unit { font-size: 10px; color: var(--text-dim); }
-
-    /* =============================================
-       RETIROS + USOS
-    ============================================= */
-    .two-col {
-      display: grid;
-      grid-template-columns: 1fr 1.6fr;
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-    @media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
-
-    .info-box {
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 18px;
-      border-radius: var(--r);
-    }
-    .info-box-label {
-      font-size: 8.5px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 14px;
-    }
-
-    .retiros-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-    .retiro {
-      text-align: center;
-      padding: 10px 6px;
-      border: 1px solid var(--border-dim);
-      border-radius: 2px;
-    }
-    .retiro-lbl { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
-    .retiro-val { font-size: 13px; font-weight: 500; color: var(--text); }
-
-    .uses-wrap {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-    .use-chip {
-      font-size: 11px;
-      padding: 4px 12px;
-      border: 1px solid var(--border-dim);
-      color: var(--text-dim);
-      border-radius: 2px;
-    }
-    .use-chip.main {
-      border-color: var(--acc);
-      color: var(--acc);
-      background: var(--acc-dim);
-    }
-
-    /* =============================================
-       CÁLCULOS
-    ============================================= */
-    #calc-block {
-      display: none;
-      background: var(--bg-card);
-      border: 1px solid var(--acc);
-      padding: 22px 24px;
-      border-radius: var(--r);
-      margin-bottom: 14px;
-      position: relative;
-    }
-    #calc-block::before {
-      content: 'CÁLCULOS DEL LOTE';
-      position: absolute;
-      top: -1px; right: 20px;
-      font-size: 8px;
-      letter-spacing: 3px;
-      font-weight: 700;
-      background: var(--acc);
-      color: #0d1117;
-      padding: 2px 10px;
-      border-radius: 0 0 3px 3px;
-    }
-
-    .calc-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 16px;
-    }
-    @media (max-width: 640px) { .calc-grid { grid-template-columns: 1fr 1fr; } }
-
-    .calc-item {
-      border-left: 2px solid var(--acc);
-      padding-left: 14px;
-    }
-    .calc-label {
-      font-size: 8.5px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 7px;
-    }
-    .calc-value {
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--acc);
-      letter-spacing: -1px;
-      line-height: 1;
-    }
-    .calc-unit { font-size: 10px; color: var(--text-dim); margin-top: 3px; }
-
-    /* =============================================
-       MAPA
-    ============================================= */
-    #map-wrap { margin-bottom: 14px; }
-    #map {
-      height: 340px;
-      border: 1px solid var(--border-dim);
-      border-radius: var(--r);
-      filter: saturate(.3) brightness(.75) contrast(1.1);
-      transition: filter .4s;
-    }
-    #map:hover { filter: saturate(.5) brightness(.85) contrast(1.1); }
-
-    .leaflet-popup-content-wrapper {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--r);
-      color: var(--acc);
-      font-family: var(--mono);
-      font-size: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,.5);
-    }
-    .leaflet-popup-tip { background: var(--bg-card); }
-
-    /* Normativa note */
-    .norm-note {
-      background: var(--bg-panel);
-      border: 1px solid var(--border-dim);
-      border-left: 3px solid var(--border);
-      padding: 12px 16px;
-      font-size: 11px;
-      color: var(--text-muted);
-      line-height: 1.6;
-      border-radius: 0 var(--r) var(--r) 0;
-      margin-bottom: 14px;
-    }
-    .norm-note strong { color: var(--text-dim); }
-
-    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 36px 0; }
-
-    /* =============================================
-       TABLA COMPLETA
-    ============================================= */
-    .table-toggle {
-      font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      background: var(--bg-card);
-      border: 1px solid var(--border-dim);
-      padding: 9px 18px;
-      cursor: pointer;
-      margin-bottom: 14px;
-      border-radius: var(--r);
-      transition: all .2s;
-    }
-    .table-toggle:hover { border-color: var(--acc); color: var(--acc); }
-
-    .norm-table { display: none; overflow-x: auto; }
-    .norm-table.on { display: block; animation: risein .3s ease-out both; }
-
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th {
-      padding: 9px 13px;
-      background: var(--bg-panel);
-      border: 1px solid var(--border-dim);
-      font-size: 8px; letter-spacing: 2.5px;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      text-align: left;
-      white-space: nowrap;
-      position: sticky; top: 58px;
-    }
-    td {
-      padding: 8px 13px;
-      border: 1px solid rgba(255,255,255,0.035);
-      color: var(--text-dim);
-      white-space: nowrap;
-      font-size: 11.5px;
-    }
-    tr:nth-child(even) td { background: rgba(255,255,255,0.018); }
-    tr:hover td { background: var(--bg-card); }
-    td:first-child { font-weight: 600; color: var(--text); }
-    .td-res { color: var(--res); }
-    .td-com { color: var(--com); }
-    .td-equ { color: var(--equ); }
-    .td-pro { color: var(--pro); }
-    .td-pub { color: var(--pub); }
-    .td-mix { color: var(--mix); }
-
-    /* =============================================
-       FOOTER
-    ============================================= */
-    footer {
-      border-top: 1px solid var(--border-dim);
-      padding: 28px 24px;
-      text-align: center;
-      max-width: 1180px;
-      margin: 0 auto;
-    }
-    .footer-warn {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--acc);
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-    }
-    .footer-note {
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: .5px;
-      line-height: 1.8;
-    }
-
-    /* =============================================
-       AUTOCOMPLETE DROPDOWN
-    ============================================= */
-    .autocomplete-wrap { position: relative; }
-    .suggestions {
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 0; right: 0;
-      background: var(--bg-card-h);
-      border: 1px solid var(--acc);
-      z-index: 500;
-      max-height: 200px;
-      overflow-y: auto;
-      border-radius: 0 0 var(--r) var(--r);
-    }
-    .sug-item {
-      padding: 10px 15px;
-      font-size: 12px;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border-dim);
-      transition: background .15s;
-      color: var(--text-dim);
-    }
-    .sug-item:last-child { border-bottom: none; }
-    .sug-item:hover { background: var(--acc-dim); color: var(--acc); }
-  </style>
-</head>
-<body>
-
-<!-- ============================================================
-     HEADER
-============================================================ -->
-<header>
-  <div class="logo">
-    <div class="logo-box">N</div>
-    <div>
-      <div class="logo-name">NORM·AR</div>
-      <div class="logo-sub">Consulta Normativa Urbanística · CABA</div>
-    </div>
-  </div>
-  <div class="header-right">
-    <span class="pill live">USIG Online</span>
-    <span class="pill">CUR · Ley 6099/2018</span>
-  </div>
-</header>
-
-<!-- ============================================================
-     MAIN
-============================================================ -->
-<main>
-
-  <!-- SEARCH -->
-  <div class="search-block">
-    <div class="section-label">Consulta de Parcela</div>
-
-    <div class="search-row">
-      <!-- Dirección -->
-      <div class="field autocomplete-wrap">
-        <label class="field-label">Dirección <em>*</em></label>
-        <input type="text" id="inp-addr"
-          placeholder="Ej: Corrientes 1234  ·  Av. Santa Fe 2500  ·  Estomba 3569"
-          autocomplete="off" />
-        <div class="suggestions" id="suggestions" style="display:none"></div>
-      </div>
-
-      <!-- Frente -->
-      <div class="field">
-        <label class="field-label">Frente <span style="color:var(--text-muted)">opt.</span></label>
-        <input type="number" id="inp-frente" placeholder="m" min="0" step="0.01" />
-      </div>
-
-      <!-- Fondo -->
-      <div class="field">
-        <label class="field-label">Fondo <span style="color:var(--text-muted)">opt.</span></label>
-        <input type="number" id="inp-fondo" placeholder="m" min="0" step="0.01" />
-      </div>
-
-      <!-- Distrito manual -->
-      <div class="field">
-        <label class="field-label">Distrito <span style="color:var(--text-muted)">manual</span></label>
-        <select id="inp-distrito" style="font-family:var(--mono);font-size:12px;color:var(--text);background:var(--bg-card);border:1px solid var(--border-dim);padding:11px 12px;outline:none;width:100%;cursor:pointer;border-radius:var(--r)">
-          <option value="" style="background:#161c26">— auto —</option>
-          <optgroup label="RESIDENCIAL" style="background:#161c26">
-            <option value="R1">R1</option><option value="R1b">R1b</option>
-            <option value="R2a">R2a</option><option value="R2b">R2b</option>
-            <option value="R2c">R2c</option><option value="R2d">R2d</option>
-          </optgroup>
-          <optgroup label="COMERCIAL" style="background:#161c26">
-            <option value="C1">C1</option><option value="C2">C2</option>
-            <option value="C2a">C2a</option><option value="C3">C3</option>
-            <option value="C3i">C3i</option><option value="CB">CB</option>
-          </optgroup>
-          <optgroup label="EQUIPAMIENTO" style="background:#161c26">
-            <option value="E1">E1</option><option value="E2">E2</option>
-            <option value="E3">E3</option>
-          </optgroup>
-          <optgroup label="INDUSTRIAL" style="background:#161c26">
-            <option value="I">I</option><option value="I1">I1</option><option value="IP">IP</option>
-          </optgroup>
-          <optgroup label="MIXTO / ESPECIAL" style="background:#161c26">
-            <option value="VT">VT</option><option value="NCI">NCI</option>
-            <option value="EMED">EMED</option><option value="ECOR">ECOR</option>
-          </optgroup>
-          <optgroup label="APH" style="background:#161c26">
-            <option value="APH">APH (genérico)</option><option value="APH1">APH1</option>
-            <option value="APH2">APH2</option><option value="APH3">APH3</option>
-            <option value="APH4">APH4</option><option value="APH5">APH5</option>
-          </optgroup>
-          <optgroup label="USO PÚBLICO" style="background:#161c26">
-            <option value="UP">UP</option>
-          </optgroup>
-        </select>
-      </div>
-
-      <!-- Botón -->
-      <button class="btn-search" id="btn-buscar" onclick="consultarParcela()">
-        ↗ CONSULTAR
-      </button>
-    </div>
-
-    <div class="load-track" id="load-track"><div class="load-fill"></div></div>
-    <div class="msg err"  id="msg-err"></div>
-    <div class="msg warn" id="msg-warn"></div>
-    <div class="msg info" id="msg-info"></div>
-  </div>
-
-  <!-- ============================================================
-       RESULTS
-  ============================================================ -->
-  <div id="results">
-
-    <!-- Banner dirección -->
-    <div class="addr-banner">
-      <div>
-        <div style="font-size:8.5px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
-        <div class="addr-main" id="res-addr">—</div>
-        <div class="addr-coords" id="res-coords">—</div>
-      </div>
-      <span class="dist-badge" id="res-badge">—</span>
-    </div>
-
-    <!-- APH Alert -->
-    <div class="aph-alert" id="aph-alert">
-      ⚠️
-      <div>
-        <strong>ÁREA DE PROTECCIÓN HISTÓRICA (APH)</strong><br>
-        Este predio se encuentra en un distrito con restricciones especiales de altura, retiros y materialidad.
-        Consultar el <strong>Catálogo de Inmuebles Catalogados</strong> del GCBA y la normativa específica del APH antes de proyectar.
-        Pueden existir limitaciones al FOT y FOS indicados.
-      </div>
-    </div>
-
-    <!-- Cards parámetros -->
-    <div class="section-label">Parámetros Normativos</div>
-    <div class="cards-row">
-      <div class="pcard">
-        <div class="pcard-icon">↕</div>
-        <div class="pcard-label">Altura Máx.</div>
-        <div class="pcard-value" id="res-altura">—</div>
-        <div class="pcard-unit">metros</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">⬜</div>
-        <div class="pcard-label">Pisos Est.</div>
-        <div class="pcard-value" id="res-pisos">—</div>
-        <div class="pcard-unit">plantas (~3m c/u)</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">∑</div>
-        <div class="pcard-label">F.O.T.</div>
-        <div class="pcard-value" id="res-fot">—</div>
-        <div class="pcard-unit">factor ocup. total</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">▣</div>
-        <div class="pcard-label">F.O.S.</div>
-        <div class="pcard-value" id="res-fos">—</div>
-        <div class="pcard-unit">factor ocup. suelo</div>
-      </div>
-      <div class="pcard">
-        <div class="pcard-icon">◈</div>
-        <div class="pcard-label">Distrito</div>
-        <div class="pcard-value sm" id="res-dist">—</div>
-        <div class="pcard-unit">zonificación CUR</div>
-      </div>
-    </div>
-
-    <!-- Retiros + Usos -->
-    <div class="two-col">
-      <div class="info-box">
-        <div class="info-box-label">Retiros Mínimos</div>
-        <div class="retiros-grid">
-          <div class="retiro">
-            <div class="retiro-lbl">↑ Frente</div>
-            <div class="retiro-val" id="res-ret-fr">—</div>
-          </div>
-          <div class="retiro">
-            <div class="retiro-lbl">↓ Fondo</div>
-            <div class="retiro-val" id="res-ret-fo">—</div>
-          </div>
-          <div class="retiro">
-            <div class="retiro-lbl">↔ Lateral</div>
-            <div class="retiro-val" id="res-ret-la">—</div>
-          </div>
-        </div>
-      </div>
-
-      <div class="info-box">
-        <div class="info-box-label">Usos Permitidos</div>
-        <div class="uses-wrap" id="res-usos">—</div>
-      </div>
-    </div>
-
-    <!-- Cálculos del lote -->
-    <div id="calc-block">
-      <div class="calc-grid">
-        <div class="calc-item">
-          <div class="calc-label">Sup. del Lote</div>
-          <div class="calc-value" id="calc-sup">—</div>
-          <div class="calc-unit">m²</div>
-        </div>
-        <div class="calc-item">
-          <div class="calc-label">M² Edificables (FOT)</div>
-          <div class="calc-value" id="calc-edif">—</div>
-          <div class="calc-unit">m² cubiertos totales</div>
-        </div>
-        <div class="calc-item">
-          <div class="calc-label">M² PB Máx. (FOS)</div>
-          <div class="calc-value" id="calc-pb">—</div>
-          <div class="calc-unit">m² en planta baja</div>
-        </div>
-        <div class="calc-item">
-          <div class="calc-label">M² Vendibles Est.</div>
-          <div class="calc-value" id="calc-vend">—</div>
-          <div class="calc-unit">× 0.85 eficiencia</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mapa -->
-    <div class="section-label">Ubicación en Mapa</div>
-    <div id="map-wrap">
-      <div id="map"></div>
-    </div>
-
-    <!-- Nota normativa -->
-    <div class="norm-note" id="norm-note">
-      Datos orientativos basados en el Código Urbanístico de CABA (Ley 6099/2018) y modificaciones vigentes.
-    </div>
-
-    <div class="divider"></div>
-  </div>
-
-  <!-- TABLA COMPLETA -->
-  <div>
-    <div class="section-label">Referencia Normativa Completa</div>
-    <button class="table-toggle" id="tbl-toggle" onclick="toggleTabla()">▶ Ver tabla CUR completa</button>
-    <div class="norm-table" id="norm-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Distrito</th>
-            <th>Tipo</th>
-            <th>Alt. Máx.</th>
-            <th>FOT</th>
-            <th>FOS</th>
-            <th>Retiro Frente</th>
-            <th>Retiro Fondo</th>
-            <th>Ret. Lateral</th>
-            <th>Uso Principal</th>
-            <th>Nota</th>
-          </tr>
-        </thead>
-        <tbody id="tbl-body"></tbody>
-      </table>
-    </div>
-  </div>
-
-</main>
-
-<!-- ============================================================
-     FOOTER
-============================================================ -->
-<footer>
-  <div class="footer-warn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="footer-note">
-    Basado en CUR CABA · Ley 6099/2018 y modificaciones (Ley 6461/2021) · Fuentes: USIG / GCBA · NORM·AR v1.2<br>
-    No reemplaza la consulta oficial ante el organismo competente. Uso exclusivamente referencial.<br>
-    Desarrollado para uso profesional en oficina técnica — Datos geocodificados via USIG Buenos Aires
-  </div>
-</footer>
-
-<!-- ============================================================
-     JAVASCRIPT
-============================================================ -->
 <script>
-
 'use strict';
 
-// ================================================================
-// TABLA NORMATIVA CUR 2018 + MODIFICACIONES
-// Fuente: Ley 6099/2018, modificaciones Ley 6461/2021
-// Nota: siempre verificar en el GCBA para normativa vigente
-// ================================================================
 const ZONAS = {
 
   // ── RESIDENCIAL ──────────────────────────────────────────────
@@ -2091,454 +502,272 @@ const ZONAS = {
   }
 };
 
-// ================================================================
-// HELPERS UI
-// ================================================================
-const $ = id => document.getElementById(id);
 
-function setLoading(on) {
-  $('load-track').classList.toggle('on', on);
-  $('btn-buscar').disabled = on;
+// ── HELPERS ─────────────────────────────────────────────────────
+const eid = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('es-AR');
+
+function setLoad(on) {
+  eid('ltrack').classList.toggle('on', on);
+  eid('btn-q').disabled = on;
 }
 
 function setMsg(type, text) {
   ['err','warn','info'].forEach(t => {
-    const el = $('msg-' + t);
+    const el = eid('msg-' + t);
     if (t === type && text) { el.textContent = text; el.classList.add('on'); }
     else { el.classList.remove('on'); }
   });
 }
 
-function clearMsgs() {
-  ['err','warn','info'].forEach(t => $('msg-' + t).classList.remove('on'));
-}
-
-function fmt(n) { return Math.round(n).toLocaleString('es-AR'); }
-
-// ================================================================
-// USIG — Normalizar dirección
-// ================================================================
+// ── USIG NORMALIZAR ──────────────────────────────────────────────
 async function normalizarDir(dir) {
-  const url = `https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion=${encodeURIComponent(dir)}&geocodificar=true`;
+  const url = 'https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion='
+    + encodeURIComponent(dir) + '&geocodificar=true';
   const r = await fetch(url);
-  if (!r.ok) throw new Error('No se pudo conectar con el servicio USIG. Verificar conexión a internet.');
-
+  if (!r.ok) throw new Error('No se pudo conectar con USIG. Verificar conexión.');
   const data = await r.json();
-  if (!data.direccionesNormalizadas || data.direccionesNormalizadas.length === 0)
+  const lista = data.direccionesNormalizadas;
+  if (!lista || lista.length === 0)
     throw new Error('Dirección no encontrada en CABA. Verificar calle y número.');
-
-  const dn = data.direccionesNormalizadas[0];
-
-  // Validar que sea CABA
-  const partido = (dn.partido || '').toUpperCase();
-  if (partido && !partido.includes('BUENOS AIRES') && !partido.includes('CABA') && !partido.includes('CIUDAD'))
-    throw new Error('La dirección parece estar fuera de CABA. Esta herramienta cubre exclusivamente la Ciudad Autónoma de Buenos Aires.');
-
+  const dn = lista[0];
+  const partido = (dn.nombre_partido || dn.cod_partido || '').toUpperCase();
+  if (partido && partido !== 'CABA' && !partido.includes('CIUDAD') && !partido.includes('BUENOS AIRES'))
+    throw new Error('La dirección parece estar fuera de CABA.');
   let coords = null;
-  if (dn.coordenadas && dn.coordenadas.x && dn.coordenadas.y) {
-    // USIG devuelve x=lng, y=lat en WGS84
+  if (dn.coordenadas) {
     coords = { lat: parseFloat(dn.coordenadas.y), lng: parseFloat(dn.coordenadas.x) };
   }
-
-  return {
-    direccion: dn.direccion || dir,
-    smp: dn.smp || null,
-    coords,
-    raw: dn
-  };
+  return { direccion: dn.direccion || dir, coords };
 }
 
+// ── NEAREST-NEIGHBOR (centroides CUR 2024) ───────────────────────
+let _cur = null;
 
-// ================================================================
-// NEAREST-NEIGHBOR por centroides CUR oficial 2024
-// ================================================================
-let _curData = null;
-let _curLoading = null;
-
-async function cargarCurData() {
-  if (_curData) return _curData;
-  if (_curLoading) return _curLoading;
-  _curLoading = fetch('./cur_centroids.json')
-    .then(r => r.json())
-    .then(data => { _curData = data; _curLoading = null; return data; })
-    .catch(e => { _curLoading = null; console.warn('CUR data no disponible:', e); return null; });
-  return _curLoading;
+async function loadCur() {
+  if (_cur) return _cur;
+  const r = await fetch('./cur_centroids.json');
+  _cur = await r.json();
+  return _cur;
 }
 
 function nearestDistrict(lng, lat, data) {
-  // Buscar los 5 más cercanos dentro de 0.003 grados (~300m)
-  const MAX_D2 = 0.003 * 0.003;
+  const MAX2 = 0.003 * 0.003;
   const nearby = [];
   for (const c of data) {
     const d2 = (c[0]-lng)*(c[0]-lng) + (c[1]-lat)*(c[1]-lat);
-    if (d2 < MAX_D2) nearby.push([d2, c[2], c[3]]);
+    if (d2 < MAX2) nearby.push([d2, c[2]]);
   }
-  if (nearby.length === 0) return null;
+  if (!nearby.length) return null;
   nearby.sort((a,b) => a[0]-b[0]);
-  const top5 = nearby.slice(0,5);
-  // Votación: el distrito más frecuente entre los 5 más cercanos
+  const top = nearby.slice(0, 5);
+  const nearM = Math.sqrt(top[0][0]) * 111000;
+  if (nearM < 150) return top[0][1];
   const votes = {};
-  for (const [,d] of top5) votes[d] = (votes[d]||0) + 1;
-  const winner = Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-  // Si el más cercano está a < 150m, confiar en él directamente
-  const nearestDist = Math.sqrt(top5[0][0]) * 111000;
-  if (nearestDist < 150) return top5[0][1];
-  // Sino usar votación
-  return winner ? winner[0] : top5[0][1];
+  for (const [,d] of top) votes[d] = (votes[d]||0) + 1;
+  return Object.entries(votes).sort((a,b) => b[1]-a[1])[0][0];
 }
 
-// ================================================================
-// OBTENER DISTRITO — GeoJSON centroides CUR + fallback API
-// ================================================================
-async function obtenerDistrito(lat, lng) {
-  // Intento 1: centroides CUR oficial (principal)
+async function getDistrito(lat, lng) {
   try {
-    const data = await cargarCurData();
+    const data = await loadCur();
     if (data) {
-      const dist = nearestDistrict(lng, lat, data);
-      if (dist) return limpiarDistrito(dist);
+      const raw = nearestDistrict(lng, lat, data);
+      if (raw) return cleanDistrito(raw);
     }
-  } catch(e) { console.warn('CUR nearest error:', e); }
-
-  // Intento 2: ArcGIS REST de USIG (fallback)
-  try {
-    const url = `https://ws.usig.buenosaires.gob.ar/arcgis/rest/services/Zonificacion/`
-      + `Distritos_Zonificacion/MapServer/0/query`
-      + `?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326`
-      + `&spatialRel=esriSpatialRelIntersects&outFields=*&f=json`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      const data = await r.json();
-      if (data.features && data.features.length > 0) {
-        const attr = data.features[0].attributes;
-        for (const k of ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa']) {
-          if (attr[k]) return limpiarDistrito(attr[k]);
-        }
-      }
-    }
-  } catch(e) { /* sin API */ }
-
+  } catch(e) { console.warn('CUR lookup:', e); }
   return null;
 }
 
->
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NORM·AR — Consulta Normativa Urbanística CABA</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
-
-function limpiarDistrito(raw) {
+function cleanDistrito(raw) {
   if (!raw) return null;
-  let d = raw.toString().trim().toUpperCase()
-    .replace(/^(DISTRITO|ZONA|ZO[\s_]*MAPA|DIS|DIST)[\s:_]*/i, '')
-    .replace(/\s+/g, '');
-
-  // Normalizar variantes comunes
-  const aliases = {
-    'R1A':'R1','R-1':'R1','R-2A':'R2a','R-2B':'R2b','R-2C':'R2c',
-    'C-1':'C1','C-2':'C2','C-3':'C3','E-1':'E1','E-2':'E2','E-3':'E3',
-  };
-  const norm = d.replace(/-/g,'');
-  if (aliases[norm]) return aliases[norm];
-
-  // Capitalizar correctamente (R2b no R2B)
-  const standard = Object.keys(ZONAS).find(k => k.toUpperCase() === d.toUpperCase());
-  return standard || d;
+  const d = raw.toString().trim().split(/\s+/)[0].toUpperCase();
+  const match = Object.keys(ZONAS).find(k => k.toUpperCase() === d);
+  return match || d;
 }
 
-// ================================================================
-// MAPA
-// ================================================================
-let leafMap = null, leafMarker = null;
+// ── MAPA ─────────────────────────────────────────────────────────
+let map = null, marker = null;
 
-function initMapa(lat, lng, addr) {
-  if (!leafMap) {
-    leafMap = L.map('map', { zoomControl: true }).setView([lat, lng], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap',
-      maxZoom: 19
-    }).addTo(leafMap);
+function initMap(lat, lng, addr) {
+  if (!map) {
+    map = L.map('map').setView([lat, lng], 17);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
   } else {
-    leafMap.setView([lat, lng], 17);
-    if (leafMarker) leafMap.removeLayer(leafMarker);
+    map.setView([lat, lng], 17);
+    if (marker) map.removeLayer(marker);
   }
-
   const icon = L.divIcon({
     className: '',
-    html: `<div style="
-      width:16px;height:16px;
-      background:#E8C547;
-      border:3px solid #0d1117;
-      border-radius:50%;
-      box-shadow:0 0 0 2px #E8C547,0 0 24px rgba(232,197,71,.5);
-    "></div>`,
-    iconSize:[16,16], iconAnchor:[8,8]
+    html: '<div style="width:16px;height:16px;background:#E8C547;border:3px solid #0d1117;border-radius:50%;box-shadow:0 0 0 2px #E8C547,0 0 24px rgba(232,197,71,.5)"></div>',
+    iconSize: [16,16], iconAnchor: [8,8]
   });
-
-  leafMarker = L.marker([lat, lng], { icon }).addTo(leafMap);
-  leafMarker.bindPopup(
-    `<span style="font-family:monospace;font-size:12px;color:#E8C547">${addr}</span>`
-  ).openPopup();
-
-  setTimeout(() => leafMap.invalidateSize(), 150);
+  marker = L.marker([lat, lng], { icon }).addTo(map);
+  marker.bindPopup('<span style="font-family:monospace;font-size:12px;color:#E8C547">' + addr + '</span>').openPopup();
+  setTimeout(() => map.invalidateSize(), 150);
 }
 
-// ================================================================
-// MOSTRAR RESULTADOS
-// ================================================================
-function mostrarResultados(addr, distritoKey, zona, lat, lng, frente, fondo) {
+// ── MOSTRAR RESULTADOS ───────────────────────────────────────────
+function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
+  eid('res-addr').textContent = addr;
+  eid('res-coords').textContent = lat ? lat.toFixed(6) + ', ' + lng.toFixed(6) + '  · WGS84' : '';
 
-  // Banner dirección
-  $('res-addr').textContent = addr;
-  $('res-coords').textContent = lat && lng
-    ? `${lat.toFixed(6)}, ${lng.toFixed(6)}  ·  WGS84`
-    : 'Coordenadas no disponibles';
+  const badge = eid('res-badge');
+  badge.textContent = distrKey || 'Distrito no det.';
+  badge.className = 'dbadge ' + (zona ? zona.tipo : 'unknown');
 
-  // Badge
-  const badge = $('res-badge');
-  badge.textContent = distritoKey || 'Distrito no det.';
-  badge.className = 'dist-badge ' + (zona ? zona.tipo : 'unknown');
+  eid('aph-box').classList.toggle('on', !!(zona && zona.esAPH));
 
-  // APH
-  $('aph-alert').classList.toggle('on', !!(zona && zona.esAPH));
+  eid('res-alt').textContent = zona && zona.altura !== '—' ? zona.altura : '—';
+  eid('res-pis').textContent = zona && typeof zona.altura === 'number' ? Math.floor(zona.altura / 3) : '—';
+  eid('res-fot').textContent = zona ? zona.fot : '—';
+  eid('res-fos').textContent = zona ? zona.fos : '—';
+  eid('res-dis').textContent = distrKey || '?';
 
-  // Cards
-  $('res-altura').textContent = zona && zona.altura !== '—' ? zona.altura : '—';
-  $('res-pisos').textContent  = zona && typeof zona.altura === 'number'
-    ? Math.floor(zona.altura / 3) : '—';
-  $('res-fot').textContent    = zona && zona.fot !== '—' ? zona.fot : '—';
-  $('res-fos').textContent    = zona && zona.fos !== '—' ? zona.fos : '—';
-  $('res-dist').textContent   = distritoKey || '?';
-
-  // Retiros
   if (zona) {
-    $('res-ret-fr').textContent = zona.retiros.frente;
-    $('res-ret-fo').textContent = zona.retiros.fondo;
-    $('res-ret-la').textContent = zona.retiros.lateral;
+    eid('res-rf').textContent = zona.retiros.frente;
+    eid('res-ro').textContent = zona.retiros.fondo;
+    eid('res-rl').textContent = zona.retiros.lateral;
   }
 
-  // Usos
-  const usosEl = $('res-usos');
-  if (zona && zona.usos) {
-    usosEl.innerHTML = zona.usos.map((u,i) =>
-      `<span class="use-chip ${i===0?'main':''}">${u}</span>`
-    ).join('');
-  } else {
-    usosEl.innerHTML = '<span class="use-chip">No determinado</span>';
-  }
+  const usosEl = eid('res-usos');
+  usosEl.innerHTML = zona && zona.usos
+    ? zona.usos.map((u,i) => '<span class="uchip' + (i===0?' main':'') + '">' + u + '</span>').join('')
+    : '<span class="uchip">No determinado</span>';
 
-  // Nota normativa
   if (zona && zona.nota) {
-    $('norm-note').innerHTML = `<strong>${distritoKey}</strong> — ${zona.nota} <br>
-      <span style="margin-top:6px;display:block;color:var(--text-muted);font-size:10.5px">
-        ⚠ Datos orientativos. Verificar normativa vigente en el GCBA — <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank" style="color:var(--acc)">buenosaires.gob.ar</a>
-      </span>`;
+    eid('norm-note').innerHTML = '<strong>' + distrKey + '</strong> — ' + zona.nota +
+      ' <span style="display:block;margin-top:6px;font-size:10.5px">⚠ Verificar normativa vigente en el GCBA — <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank" style="color:var(--acc)">buenosaires.gob.ar</a></span>';
   }
 
-  // Cálculos
-  const calcBlock = $('calc-block');
-  if (frente && fondo && zona && typeof zona.fot === 'number' && typeof zona.fos === 'number') {
-    const sup   = frente * fondo;
-    const edif  = sup * zona.fot;
-    const pb    = sup * zona.fos;
-    const vend  = edif * 0.85;
-
-    $('calc-sup').textContent  = fmt(sup);
-    $('calc-edif').textContent = fmt(edif);
-    $('calc-pb').textContent   = fmt(pb);
-    $('calc-vend').textContent = fmt(vend);
-    calcBlock.style.display = 'block';
+  const cb = eid('calc-block');
+  if (frente && fondo && zona && typeof zona.fot === 'number') {
+    const sup = frente * fondo;
+    eid('c-sup').textContent  = fmt(sup);
+    eid('c-edif').textContent = fmt(sup * zona.fot);
+    eid('c-pb').textContent   = fmt(sup * zona.fos);
+    eid('c-vend').textContent = fmt(sup * zona.fot * 0.85);
+    cb.style.display = 'block';
   } else {
-    calcBlock.style.display = 'none';
+    cb.style.display = 'none';
   }
 
-  // Mapa
-  if (lat && lng) {
-    initMapa(lat, lng, addr);
-    $('map-wrap').style.display = 'block';
-  } else {
-    $('map-wrap').style.display = 'none';
-  }
+  if (lat && lng) initMap(lat, lng, addr);
 
-  // Show results
-  const res = $('results');
+  const res = eid('results');
   res.classList.remove('on');
-  void res.offsetWidth; // reflow para reiniciar animación
+  void res.offsetWidth;
   res.classList.add('on');
-  setTimeout(() => res.scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+  setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
 }
 
-// ================================================================
-// CONSULTA PRINCIPAL
-// ================================================================
+// ── CONSULTA PRINCIPAL ───────────────────────────────────────────
 async function consultarParcela() {
-  clearMsgs();
-  $('suggestions').style.display = 'none';
+  ['err','warn','info'].forEach(t => eid('msg-'+t).classList.remove('on'));
+  eid('suggestions').style.display = 'none';
 
-  const dir    = $('inp-addr').value.trim();
-  const frente = parseFloat($('inp-frente').value);
-  const fondo  = parseFloat($('inp-fondo').value);
+  const dir    = eid('inp-addr').value.trim();
+  const frente = parseFloat(eid('inp-frente').value);
+  const fondo  = parseFloat(eid('inp-fondo').value);
+  const manual = eid('inp-distrito').value;
 
-  if (!dir) {
-    setMsg('err', '⚠  Ingresá la dirección para consultar.');
-    $('inp-addr').focus();
-    return;
-  }
+  if (!dir) { setMsg('err', '⚠ Ingresá la dirección para consultar.'); return; }
 
-  setLoading(true);
-
+  setLoad(true);
   try {
-    // 1) Normalizar
     const norm = await normalizarDir(dir);
+    const lat  = norm.coords ? norm.coords.lat : null;
+    const lng  = norm.coords ? norm.coords.lng : null;
 
-    let lat = null, lng = null;
-    if (norm.coords) { lat = norm.coords.lat; lng = norm.coords.lng; }
+    let distrKey = null, zona = null;
 
-    if (!lat || !lng) {
-      setMsg('warn', '⚠  No se obtuvieron coordenadas exactas para esta dirección. Mostrando datos disponibles.');
-    }
-
-    // 2) Obtener distrito
-    let distritoKey = null, zona = null;
-    const distritoManual = $('inp-distrito').value;
-
-    if (distritoManual) {
-      // Distrito ingresado manualmente → prioridad total
-      distritoKey = distritoManual;
-      zona = ZONAS[distritoKey] || null;
+    if (manual) {
+      distrKey = manual;
+      zona = ZONAS[distrKey] || null;
     } else if (lat && lng) {
-      // Intento automático via API
-      distritoKey = await obtenerDistrito(lat, lng);
-
-      if (distritoKey) {
-        zona = ZONAS[distritoKey]
-          || ZONAS[Object.keys(ZONAS).find(k => k.toUpperCase() === distritoKey.toUpperCase())]
-          || null;
-        if (!zona) {
-          setMsg('warn', `Distrito "${distritoKey}" detectado pero no está en la tabla local. `
-            + `Seleccioná el distrito manualmente para ver los parámetros.`);
-        }
+      distrKey = await getDistrito(lat, lng);
+      if (distrKey) {
+        zona = ZONAS[distrKey] || ZONAS[Object.keys(ZONAS).find(k => k.toUpperCase() === distrKey.toUpperCase())] || null;
+        if (!zona) setMsg('warn', 'Distrito "' + distrKey + '" detectado pero no está en la tabla. Seleccioná manualmente.');
       } else {
-        setMsg('info', '⚠ Los servicios de zonificación del GCBA no respondieron. '
-          + 'La dirección fue geocodificada correctamente. '
-          + 'Seleccioná el distrito manualmente del selector para ver los parámetros normativos.');
+        setMsg('info', '⚠ No se pudo detectar el distrito automáticamente. Seleccionalo del selector.');
       }
     }
 
-    // 3) Mostrar
-    mostrarResultados(
-      norm.direccion,
-      distritoKey,
-      zona,
-      lat,
-      lng,
+    mostrar(norm.direccion, distrKey, zona, lat, lng,
       isNaN(frente) ? null : frente,
-      isNaN(fondo)  ? null : fondo
-    );
+      isNaN(fondo)  ? null : fondo);
 
-  } catch(err) {
-    setMsg('err', '✕  ' + err.message);
-    console.error('[NORM·AR]', err);
+  } catch(e) {
+    setMsg('err', '✕ ' + e.message);
   } finally {
-    setLoading(false);
+    setLoad(false);
   }
 }
 
-// ================================================================
-// TABLA COMPLETA
-// ================================================================
-(function buildTable() {
-  const tbody = $('tbl-body');
-  const clsMap = {
-    residencial:'td-res', comercial:'td-com', equipamiento:'td-equ',
-    proteccion:'td-pro', 'uso-publico':'td-pub', mixed:'td-mix'
-  };
-
-  Object.entries(ZONAS).forEach(([k, z]) => {
+// ── TABLA COMPLETA ───────────────────────────────────────────────
+function buildTable() {
+  const tb = eid('tbl-body');
+  const cls = {residencial:'tr',comercial:'tc',equipamiento:'te',proteccion:'tp','uso-publico':'tpu',mixed:'tm'};
+  Object.entries(ZONAS).forEach(([k,z]) => {
     const tr = document.createElement('tr');
-    const cls = clsMap[z.tipo] || '';
-    tr.innerHTML = `
-      <td>${k}</td>
-      <td class="${cls}">${z.tipo.toUpperCase()}</td>
-      <td>${z.altura !== '—' ? z.altura + ' m' : '—'}</td>
-      <td>${z.fot}</td>
-      <td>${z.fos}</td>
-      <td>${z.retiros.frente}</td>
-      <td>${z.retiros.fondo}</td>
-      <td>${z.retiros.lateral}</td>
-      <td style="white-space:normal;max-width:160px">${z.usos[0]}</td>
-      <td style="white-space:normal;max-width:220px;font-size:10.5px;color:var(--text-muted)">${z.nota.substring(0,80)}${z.nota.length>80?'…':''}</td>
-    `;
-    tbody.appendChild(tr);
+    tr.innerHTML = '<td>' + k + '</td>'
+      + '<td class="' + (cls[z.tipo]||'') + '">' + z.tipo.toUpperCase() + '</td>'
+      + '<td>' + (z.altura !== '—' ? z.altura + 'm' : '—') + '</td>'
+      + '<td>' + z.fot + '</td><td>' + z.fos + '</td>'
+      + '<td>' + z.retiros.frente + '</td><td>' + z.retiros.fondo + '</td><td>' + z.retiros.lateral + '</td>'
+      + '<td style="white-space:normal;max-width:160px">' + z.usos[0] + '</td>';
+    tb.appendChild(tr);
   });
-})();
-
-function toggleTabla() {
-  const t = $('norm-table');
-  const btn = $('tbl-toggle');
-  const show = t.classList.toggle('on');
-  btn.textContent = show ? '▼ Ocultar tabla' : '▶ Ver tabla CUR completa';
 }
 
-// ================================================================
-// AUTOCOMPLETE (USIG)
-// ================================================================
-let sugTimer = null;
+function toggleTabla() {
+  const t = eid('ntable');
+  const show = t.classList.toggle('on');
+  document.querySelector('.ttoggle').textContent = show ? '▼ Ocultar tabla' : '▶ Ver tabla CUR completa';
+}
 
-$('inp-addr').addEventListener('input', function() {
-  clearTimeout(sugTimer);
-  const val = this.value.trim();
-  if (val.length < 3) { $('suggestions').style.display = 'none'; return; }
-
-  sugTimer = setTimeout(async () => {
+// ── AUTOCOMPLETE ─────────────────────────────────────────────────
+let _sugTimer = null;
+eid('inp-addr').addEventListener('input', function() {
+  clearTimeout(_sugTimer);
+  const v = this.value.trim();
+  if (v.length < 3) { eid('suggestions').style.display = 'none'; return; }
+  _sugTimer = setTimeout(async () => {
     try {
-      const url = `https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion=${encodeURIComponent(val)}&geocodificar=false&max_calles=6`;
+      const url = 'https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion='
+        + encodeURIComponent(v) + '&geocodificar=false&max_calles=5';
       const r = await fetch(url);
-      const data = await r.json();
-      const items = data.direccionesNormalizadas || [];
-
-      if (items.length === 0) { $('suggestions').style.display = 'none'; return; }
-
-      const sug = $('suggestions');
-      sug.innerHTML = items.slice(0,6).map(d =>
-        `<div class="sug-item" onclick="selectSuggestion(this)">${d.direccion}</div>`
+      const d = await r.json();
+      const items = d.direccionesNormalizadas || [];
+      if (!items.length) { eid('suggestions').style.display = 'none'; return; }
+      const sug = eid('suggestions');
+      sug.innerHTML = items.slice(0,5).map(i =>
+        '<div class="si" onclick="selSug(this)">' + i.direccion + '</div>'
       ).join('');
       sug.style.display = 'block';
-    } catch(e) { $('suggestions').style.display = 'none'; }
-  }, 320);
+    } catch(e) { eid('suggestions').style.display = 'none'; }
+  }, 300);
 });
 
-function selectSuggestion(el) {
-  $('inp-addr').value = el.textContent;
-  $('suggestions').style.display = 'none';
+function selSug(el) {
+  eid('inp-addr').value = el.textContent;
+  eid('suggestions').style.display = 'none';
 }
 
 document.addEventListener('click', e => {
-  if (!e.target.closest('.autocomplete-wrap'))
-    $('suggestions').style.display = 'none';
+  if (!e.target.closest('.acwrap')) eid('suggestions').style.display = 'none';
 });
 
-$('inp-addr').addEventListener('keydown', e => {
+eid('inp-addr').addEventListener('keydown', e => {
   if (e.key === 'Enter') consultarParcela();
-  if (e.key === 'Escape') $('suggestions').style.display = 'none';
+  if (e.key === 'Escape') eid('suggestions').style.display = 'none';
 });
 
-// ================================================================
-// KEYBOARD SHORTCUT
-// ================================================================
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') consultarParcela();
-});
-
+// ── INIT ─────────────────────────────────────────────────────────
+buildTable();
+setTimeout(() => loadCur().catch(() => {}), 800);
 </script>
 </body>
 </html>
