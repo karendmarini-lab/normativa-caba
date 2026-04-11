@@ -541,49 +541,73 @@ async function normalizarDir(dir) {
   return { direccion: dn.direccion || dir, coords };
 }
 
-// ── NEAREST-NEIGHBOR (centroides CUR 2024) ───────────────────────
-let _cur = null;
+// ── DISTRICT LOOKUP: CPU Polígonos WGS84 + CUR centroids fallback ─
+let _districts = null;
+let _centroids = null;
 
-async function loadCur() {
-  if (_cur) return _cur;
-  const r = await fetch('./cur_centroids.json');
-  _cur = await r.json();
-  return _cur;
+async function loadDistricts() {
+  if (_districts) return _districts;
+  const r = await fetch('./cpu_districts.json');
+  _districts = await r.json();
+  return _districts;
 }
 
-function nearestDistrict(lng, lat, data) {
-  const MAX2 = 0.003 * 0.003;
-  const nearby = [];
-  for (const c of data) {
-    const d2 = (c[0]-lng)*(c[0]-lng) + (c[1]-lat)*(c[1]-lat);
-    if (d2 < MAX2) nearby.push([d2, c[2]]);
-  }
-  if (!nearby.length) return null;
-  nearby.sort((a,b) => a[0]-b[0]);
-  const top = nearby.slice(0, 5);
-  const nearM = Math.sqrt(top[0][0]) * 111000;
-  if (nearM < 150) return top[0][1];
-  const votes = {};
-  for (const [,d] of top) votes[d] = (votes[d]||0) + 1;
-  return Object.entries(votes).sort((a,b) => b[1]-a[1])[0][0];
-}
-
-async function getDistrito(lat, lng) {
+async function loadCentroids() {
+  if (_centroids) return _centroids;
   try {
-    const data = await loadCur();
-    if (data) {
-      const raw = nearestDistrict(lng, lat, data);
-      if (raw) return cleanDistrito(raw);
-    }
-  } catch(e) { console.warn('CUR lookup:', e); }
+    const r = await fetch('./cur_centroids.json');
+    _centroids = await r.json();
+  } catch(e) { _centroids = []; }
+  return _centroids;
+}
+
+function pip(lng, lat, ring) {
+  let inside = false, j = ring.length - 1;
+  for (let i = 0; i < ring.length; j = i++) {
+    const [xi,yi] = ring[i], [xj,yj] = ring[j];
+    if ((yi > lat) !== (yj > lat) && lng < (xj-xi)*(lat-yi)/(yj-yi)+xi)
+      inside = !inside;
+  }
+  return inside;
+}
+
+function findByPip(lng, lat, features) {
+  for (const f of features)
+    for (const ring of f.r)
+      if (pip(lng, lat, ring)) return f.c;
   return null;
 }
 
-function cleanDistrito(raw) {
-  if (!raw) return null;
-  const d = raw.toString().trim().split(/\s+/)[0].toUpperCase();
-  const match = Object.keys(ZONAS).find(k => k.toUpperCase() === d);
-  return match || d;
+function findByNearest(lng, lat, centroids) {
+  const MAX2 = 0.002*0.002;
+  let best = null, bestD2 = MAX2;
+  for (const c of centroids) {
+    const d2 = (c[0]-lng)**2 + (c[1]-lat)**2;
+    if (d2 < bestD2) { bestD2 = d2; best = c[2]; }
+  }
+  return best;
+}
+
+async function getDistrito(lat, lng) {
+  // Método 1: PIP con polígonos de distrito CPU/CUR
+  try {
+    const feats = await loadDistricts();
+    if (feats) {
+      const d = findByPip(lng, lat, feats);
+      if (d) return cleanDistrito(d);
+    }
+  } catch(e) { console.warn('PIP error:', e); }
+
+  // Método 2: Nearest-neighbor centroides CUR (fallback)
+  try {
+    const cents = await loadCentroids();
+    if (cents && cents.length) {
+      const d = findByNearest(lng, lat, cents);
+      if (d) return cleanDistrito(d);
+    }
+  } catch(e) { console.warn('NN error:', e); }
+
+  return null;
 }
 
 // ── MAPA ─────────────────────────────────────────────────────────
@@ -767,7 +791,11 @@ eid('inp-addr').addEventListener('keydown', e => {
 
 // ── INIT ─────────────────────────────────────────────────────────
 buildTable();
-setTimeout(() => loadCur().catch(() => {}), 800);
+// Precargar ambos archivos en background
+setTimeout(() => {
+  loadDistricts().catch(e => console.warn('districts preload:', e));
+  loadCentroids().catch(e => console.warn('centroids preload:', e));
+}, 600);
 </script>
 </body>
 </html>
