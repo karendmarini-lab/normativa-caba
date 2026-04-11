@@ -235,7 +235,7 @@
     <div class="slabel">Parámetros Normativos</div>
     <div class="cards">
       <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Máx.</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
-      <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">plantas (~3m c/u)</div></div>
+      <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos indicativos</div></div>
       <div class="card"><div class="card-ico">∑</div><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
       <div class="card"><div class="card-ico">▣</div><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
       <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div>
@@ -277,7 +277,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -764,7 +764,23 @@ function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
   }
 
   eid('res-alt').textContent = zona && zona.altura !== '—' ? zona.altura : '—';
-  eid('res-pis').textContent = zona && typeof zona.altura === 'number' ? Math.floor(zona.altura / 3) : '—';
+  // Cálculo de pisos según Código de Edificación CABA
+  // PB residencial: libre 3.00m + estructura 0.30m = 3.30m
+  // Pisos superiores residencial: libre 2.60m + 0.30m = 2.90m (CE Art. 4.8)
+  // PB comercial: libre 3.50m + 0.30m = 3.80m | Pisos sup com: 3.00+0.30=3.30m
+  if (zona) {
+    const h = parseFloat(zona.altura);
+    if (!isNaN(h) && h > 0) {
+      const pbH   = zona.tipo === 'commercial' ? 3.80 : 3.30;
+      const pisoH = zona.tipo === 'commercial' ? 3.30 : 2.90;
+      const pisos = h <= pbH ? 1 : 1 + Math.round((h - pbH) / pisoH);
+      eid('res-pis').textContent = '≈' + pisos;
+    } else {
+      eid('res-pis').textContent = '—';
+    }
+  } else {
+    eid('res-pis').textContent = '—';
+  }
   eid('res-fot').textContent = zona ? zona.fot : '—';
   eid('res-fos').textContent = zona ? zona.fos : '—';
   eid('res-dis').textContent = distrKey || '?';
