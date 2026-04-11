@@ -277,7 +277,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v6.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v6.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -586,6 +586,34 @@ function gridLookup(lng, lat) {
   if (col<0||col>=_G.ncols||row<0||row>=_G.nrows) return null;
   const idx = _gridArr[row * _G.ncols + col];
   return idx > 0 ? _GRID_CODES[idx-1] : null;
+}
+
+
+function cleanDistrito(raw) {
+  if (!raw) return null;
+  const d = raw.toString().trim().split(/\s+/)[0].toUpperCase();
+  const match = Object.keys(ZONAS).find(k => k.toUpperCase() === d);
+  return match || d;
+}
+
+let _centroids = null;
+async function loadCentroids() {
+  if (_centroids) return _centroids;
+  try {
+    const r = await fetch('./cur_centroids.json?v=6');
+    _centroids = await r.json();
+  } catch(e) { _centroids = []; }
+  return _centroids;
+}
+
+function findByNearest(lng, lat, centroids) {
+  const MAX2 = 0.002 * 0.002;
+  let best = null, bestD2 = MAX2;
+  for (const c of centroids) {
+    const d2 = (c[0]-lng)**2 + (c[1]-lat)**2;
+    if (d2 < bestD2) { bestD2 = d2; best = c[2]; }
+  }
+  return best;
 }
 
 async function getDistrito(lat, lng) {
