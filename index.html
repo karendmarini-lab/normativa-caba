@@ -1224,69 +1224,81 @@ async function normalizarDir(dir) {
 }
 
 // ================================================================
-// OBTENER DISTRITO — múltiples intentos
+// GEOJSON CUR — point-in-polygon
+// ================================================================
+let _curData = null;
+let _curLoading = null;
+
+async function cargarCurData() {
+  if (_curData) return _curData;
+  if (_curLoading) return _curLoading;
+  
+  _curLoading = fetch('./cur_wgs84.json')
+    .then(r => r.json())
+    .then(data => { _curData = data; _curLoading = null; return data; })
+    .catch(() => { _curLoading = null; return null; });
+  
+  return _curLoading;
+}
+
+function pointInRing(lng, lat, ring) {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (((yi > lat) !== (yj > lat)) &&
+        (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
+      inside = !inside;
+    }
+  }
+  return inside;
+}
+
+function findDistrict(lng, lat, data) {
+  for (const feat of data) {
+    for (const ring of feat.r) {
+      if (pointInRing(lng, lat, ring)) {
+        return feat.d;
+      }
+    }
+  }
+  return null;
+}
+
+// ================================================================
+// OBTENER DISTRITO — GeoJSON CUR + fallback APIs
 // ================================================================
 async function obtenerDistrito(lat, lng) {
-  // Intento 1: ArcGIS REST de USIG — Zonificación
+  // Intento 1: GeoJSON CUR oficial (más confiable)
+  try {
+    const data = await cargarCurData();
+    if (data) {
+      const dist = findDistrict(lng, lat, data);
+      if (dist) return limpiarDistrito(dist);
+    }
+  } catch(e) { /* siguiente */ }
+
+  // Intento 2: ArcGIS REST de USIG
   try {
     const url = `https://ws.usig.buenosaires.gob.ar/arcgis/rest/services/Zonificacion/`
       + `Distritos_Zonificacion/MapServer/0/query`
       + `?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326`
       + `&spatialRel=esriSpatialRelIntersects&outFields=*&f=json`;
-
-    const r = await fetch(url);
+    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
     if (r.ok) {
       const data = await r.json();
       if (data.features && data.features.length > 0) {
         const attr = data.features[0].attributes;
-        const keys = ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa','NOMBRE','nombre','DESCRIPCION'];
+        const keys = ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa'];
         for (const k of keys) {
           if (attr[k]) return limpiarDistrito(attr[k]);
         }
-        // Último recurso: cualquier campo string
-        for (const v of Object.values(attr)) {
-          if (v && typeof v === 'string' && v.length > 0 && v.length < 20)
-            return limpiarDistrito(v);
-        }
       }
     }
   } catch(e) { /* siguiente */ }
-
-  // Intento 2: API de catastro / parcelas EPOK (coordenadas en SRS local aprox.)
-  try {
-    // Conversión WGS84 → POSGAR / Gauss-Krüger faja 5 (aproximación para CABA)
-    // x (easting) ≈ 5 * 10^6 + (lng + 60) * 87900
-    // y (northing) ≈ (lat + 90) * 111320
-    const xGK = 5000000 + (lng + 60) * 87900;
-    const yGK = (lat + 90) * 111320;
-
-    const url = `https://epok.buenosaires.gob.ar/catastro/getParcela?x=${xGK.toFixed(0)}&y=${yGK.toFixed(0)}`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(4000) });
-    if (r.ok) {
-      const data = await r.json();
-      if (data && data.parcela) {
-        const z = data.parcela.zo_mapa || data.parcela.zona || data.parcela.zo || null;
-        if (z) return limpiarDistrito(z);
-      }
-    }
-  } catch(e) { /* siguiente */ }
-
-  // Intento 3: Servicio USIG de búsqueda por coordenadas WGS84
-  try {
-    const url = `https://servicios.usig.buenosaires.gob.ar/normalizar/?lng=${lng}&lat=${lat}`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      const data = await r.json();
-      // Extraer zona si viene en la respuesta
-      const texto = JSON.stringify(data).toUpperCase();
-      const match = texto.match(/"ZO[NA_MAP]*"\s*:\s*"([A-Z0-9]+)"/i);
-      if (match) return limpiarDistrito(match[1]);
-    }
-  } catch(e) { /* fin */ }
 
   return null;
 }
-
 function limpiarDistrito(raw) {
   if (!raw) return null;
   let d = raw.toString().trim().toUpperCase()
