@@ -935,380 +935,7 @@
 <!-- ============================================================
      JAVASCRIPT
 ============================================================ -->
-<script>
-'use strict';
 
-// ================================================================
-// TABLA NORMATIVA CUR 2018 + MODIFICACIONES
-// Fuente: Ley 6099/2018, modificaciones Ley 6461/2021
-// Nota: siempre verificar en el GCBA para normativa vigente
-// ================================================================
-const ZONAS = {
-
-  // ── RESIDENCIAL ──────────────────────────────────────────────
-  "R1": {
-    tipo:"residencial", altura:9, fot:1.2, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Residencial","Pequeño comercio barrial","Servicios locales"],
-    nota:"Zona residencial de baja densidad. Máx. 3 plantas. Tejido edilicio bajo."
-  },
-  "R1b": {
-    tipo:"residencial", altura:12, fot:1.5, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Residencial","Pequeño comercio PB"],
-    nota:"Residencial baja densidad ampliada. Variante con mayor permisividad de altura."
-  },
-  "R2a": {
-    tipo:"residencial", altura:12, fot:2.0, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio local PB","Oficinas"],
-    nota:"Zona residencial de densidad media. Corredor residencial barrial."
-  },
-  "R2b": {
-    tipo:"residencial", altura:24, fot:3.0, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB","Usos compatibles","Oficinas"],
-    nota:"Residencial alta densidad. Tipología de torre con basamento posible."
-  },
-  "R2c": {
-    tipo:"residencial", altura:18, fot:2.5, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio PB","Servicios"],
-    nota:"Residencial media-alta densidad. Transición entre R2a y R2b."
-  },
-  "R2d": {
-    tipo:"residencial", altura:30, fot:3.5, fos:0.65,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Residencial","Mixto compatible","Comercio en PB"],
-    nota:"Residencial máxima densidad. Zona de alta intensidad edilicia."
-  },
-
-  // ── COMERCIAL ────────────────────────────────────────────────
-  "C1": {
-    tipo:"comercial", altura:12, fot:2.5, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Comercial","Residencial","Servicios","Oficinas"],
-    nota:"Corredor comercial barrial. Uso mixto con predominio comercial."
-  },
-  "C2": {
-    tipo:"comercial", altura:30, fot:4.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Comercial","Residencial","Oficinas","Hotelería","Servicios"],
-    nota:"Corredor comercial principal. Ejes comerciales de escala urbana."
-  },
-  "C2a": {
-    tipo:"comercial", altura:30, fot:4.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Comercial","Residencial","Oficinas","Servicios especializados"],
-    nota:"Variante de C2 con usos específicos sobre corredores determinados."
-  },
-  "C3": {
-    tipo:"comercial", altura:42, fot:5.0, fos:0.80,
-    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
-    usos:["Comercial intensivo","Residencial","Oficinas corporativas","Hotelería","Grandes superficies"],
-    nota:"Centro comercial de alta intensidad. Macrocentro y grandes corredores."
-  },
-  "C3i": {
-    tipo:"comercial", altura:42, fot:5.0, fos:0.80,
-    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
-    usos:["Comercial intensivo","Grandes superficies","Logística compatible"],
-    nota:"Comercial máxima intensidad con actividades de soporte logístico."
-  },
-  "CB": {
-    tipo:"comercial", altura:12, fot:2.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"3m", lateral:"No req."},
-    usos:["Comercio local","Residencial","Servicios barriales"],
-    nota:"Corredor Basal. Ejes comerciales de escala barrial/vecinal."
-  },
-
-  // ── EQUIPAMIENTO ─────────────────────────────────────────────
-  "E1": {
-    tipo:"equipamiento", altura:12, fot:2.0, fos:0.60,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Equipamiento comunitario","Educación","Salud","Residencial compatible"],
-    nota:"Equipamiento de escala barrial. Escuelas, centros de salud."
-  },
-  "E2": {
-    tipo:"equipamiento", altura:24, fot:3.5, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Equipamiento","Institucional","Cultural","Servicios especializados"],
-    nota:"Equipamiento de escala urbana. Hospitales, facultades, centros culturales."
-  },
-  "E3": {
-    tipo:"equipamiento", altura:42, fot:5.0, fos:0.80,
-    retiros:{frente:"LM (0m)", fondo:"6m", lateral:"No req."},
-    usos:["Grandes equipamientos","Corporativo","Institucional metropolitano"],
-    nota:"Gran equipamiento de escala metropolitana. Permite desarrollo intensivo."
-  },
-
-  // ── INDUSTRIA / PRODUCCIÓN ───────────────────────────────────
-  "I": {
-    tipo:"equipamiento", altura:12, fot:1.5, fos:0.60,
-    retiros:{frente:"3m", fondo:"3m", lateral:"3m"},
-    usos:["Industrial compatible","Producción artesanal","Depósito","Servicios industriales"],
-    nota:"Zona industrial general. Industria compatible con tejido urbano."
-  },
-  "I1": {
-    tipo:"equipamiento", altura:12, fot:1.5, fos:0.60,
-    retiros:{frente:"3m", fondo:"3m", lateral:"3m"},
-    usos:["Industrial liviano","Producción limpia","Taller artesanal"],
-    nota:"Industria liviana inofensiva en zonas de transición."
-  },
-  "IP": {
-    tipo:"equipamiento", altura:15, fot:1.8, fos:0.65,
-    retiros:{frente:"3m", fondo:"4m", lateral:"3m"},
-    usos:["Industria y parque","Producción tecnológica","Logística"],
-    nota:"Parque industrial. Usos productivos agrupados con servicios."
-  },
-
-  // ── NUEVOS USOS MIXTOS (CUR) ─────────────────────────────────
-  "VT": {
-    tipo:"mixed", altura:18, fot:2.5, fos:0.65,
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Usos mixtos controlados","Comercio PB"],
-    nota:"Vivienda con Tejido. Preservación del tejido edilicio característico barrial."
-  },
-  "NCI": {
-    tipo:"mixed", altura:30, fot:3.5, fos:0.70,
-    retiros:{frente:"3m", fondo:"6m", lateral:"3m"},
-    usos:["Residencial","Comercial","Servicios","Oficinas","Usos mixtos"],
-    nota:"Nueva Centralidad. Zonas de reconversión industrial / nuevos usos urbanos."
-  },
-  "EMED": {
-    tipo:"equipamiento", altura:24, fot:2.5, fos:0.65,
-    retiros:{frente:"3m", fondo:"5m", lateral:"3m"},
-    usos:["Equipamiento médico","Salud","Residencial médico asociado"],
-    nota:"Eje Médico Sanitario. Corredor hospitalario especializado."
-  },
-  "ECOR": {
-    tipo:"mixed", altura:24, fot:3.0, fos:0.70,
-    retiros:{frente:"LM (0m)", fondo:"5m", lateral:"No req."},
-    usos:["Comercial","Residencial","Servicios turísticos","Oficinas"],
-    nota:"Eje de corredores especiales. Normativa particular según tramo."
-  },
-  "AU": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Autopista y vías rápidas","Infraestructura vial","Equipamiento vial"],
-    nota:"Autopistas y vías rápidas. No apto para desarrollo privado residencial/comercial."
-  },
-
-  // ── ÁREAS DE PROTECCIÓN HISTÓRICA ────────────────────────────
-  "APH": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"Según catálogo", fondo:"Según catálogo", lateral:"Según catálogo"},
-    usos:["Residencial","Comercio restringido","Cultural","Turístico"],
-    nota:"Área de Protección Histórica genérica. Normativa especial por catálogo.", esAPH:true
-  },
-  "APH1": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM (preservación)", fondo:"Según catálogo", lateral:"Según catálogo"},
-    usos:["Residencial","Cultural","Comercio PB restringido","Turístico"],
-    nota:"APH San Telmo — Montserrat. Casco histórico fundacional. Catálogo obligatorio.", esAPH:true
-  },
-  "APH2": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM (preservación)", fondo:"Según catálogo", lateral:"Según catálogo"},
-    usos:["Residencial","Cultural","Turístico","Comercio barrial"],
-    nota:"APH La Boca. Patrimonio barrial e industrial. Consultar catálogo.", esAPH:true
-  },
-  "APH3": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural","Gastronómico"],
-    nota:"APH Palermo Viejo. Tejido de casas bajas. Protección de escala barrial.", esAPH:true
-  },
-  "APH4": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural","Mixto restringido"],
-    nota:"APH Chacarita. Barrio obrero histórico.", esAPH:true
-  },
-  "APH5": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural"],
-    nota:"APH Barracas. Tejido industrial reconvertido.", esAPH:true
-  },
-  "APH20": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural","Comercio PB"],
-    nota:"APH Zona de protección especial según normativa específica.", esAPH:true
-  },
-  "APH50": {
-    tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
-    retiros:{frente:"LM", fondo:"Según APH", lateral:"Según APH"},
-    usos:["Residencial","Cultural"],
-    nota:"APH Zona histórica de alta protección patrimonial.", esAPH:true
-  },
-
-  // ── USO PÚBLICO ──────────────────────────────────────────────
-  "UP": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Espacio público","Parques","Plazas","Equipamiento público","Reservas"],
-    nota:"Espacio de uso público. No apto para desarrollo privado."
-  },
-  "ESC": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Escuelas y establecimientos educativos públicos"],
-    nota:"Zona de equipamiento educativo público."
-  },
-
-  // ── ESPECIALES ──────────────────────────────────────────────
-  "ZP": {
-    tipo:"uso-publico", altura:"—", fot:"—", fos:"—",
-    retiros:{frente:"—", fondo:"—", lateral:"—"},
-    usos:["Zona portuaria","Actividades portuarias","Logística fluvial"],
-    nota:"Zona portuaria. Normativa especial Puerto Madero y otros frentes de agua."
-  }
-};
-
-// ================================================================
-// HELPERS UI
-// ================================================================
-const $ = id => document.getElementById(id);
-
-function setLoading(on) {
-  $('load-track').classList.toggle('on', on);
-  $('btn-buscar').disabled = on;
-}
-
-function setMsg(type, text) {
-  ['err','warn','info'].forEach(t => {
-    const el = $('msg-' + t);
-    if (t === type && text) { el.textContent = text; el.classList.add('on'); }
-    else { el.classList.remove('on'); }
-  });
-}
-
-function clearMsgs() {
-  ['err','warn','info'].forEach(t => $('msg-' + t).classList.remove('on'));
-}
-
-function fmt(n) { return Math.round(n).toLocaleString('es-AR'); }
-
-// ================================================================
-// USIG — Normalizar dirección
-// ================================================================
-async function normalizarDir(dir) {
-  const url = `https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion=${encodeURIComponent(dir)}&geocodificar=true`;
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('No se pudo conectar con el servicio USIG. Verificar conexión a internet.');
-
-  const data = await r.json();
-  if (!data.direccionesNormalizadas || data.direccionesNormalizadas.length === 0)
-    throw new Error('Dirección no encontrada en CABA. Verificar calle y número.');
-
-  const dn = data.direccionesNormalizadas[0];
-
-  // Validar que sea CABA
-  const partido = (dn.partido || '').toUpperCase();
-  if (partido && !partido.includes('BUENOS AIRES') && !partido.includes('CABA') && !partido.includes('CIUDAD'))
-    throw new Error('La dirección parece estar fuera de CABA. Esta herramienta cubre exclusivamente la Ciudad Autónoma de Buenos Aires.');
-
-  let coords = null;
-  if (dn.coordenadas && dn.coordenadas.x && dn.coordenadas.y) {
-    // USIG devuelve x=lng, y=lat en WGS84
-    coords = { lat: parseFloat(dn.coordenadas.y), lng: parseFloat(dn.coordenadas.x) };
-  }
-
-  return {
-    direccion: dn.direccion || dir,
-    smp: dn.smp || null,
-    coords,
-    raw: dn
-  };
-}
-
-// ================================================================
-// NEAREST-NEIGHBOR por centroides CUR oficial 2024
-// ================================================================
-let _curData = null;
-let _curLoading = null;
-
-async function cargarCurData() {
-  if (_curData) return _curData;
-  if (_curLoading) return _curLoading;
-  _curLoading = fetch('./cur_centroids.json')
-    .then(r => r.json())
-    .then(data => { _curData = data; _curLoading = null; return data; })
-    .catch(e => { _curLoading = null; console.warn('CUR data no disponible:', e); return null; });
-  return _curLoading;
-}
-
-function nearestDistrict(lng, lat, data) {
-  // Buscar los 5 más cercanos dentro de 0.003 grados (~300m)
-  const MAX_D2 = 0.003 * 0.003;
-  const nearby = [];
-  for (const c of data) {
-    const d2 = (c[0]-lng)*(c[0]-lng) + (c[1]-lat)*(c[1]-lat);
-    if (d2 < MAX_D2) nearby.push([d2, c[2], c[3]]);
-  }
-  if (nearby.length === 0) return null;
-  nearby.sort((a,b) => a[0]-b[0]);
-  const top5 = nearby.slice(0,5);
-  // Votación: el distrito más frecuente entre los 5 más cercanos
-  const votes = {};
-  for (const [,d] of top5) votes[d] = (votes[d]||0) + 1;
-  const winner = Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
-  // Si el más cercano está a < 150m, confiar en él directamente
-  const nearestDist = Math.sqrt(top5[0][0]) * 111000;
-  if (nearestDist < 150) return top5[0][1];
-  // Sino usar votación
-  return winner ? winner[0] : top5[0][1];
-}
-
-// ================================================================
-// OBTENER DISTRITO — GeoJSON centroides CUR + fallback API
-// ================================================================
-async function obtenerDistrito(lat, lng) {
-  // Intento 1: centroides CUR oficial (principal)
-  try {
-    const data = await cargarCurData();
-    if (data) {
-      const dist = nearestDistrict(lng, lat, data);
-      if (dist) return limpiarDistrito(dist);
-    }
-  } catch(e) { console.warn('CUR nearest error:', e); }
-
-  // Intento 2: ArcGIS REST de USIG (fallback)
-  try {
-    const url = `https://ws.usig.buenosaires.gob.ar/arcgis/rest/services/Zonificacion/`
-      + `Distritos_Zonificacion/MapServer/0/query`
-      + `?geometry=${lng},${lat}&geometryType=esriGeometryPoint&inSR=4326`
-      + `&spatialRel=esriSpatialRelIntersects&outFields=*&f=json`;
-    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
-    if (r.ok) {
-      const data = await r.json();
-      if (data.features && data.features.length > 0) {
-        const attr = data.features[0].attributes;
-        for (const k of ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa']) {
-          if (attr[k]) return limpiarDistrito(attr[k]);
-        }
-      }
-    }
-  } catch(e) { /* sin API */ }
-
-  return null;
-}
-
->
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NORM·AR — Consulta Normativa Urbanística CABA</title>
-
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-
-  <!-- Leaflet -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
   <style>
     /* =============================================
@@ -2233,6 +1860,7 @@ async function obtenerDistrito(lat, lng) {
      JAVASCRIPT
 ============================================================ -->
 <script>
+
 'use strict';
 
 // ================================================================
@@ -2520,8 +2148,9 @@ async function normalizarDir(dir) {
   };
 }
 
+
 // ================================================================
-// GEOJSON CUR — point-in-polygon
+// NEAREST-NEIGHBOR por centroides CUR oficial 2024
 // ================================================================
 let _curData = null;
 let _curLoading = null;
@@ -2529,53 +2158,49 @@ let _curLoading = null;
 async function cargarCurData() {
   if (_curData) return _curData;
   if (_curLoading) return _curLoading;
-  
-  _curLoading = fetch('./cur_wgs84.json')
+  _curLoading = fetch('./cur_centroids.json')
     .then(r => r.json())
     .then(data => { _curData = data; _curLoading = null; return data; })
-    .catch(() => { _curLoading = null; return null; });
-  
+    .catch(e => { _curLoading = null; console.warn('CUR data no disponible:', e); return null; });
   return _curLoading;
 }
 
-function pointInRing(lng, lat, ring) {
-  let inside = false;
-  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-    const [xi, yi] = ring[i];
-    const [xj, yj] = ring[j];
-    if (((yi > lat) !== (yj > lat)) &&
-        (lng < (xj - xi) * (lat - yi) / (yj - yi) + xi)) {
-      inside = !inside;
-    }
+function nearestDistrict(lng, lat, data) {
+  // Buscar los 5 más cercanos dentro de 0.003 grados (~300m)
+  const MAX_D2 = 0.003 * 0.003;
+  const nearby = [];
+  for (const c of data) {
+    const d2 = (c[0]-lng)*(c[0]-lng) + (c[1]-lat)*(c[1]-lat);
+    if (d2 < MAX_D2) nearby.push([d2, c[2], c[3]]);
   }
-  return inside;
-}
-
-function findDistrict(lng, lat, data) {
-  for (const feat of data) {
-    for (const ring of feat.r) {
-      if (pointInRing(lng, lat, ring)) {
-        return feat.d;
-      }
-    }
-  }
-  return null;
+  if (nearby.length === 0) return null;
+  nearby.sort((a,b) => a[0]-b[0]);
+  const top5 = nearby.slice(0,5);
+  // Votación: el distrito más frecuente entre los 5 más cercanos
+  const votes = {};
+  for (const [,d] of top5) votes[d] = (votes[d]||0) + 1;
+  const winner = Object.entries(votes).sort((a,b)=>b[1]-a[1])[0];
+  // Si el más cercano está a < 150m, confiar en él directamente
+  const nearestDist = Math.sqrt(top5[0][0]) * 111000;
+  if (nearestDist < 150) return top5[0][1];
+  // Sino usar votación
+  return winner ? winner[0] : top5[0][1];
 }
 
 // ================================================================
-// OBTENER DISTRITO — GeoJSON CUR + fallback APIs
+// OBTENER DISTRITO — GeoJSON centroides CUR + fallback API
 // ================================================================
 async function obtenerDistrito(lat, lng) {
-  // Intento 1: GeoJSON CUR oficial (más confiable)
+  // Intento 1: centroides CUR oficial (principal)
   try {
     const data = await cargarCurData();
     if (data) {
-      const dist = findDistrict(lng, lat, data);
+      const dist = nearestDistrict(lng, lat, data);
       if (dist) return limpiarDistrito(dist);
     }
-  } catch(e) { /* siguiente */ }
+  } catch(e) { console.warn('CUR nearest error:', e); }
 
-  // Intento 2: ArcGIS REST de USIG
+  // Intento 2: ArcGIS REST de USIG (fallback)
   try {
     const url = `https://ws.usig.buenosaires.gob.ar/arcgis/rest/services/Zonificacion/`
       + `Distritos_Zonificacion/MapServer/0/query`
@@ -2586,16 +2211,31 @@ async function obtenerDistrito(lat, lng) {
       const data = await r.json();
       if (data.features && data.features.length > 0) {
         const attr = data.features[0].attributes;
-        const keys = ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa'];
-        for (const k of keys) {
+        for (const k of ['DISTRITO','distrito','ZONA','zona','ZO_MAPA','zo_mapa']) {
           if (attr[k]) return limpiarDistrito(attr[k]);
         }
       }
     }
-  } catch(e) { /* siguiente */ }
+  } catch(e) { /* sin API */ }
 
   return null;
 }
+
+>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NORM·AR — Consulta Normativa Urbanística CABA</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+
 function limpiarDistrito(raw) {
   if (!raw) return null;
   let d = raw.toString().trim().toUpperCase()
@@ -2898,6 +2538,7 @@ $('inp-addr').addEventListener('keydown', e => {
 document.addEventListener('keydown', e => {
   if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') consultarParcela();
 });
+
 </script>
 </body>
 </html>
