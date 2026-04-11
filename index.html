@@ -232,6 +232,15 @@
       <div><strong>ÁREA DE PROTECCIÓN HISTÓRICA (APH)</strong><br>
       Restricciones especiales de altura, retiros y materialidad. Consultar catálogo GCBA antes de proyectar.</div>
     </div>
+    <div class="aph-box" id="u-box" style="border-color:#22d3ee;background:rgba(34,211,238,.07);color:#a0f0ff">⚠️
+      <div><strong id="u-box-title">URBANIZACIÓN ESPECIAL</strong><br>
+      Este predio pertenece a un distrito de normativa individualizada. Verificar plancheta de edificabilidad en el GCBA.</div>
+    </div>
+    <div class="aph-box" id="cur-box" style="border-color:#f59e0b;background:rgba(245,158,11,.08);color:#fcd34d">⚠️
+      <div><strong id="cur-box-title">VERIFICAR EN CIUDAD3D</strong><br>
+      La altura y el FOT varían por parcela según el CUR (Ley 6099). Verificá los valores exactos en
+      <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank" style="color:#f59e0b">ciudad3d.buenosaires.gob.ar</a>.</div>
+    </div>
     <div class="slabel">Parámetros Normativos</div>
     <div class="cards">
       <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Máx.</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
@@ -277,7 +286,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v7.3<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -456,42 +465,42 @@ const ZONAS = {
   },
   // ── R2a INDICADORES ──────────────────────────────────────────────
   "R2a I": {
-    tipo:"residential", altura:"9.30", pisos:3, fot:"1.2", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB"],
-    desc:"R2a I — Residencial baja densidad. Altura máx. 9.30m."
+    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Residencial","Servicios","Comercio"],
+    nota:"R2a I — La altura varía por parcela según el CUR (puede ser U.S.A.A. 22.80m, U.S.A.M. 17.20m u otra). Verificar en ciudad3D.", esCUR:true
   },
   "R2a II": {
-    tipo:"residential", altura:"14.60", pisos:5, fot:"1.6", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
-    usos:["Residencial","Comercio en PB","Usos compatibles"],
-    desc:"R2a II — Residencial media densidad. Altura máx. 14.60m."
+    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
+    usos:["Residencial","Servicios","Comercio"],
+    nota:"R2a II — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
   },
   // ── C3 INDICADORES ───────────────────────────────────────────────
   "C3 I": {
-    tipo:"commercial", altura:"24", pisos:8, fot:"3", fos:"0.70",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    tipo:"commercial", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
     usos:["Comercial","Residencial","Servicios","Oficinas","Hotelería"],
-    desc:"C3 I — Comercial general. Altura máx. 24m."
+    nota:"C3 I — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
   },
   "C3 II": {
-    tipo:"commercial", altura:"36", pisos:12, fot:"5", fos:"0.70",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    tipo:"commercial", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
     usos:["Comercial","Residencial","Servicios","Oficinas","Hotelería"],
-    desc:"C3 II — Comercial general alta densidad. Altura máx. 36m."
+    nota:"C3 II — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
   },
   // ── R1b INDICADORES ──────────────────────────────────────────────
   "R1b I": {
-    tipo:"residential", altura:"9.30", pisos:3, fot:"1.0", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
     usos:["Residencial","Comercio en PB"],
-    desc:"R1b I — Residencial unifamiliar y plurifamiliar baja densidad."
+    nota:"R1b I — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
   },
   "R1b II": {
-    tipo:"residential", altura:"14.60", pisos:5, fot:"1.4", fos:"0.60",
-    retiros:{frente:"LM (0m)", fondo:"4m", lateral:"No req."},
+    tipo:"residential", altura:"Ver CUR", fot:"Ver CUR", fos:"Ver CUR",
+    retiros:{frente:"Según plancheta",fondo:"Según plancheta",lateral:"Según plancheta"},
     usos:["Residencial","Comercio en PB"],
-    desc:"R1b II — Residencial plurifamiliar media densidad."
+    nota:"R1b II — La altura varía por parcela según el CUR. Verificar en ciudad3D.", esCUR:true
   },
 "APH": {
     tipo:"proteccion", altura:9, fot:0.8, fos:0.40,
@@ -762,8 +771,18 @@ function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
     uBox.classList.toggle('on', isU);
     if (isU) eid('u-box-title').textContent = `URBANIZACIÓN ESPECIAL (${distrKey})`;
   }
+  // Mostrar alerta para zonas con parámetros CUR no confirmados
+  const curBox = eid('cur-box');
+  if (curBox) {
+    const isCUR = !!(zona && zona.esCUR);
+    curBox.classList.toggle('on', isCUR);
+    if (isCUR) {
+      eid('cur-box-title').textContent = `${distrKey} — VERIFICAR EN CIUDAD3D`;
+    }
+  }
 
-  eid('res-alt').textContent = zona && zona.altura !== '—' ? zona.altura : '—';
+
+  eid('res-alt').textContent = zona && zona.altura && zona.altura !== '—' && zona.altura !== 'Ver CUR' ? zona.altura : '—';
   // Cálculo de pisos según Código de Edificación CABA
   // PB residencial: libre 3.00m + estructura 0.30m = 3.30m
   // Pisos superiores residencial: libre 2.60m + 0.30m = 2.90m (CE Art. 4.8)
@@ -781,8 +800,8 @@ function mostrar(addr, distrKey, zona, lat, lng, frente, fondo) {
   } else {
     eid('res-pis').textContent = '—';
   }
-  eid('res-fot').textContent = zona ? zona.fot : '—';
-  eid('res-fos').textContent = zona ? zona.fos : '—';
+  eid('res-fot').textContent = zona && zona.fot && zona.fot !== 'Ver CUR' ? zona.fot : '—';
+  eid('res-fos').textContent = zona && zona.fos && zona.fos !== 'Ver CUR' ? zona.fos : '—';
   eid('res-dis').textContent = distrKey || '?';
 
   if (zona) {
