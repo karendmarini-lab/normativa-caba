@@ -477,10 +477,14 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   // Plano Límite + pisos calculados sobre plano (CE CABA)
   if (plano && plano > 0) {
     const pisos = 1 + Math.floor((plano - 3.30) / 2.90);
-    eid('res-pis').textContent = '≈' + Math.max(1, pisos) + ' pisos (Plano Límite: ' + plano + 'm)';
+    eid('res-pis').textContent = '≈' + Math.max(1, pisos);
+    const u = eid('res-pis').closest('.card')?.querySelector('.card-unit');
+    if (u) u.textContent = 'pisos · PL ' + plano + 'm';
   } else if (h && h > 0) {
     const pisos = 1 + Math.floor((h - 3.30) / 2.90);
-    eid('res-pis').textContent = '≈' + Math.max(1, pisos) + ' pisos (Altura: ' + h + 'm)';
+    eid('res-pis').textContent = '≈' + Math.max(1, pisos);
+    const u = eid('res-pis').closest('.card')?.querySelector('.card-unit');
+    if (u) u.textContent = 'pisos indicativos';
   } else {
     eid('res-pis').textContent = '—';
   }
