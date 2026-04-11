@@ -243,8 +243,8 @@
     </div>
     <div class="slabel">Parámetros Normativos</div>
     <div class="cards">
-      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Máx.</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
-      <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos indicativos</div></div>
+      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Dominante</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Plano Límite</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos indicativos</div></div>
       <div class="card"><div class="card-ico">∑</div><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
       <div class="card"><div class="card-ico">▣</div><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
       <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div>
@@ -471,13 +471,16 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     const ab = eid('aph-box'); if (ab) ab.classList.add('on');
   }
 
-  // Altura
+  // Altura Dominante (h) + Plano Límite (plano)
   eid('res-alt').textContent = h ? h : '—';
 
-  // Pisos (fórmula CE CABA)
-  if (h && h > 0) {
+  // Plano Límite + pisos calculados sobre plano (CE CABA)
+  if (plano && plano > 0) {
+    const pisos = 1 + Math.floor((plano - 3.30) / 2.90);
+    eid('res-pis').textContent = '≈' + Math.max(1, pisos) + ' pisos (Plano Límite: ' + plano + 'm)';
+  } else if (h && h > 0) {
     const pisos = 1 + Math.floor((h - 3.30) / 2.90);
-    eid('res-pis').textContent = '≈' + Math.max(1, pisos);
+    eid('res-pis').textContent = '≈' + Math.max(1, pisos) + ' pisos (Altura: ' + h + 'm)';
   } else {
     eid('res-pis').textContent = '—';
   }
@@ -501,8 +504,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   const noteEl = eid('norm-note');
   if (noteEl && cpu) {
     const distInfo = distM != null ? ` (parcela a ${distM}m)` : '';
-    const planoInfo = plano && plano > h ? ` | Plano límite completamiento: ${plano}m` : '';
-    noteEl.innerHTML = `<strong>${cpu}</strong>${distInfo}${planoInfo}. ` +
+    noteEl.innerHTML = `<strong>${cpu}</strong>${distInfo}. ` +
       `Datos del CUR 2024. ` +
       `<span style="display:block;margin-top:6px;font-size:10.5px">⚠ Verificar normativa completa en ` +
       `<a href="https://ciudad3d.buenosaires.gob.ar" target="_blank" style="color:var(--acc)">ciudad3d.buenosaires.gob.ar</a></span>`;
