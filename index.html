@@ -262,10 +262,10 @@
     </div>
     <div id="calc-block">
       <div class="cgrid">
-        <div class="citem"><div class="clbl">Sup. del Lote</div><div class="cval" id="c-sup">—</div><div class="cunit">m²</div></div>
-        <div class="citem"><div class="clbl">M² Edificables (FOT)</div><div class="cval" id="c-edif">—</div><div class="cunit">m² totales</div></div>
-        <div class="citem"><div class="clbl">Pisada (65%)</div><div class="cval" id="c-pb">—</div><div class="cunit">m² m² construibles</div></div>
-        <div class="citem"><div class="clbl">M² Vendibles Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">× 0.85 efic.</div></div>
+        <div class="citem"><div class="clbl">Superficie Oficial del Lote</div><div class="cval" id="c-sup">—</div><div class="cunit">m² (Catastro)</div></div>
+        <div class="citem"><div class="clbl">Volumen Total Edificable</div><div class="cval" id="c-edif">—</div><div class="cunit">m² construibles</div></div>
+        <div class="citem"><div class="clbl">Pisada Estimada (65%)</div><div class="cval" id="c-pb">—</div><div class="cunit">m² m² construibles</div></div>
+        <div class="citem"><div class="clbl">Superficie Vendible Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">× 0.85 efic.</div></div>
       </div>
     </div>
 
@@ -586,19 +586,21 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   // Calculadora (frente × fondo)
   const cb = eid('calc-block');
   const area = parcel ? parcel.area : 0;
-  if (area && area > 0 && fot) {
-    const sup   = area;
-    const edif  = sup * fot;
-    const pb    = sup * 0.65;  // Pisada 65%
-    const vend  = edif * 0.85;
-    eid('c-sup').textContent  = fmt(sup);
-    eid('c-edif').textContent = fmt(edif);
-    eid('c-pb').textContent   = fmt(pb);
-    eid('c-vend').textContent = fmt(vend);
+  if (area && area > 0) {
+    // Pisos estimados desde plano límite (o altura dominante)
+    const altRef = (plano && plano > 0) ? plano : (h || 0);
+    const pisosEst = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
+    const pisada   = area * 0.65;
+    const totales  = pisada * pisosEst;
+    const vendibles = totales * 0.85;
+    eid('c-sup').textContent  = fmt(area);
+    eid('c-pb').textContent   = fmt(pisada);
+    eid('c-edif').textContent = fmt(totales);
+    eid('c-vend').textContent = fmt(vendibles);
     cb.style.display = 'block';
     // Alimentar módulo financiero automáticamente
-    _finMetrosTotales   = edif;
-    _finMetrosVendibles = vend;
+    _finMetrosTotales   = totales;
+    _finMetrosVendibles = vendibles;
     const fb = eid('fin-block');
     if (fb) fb.style.display = 'block';
     calcularFinanzas();
