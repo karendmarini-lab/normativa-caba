@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.2<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.3<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -595,8 +595,19 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   const distM   = parcel ? parcel.dist  : null;
 
   // Badge del código CPU
+  // FIX 3: mapeo CPU (nomenclatura derogada) → CUR vigente
+  const CPU_TO_CUR = {
+    'R2a I':'U.S.A.A.', 'R2a II':'U.S.A.A.',
+    'C3 I':'Corredor Medio', 'C3 II':'Corredor Medio',
+    'C2':'Corredor Alto', 'C1':'Corredor Alto',
+    'R2b I':'U.S.A.B. 2', 'R2b I 1':'U.S.A.B. 2',
+    'R2b II':'U.S.A.B. 1', 'R2b III':'U.S.A.B. 1',
+    'R1b I':'U.S.A.B. 2', 'R1b II':'U.S.A.B. 2',
+    'E1':'E1', 'E2':'E2', 'E3':'E3',
+  };
+  const cpuLabel = cpu ? (CPU_TO_CUR[cpu] ? CPU_TO_CUR[cpu] + ' (' + cpu + ')' : cpu) : 'Distrito no det.';
   const badge = eid('res-badge');
-  badge.textContent = cpu || 'Distrito no det.';
+  badge.textContent = cpuLabel;
   badge.className = 'dbadge ' + (cpu ? 'residential' : 'unknown');
 
   // Ocultar todas las alertas
@@ -614,16 +625,18 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
 
   // Plano Límite + pisos calculados sobre plano (CE CABA)
   // Plano Límite card
-  const planoEl = eid('res-plano');
-  if (planoEl) planoEl.textContent = plano ? plano : '—';
+  // FIX 1: sanitizar plano límite — en distritos bajos (≤14.6m) el plano = h
+  const planoSan = (h && h <= 14.6) ? h : (plano || h || 0);
 
-  // Pisos — calculados sobre plano límite
-  if (plano && plano > 0) {
-    const pisos = 1 + Math.floor((plano - 3.30) / 2.90);
+  const planoEl = eid('res-plano');
+  if (planoEl) planoEl.textContent = planoSan ? planoSan : '—';
+
+  // FIX 2: pisos calculados sobre plano sanitizado
+  if (planoSan > 0) {
+    const pisos = 1 + Math.floor((planoSan - 3.30) / 2.90);
     eid('res-pis').textContent = '≈' + Math.max(1, pisos);
-  } else if (h && h > 0) {
-    const pisos = 1 + Math.floor((h - 3.30) / 2.90);
-    eid('res-pis').textContent = '≈' + Math.max(1, pisos);
+    const u = eid('res-pis').closest?.('.card')?.querySelector('.card-unit');
+    if (u) u.textContent = 'pisos · PL ' + planoSan + 'm';
   } else {
     eid('res-pis').textContent = '—';
   }
@@ -660,7 +673,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   const area = parcel ? parcel.area : 0;
   if (area && area > 0) {
     // Auto-llenar inputs editables con datos oficiales
-    const altRef = (plano && plano > 0) ? plano : (h || 0);
+    const altRef = planoSan > 0 ? planoSan : (h || 0);  // usa plano sanitizado
     const pisosEst = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
     window._pisosEstimados = pisosEst;
     const fr = parcel.fr || 0;
