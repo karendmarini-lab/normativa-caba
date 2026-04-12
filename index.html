@@ -268,6 +268,30 @@
         <div class="citem"><div class="clbl">M² Vendibles Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">× 0.85 efic.</div></div>
       </div>
     </div>
+
+    <!-- ── MÓDULO FINANCIERO ──────────────────────────────────────── -->
+    <div id="fin-block" style="display:none">
+      <div class="slabel" style="color:#4ade80">◈ Análisis de Inversión</div>
+      <div style="background:#0d1f14;border:1px solid #22c55e33;border-radius:6px;padding:20px 22px;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+          <div>
+            <div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Precio del Terreno (USD)</div>
+            <input id="fin-terreno" type="number" min="0" placeholder="ej. 500000"
+              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;
+                     color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
+              oninput="calcularFinanzas()">
+          </div>
+          <div>
+            <div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Valor de Venta Esperado (USD/m²)</div>
+            <input id="fin-precio-m2" type="number" min="0" placeholder="ej. 3000"
+              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;
+                     color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
+              oninput="calcularFinanzas()">
+          </div>
+        </div>
+        <div id="resultados-financieros"></div>
+      </div>
+    </div>
     <div class="slabel">Ubicación en Mapa</div>
     <div id="map-wrap"><div id="map"></div></div>
     <div class="nnote" id="norm-note">Datos orientativos basados en el CUR CABA (Ley 6099/2018) y modificaciones vigentes.</div>
@@ -423,6 +447,48 @@ async function getDistrito(lat, lng) {
   }
 }
 
+
+// ── MÓDULO FINANCIERO ────────────────────────────────────────────
+let _finMetrosVendibles = 0;
+let _finMetrosTotales   = 0;
+
+function calcularFinanzas() {
+  const terreno  = parseFloat(document.getElementById('fin-terreno')?.value)   || 0;
+  const precioM2 = parseFloat(document.getElementById('fin-precio-m2')?.value) || 0;
+  const container = document.getElementById('resultados-financieros');
+  if (!container) return;
+
+  if (!_finMetrosVendibles || !_finMetrosTotales || (!terreno && !precioM2)) {
+    container.innerHTML = ''; return;
+  }
+
+  const fmtUSD = n => 'USD ' + Math.round(n).toLocaleString('en-US');
+
+  const incidencia = terreno  ? Math.round(terreno / _finMetrosVendibles) : null;
+  const costoCons  = Math.round(_finMetrosTotales * 800);
+  const gdv        = precioM2 ? Math.round(_finMetrosVendibles * precioM2) : null;
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
+      ${incidencia != null ? `
+      <div style="background:#0a1409;border:1px solid #22c55e33;border-radius:4px;padding:12px 14px">
+        <div style="font-size:9px;letter-spacing:2px;color:#4ade80;text-transform:uppercase;margin-bottom:4px">Incidencia del Terreno</div>
+        <div style="font-size:20px;font-weight:600;color:#f0fdf4">${fmtUSD(incidencia)}<span style="font-size:11px;color:#6b7280"> /m²</span></div>
+      </div>` : ''}
+      <div style="background:#0a1409;border:1px solid #22c55e33;border-radius:4px;padding:12px 14px">
+        <div style="font-size:9px;letter-spacing:2px;color:#4ade80;text-transform:uppercase;margin-bottom:4px">Costo Construcción Est.</div>
+        <div style="font-size:20px;font-weight:600;color:#f0fdf4">${fmtUSD(costoCons)}</div>
+        <div style="font-size:10px;color:#6b7280;margin-top:2px">${Math.round(_finMetrosTotales).toLocaleString('en-US')} m² × USD 800</div>
+      </div>
+      ${gdv != null ? `
+      <div style="background:#0a1409;border:1px solid #22c55e33;border-radius:4px;padding:12px 14px">
+        <div style="font-size:9px;letter-spacing:2px;color:#4ade80;text-transform:uppercase;margin-bottom:4px">Volumen de Ventas Est. (GDV)</div>
+        <div style="font-size:20px;font-weight:600;color:#f0fdf4">${fmtUSD(gdv)}</div>
+        <div style="font-size:10px;color:#6b7280;margin-top:2px">${Math.round(_finMetrosVendibles).toLocaleString('en-US')} m² vendibles</div>
+      </div>` : ''}
+    </div>`;
+}
+
 // ── MAPA──────────────────────────────────────
 let map = null, marker = null;
 
@@ -526,6 +592,12 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     eid('c-pb').textContent   = fmt(sup * 0.60);   // FOS típico CABA
     eid('c-vend').textContent = fmt(sup * fot * 0.85);
     cb.style.display = 'block';
+    // Alimentar módulo financiero
+    _finMetrosTotales   = sup * fot;
+    _finMetrosVendibles = sup * fot * 0.85;
+    const fb = eid('fin-block');
+    if (fb) fb.style.display = 'block';
+    calcularFinanzas();
   } else {
     if (cb) cb.style.display = 'none';
   }
