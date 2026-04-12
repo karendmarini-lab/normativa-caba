@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.3<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.4<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -626,7 +626,8 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   // Plano Límite + pisos calculados sobre plano (CE CABA)
   // Plano Límite card
   // FIX 1: sanitizar plano límite — en distritos bajos (≤14.6m) el plano = h
-  const planoSan = (h && h <= 14.6) ? h : (plano || h || 0);
+  // planoSan: h si es bajo (<=14.6) O si plano es inconsistente (<h)
+  const planoSan = (h && (h <= 14.6 || !plano || plano < h)) ? h : plano;
 
   const planoEl = eid('res-plano');
   if (planoEl) planoEl.textContent = planoSan ? planoSan : '—';
@@ -681,10 +682,10 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     let pisadaCalc, bandaLabel;
     if (fr > 0 && fo > 0) {
       if (fo <= 16) {
-        pisadaCalc = Math.round(fr * fo);
+        pisadaCalc = Math.min(Math.round(fr * fo), Math.round(area));
         bandaLabel = fr.toFixed(2) + ' x ' + fo.toFixed(2) + ' m (100%)';
       } else {
-        pisadaCalc = Math.round(fr * 22);
+        pisadaCalc = Math.min(Math.round(fr * 22), Math.round(area));
         bandaLabel = fr.toFixed(2) + ' x 22 m (LFI)';
       }
     } else {
