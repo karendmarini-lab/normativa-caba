@@ -9,258 +9,266 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap');
 
   :root {
-    --bg:        #F5F3EF;
-    --bg-card:   #FFFFFF;
-    --bg-input:  #F0EDE8;
-    --border:    #E2DDD6;
-    --text:      #1A1714;
-    --muted:     #8A837A;
-    --acc:       #C4622D;
-    --acc-light: #F5E6DC;
-    --acc-dim:   rgba(196,98,45,.10);
-    --green:     #2D7A4F;
-    --green-bg:  #EBF5EF;
-    --r:         8px;
-    --shadow:    0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+    --bg:       #0C0C0C;
+    --bg-card:  #141414;
+    --bg-lift:  #1A1A1A;
+    --border:   rgba(255,255,255,.08);
+    --border-h: rgba(255,255,255,.18);
+    --text:     #F0EDE8;
+    --muted:    rgba(240,237,232,.4);
+    --acc:      #C8A96E;
+    --acc-dim:  rgba(200,169,110,.12);
+    --green:    #5A9E7A;
+    --green-bg: rgba(90,158,122,.10);
+    --r:        6px;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'Outfit', system-ui, sans-serif;
     background: var(--bg);
     color: var(--text);
-    font-size: 15px;
-    line-height: 1.5;
+    font-size: 14px;
+    font-weight: 300;
+    line-height: 1.6;
     min-height: 100vh;
   }
 
-  /* ── HEADER ─────────────────────────────────── */
-  header {
-    background: var(--text);
-    padding: 0 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 60px;
-    position: sticky; top: 0; z-index: 100;
+  /* ── TOPBAR: Karen Marini ──────────────────────── */
+  .topbar {
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px;
+    height: 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted);
   }
-  .logo-wrap { display: flex; align-items: baseline; gap: 10px; }
+  .topbar-name { color: var(--acc); letter-spacing: 3px; font-weight: 400; }
+  .topbar-right { display: flex; gap: 24px; }
+  .topbar-right a { color: var(--muted); text-decoration: none; transition: color .2s; }
+  .topbar-right a:hover { color: var(--acc); }
+
+  /* ── HEADER ─────────────────────────────────────── */
+  header {
+    padding: 0 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-wrap { display: flex; align-items: center; gap: 14px; }
   .logo-mark {
-    width: 28px; height: 28px;
-    background: var(--acc);
-    border-radius: 4px;
+    width: 32px; height: 32px;
+    border: 1.5px solid var(--acc);
     display: flex; align-items: center; justify-content: center;
-    font-family: 'DM Serif Display', serif;
-    font-size: 16px; color: #fff; font-weight: 400;
-    flex-shrink: 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 16px; color: var(--acc); font-weight: 300;
   }
   .logo-name {
-    font-family: 'DM Serif Display', serif;
-    font-size: 20px; color: #fff;
-    letter-spacing: -.3px;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; color: var(--text);
+    font-weight: 300; letter-spacing: 1px;
   }
   .logo-name span { color: var(--acc); }
   .logo-sub {
-    font-size: 10px; letter-spacing: 2px;
-    color: rgba(255,255,255,.4);
-    text-transform: uppercase;
-    margin-left: 4px;
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin-top: 1px;
   }
-  .header-right {
-    display: flex; align-items: center; gap: 24px;
+  .header-nav { display: flex; gap: 28px; }
+  .header-nav a {
+    font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); text-decoration: none; transition: color .2s;
   }
-  .hbadge {
-    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
-    color: rgba(255,255,255,.5); cursor: pointer;
-    transition: color .2s;
-  }
-  .hbadge:hover { color: var(--acc); }
-  .hbadge a { color: inherit; text-decoration: none; }
+  .header-nav a:hover { color: var(--acc); }
 
-  /* ── MAIN ───────────────────────────────────── */
-  main { max-width: 900px; margin: 0 auto; padding: 48px 24px 80px; }
+  /* ── MAIN ───────────────────────────────────────── */
+  main { max-width: 860px; margin: 0 auto; padding: 52px 24px 100px; }
 
-  /* ── SEARCH BAR ─────────────────────────────── */
+  /* ── SEARCH ─────────────────────────────────────── */
   .search-section {
-    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px 28px 24px;
-    box-shadow: var(--shadow);
-    margin-bottom: 28px;
+    border-radius: var(--r);
+    padding: 32px 32px 28px;
+    margin-bottom: 32px;
+    position: relative;
   }
-  .search-title {
-    font-size: 11px; letter-spacing: 2.5px; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 16px;
-    display: flex; align-items: center; gap: 8px;
+  .search-section::before {
+    content: 'CONSULTA DE PARCELA';
+    position: absolute; top: -1px; left: 28px;
+    font-size: 9px; letter-spacing: 3px;
+    background: var(--bg); color: var(--muted);
+    padding: 0 8px;
   }
-  .search-title::before {
-    content: ''; display: block;
-    width: 20px; height: 1px; background: var(--acc);
-  }
-  .search-row { display: flex; gap: 10px; align-items: flex-start; }
-  .acwrap { flex: 1; position: relative; }
 
-  input[type=text], input[type=number] {
-    font-family: inherit; font-size: 15px;
-    background: var(--bg-input); color: var(--text);
-    border: 1px solid var(--border); border-radius: var(--r);
-    padding: 11px 14px; outline: none; width: 100%;
-    transition: border-color .2s, box-shadow .2s;
+  .inp-label {
+    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px; display: block;
   }
+  .inp-label span { color: var(--acc); margin-left: 2px; }
+
+  input[type=text], input[type=number], select {
+    font-family: 'Outfit', inherit; font-size: 15px; font-weight: 300;
+    background: var(--bg-card); color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 13px 16px; outline: none; width: 100%;
+    transition: border-color .2s;
+    letter-spacing: .3px;
+  }
+  input[type=text]::placeholder { color: var(--muted); }
   input[type=text]:focus, input[type=number]:focus {
     border-color: var(--acc);
-    box-shadow: 0 0 0 3px var(--acc-dim);
   }
-  input[type=number] { -moz-appearance: textfield; appearance: textfield; }
+  input[type=number] { -moz-appearance: textfield; }
   input[type=number]::-webkit-inner-spin-button { display: none; }
+  select { -webkit-appearance: none; cursor: pointer; }
+  select option { background: var(--bg-card); }
 
+  .acwrap { position: relative; margin-bottom: 20px; }
   #suggestions {
     display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
     background: var(--bg-card); border: 1px solid var(--border);
     border-radius: var(--r); overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0,0,0,.10);
   }
   .si {
-    padding: 10px 14px; cursor: pointer; font-size: 14px;
+    padding: 11px 16px; cursor: pointer; font-size: 13px;
     border-bottom: 1px solid var(--border); transition: background .15s;
+    color: var(--text);
   }
   .si:last-child { border-bottom: none; }
-  .si:hover { background: var(--acc-light); }
+  .si:hover { background: var(--bg-lift); color: var(--acc); }
 
+  .search-actions { display: flex; align-items: center; gap: 12px; }
   .btn-consultar {
-    background: var(--acc); color: #fff;
+    background: var(--acc); color: var(--bg);
     border: none; border-radius: var(--r);
-    padding: 11px 22px; font-family: inherit; font-size: 14px;
-    font-weight: 600; cursor: pointer; white-space: nowrap;
-    display: flex; align-items: center; gap: 8px;
-    transition: background .2s, transform .1s;
+    padding: 13px 32px; font-family: 'Outfit', inherit;
+    font-size: 12px; font-weight: 500;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    cursor: pointer; white-space: nowrap;
+    transition: opacity .2s, transform .1s;
   }
-  .btn-consultar:hover { background: #A8531F; }
+  .btn-consultar:hover { opacity: .85; }
   .btn-consultar:active { transform: scale(.98); }
-  .btn-consultar.loading { opacity: .7; pointer-events: none; }
+  .btn-consultar.loading { opacity: .5; pointer-events: none; }
 
-  /* ── MESSAGES ───────────────────────────────── */
+  .sel-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 240px; }
+  .sel-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+
+  /* ── MESSAGES ───────────────────────────────────── */
   .msg { display: none; padding: 12px 16px; border-radius: var(--r);
-         font-size: 13.5px; margin-top: 12px; }
+         font-size: 13px; margin-top: 12px; font-weight: 300; }
   .msg.on { display: block; }
-  #msg-err  { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
-  #msg-warn { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
-  #msg-info { background: #EFF6FF; color: #1E40AF; border: 1px solid #BFDBFE; }
+  #msg-err  { background: rgba(220,38,38,.08); color: #F87171; border: 1px solid rgba(220,38,38,.2); }
+  #msg-warn { background: rgba(234,179,8,.07); color: #FCD34D; border: 1px solid rgba(234,179,8,.2); }
+  #msg-info { background: rgba(59,130,246,.07); color: #93C5FD; border: 1px solid rgba(59,130,246,.2); }
 
-  /* ── RESULTS ────────────────────────────────── */
-  #results { display: none; opacity: 0; transform: translateY(8px); transition: all .3s; }
+  /* ── RESULTS ────────────────────────────────────── */
+  #results { display: none; opacity: 0; transform: translateY(10px); transition: all .35s; }
   #results.on { display: block; opacity: 1; transform: none; }
 
   .res-header {
-    background: var(--text);
-    border-radius: 12px;
-    padding: 20px 24px;
-    margin-bottom: 16px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  #res-addr {
-    font-family: 'DM Serif Display', serif;
-    font-size: 22px; color: #fff; letter-spacing: -.3px;
-  }
-  #res-coords { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px; }
-
-  .dbadge {
-    font-size: 12px; font-weight: 600; letter-spacing: .5px;
-    padding: 6px 14px; border-radius: 20px;
-    background: var(--acc); color: #fff;
-    white-space: nowrap;
-  }
-  .dbadge.unknown { background: var(--border); color: var(--muted); }
-
-  /* ── SECTION LABELS ─────────────────────────── */
-  .slabel {
-    font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-    color: var(--muted); margin: 24px 0 12px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .slabel::before { content:''; display:block; width:16px; height:1px; background:var(--acc); }
-
-  /* ── CARDS ──────────────────────────────────── */
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px; }
-  .card {
-    background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: var(--r);
-    padding: 16px 18px;
-    box-shadow: var(--shadow);
-    transition: border-color .2s;
+    padding: 24px 28px;
+    margin-bottom: 20px;
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 16px;
   }
-  .card:hover { border-color: var(--acc); }
-  .card-ico { font-size: 16px; color: var(--acc); margin-bottom: 8px; }
-  .card-lbl { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .card-val { font-size: 26px; font-weight: 600; color: var(--text); line-height: 1.1; }
-  .card-val.sm { font-size: 17px; }
-  .card-unit { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  #res-addr {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px; color: var(--text); font-weight: 300;
+    letter-spacing: .5px; line-height: 1.2;
+  }
+  #res-coords { font-size: 11px; color: var(--muted); margin-top: 4px; letter-spacing: .5px; }
 
-  /* ── APH / CUR BOX ──────────────────────────── */
+  .dbadge {
+    font-size: 11px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+    padding: 6px 16px; border-radius: 2px;
+    background: var(--acc-dim); color: var(--acc);
+    border: 1px solid rgba(200,169,110,.25);
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .dbadge.unknown { background: transparent; color: var(--muted); border-color: var(--border); }
+
+  /* ── SECTION LABELS ─────────────────────────────── */
+  .slabel {
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin: 28px 0 14px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .slabel::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* ── CARDS ──────────────────────────────────────── */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .card {
+    background: var(--bg-card);
+    padding: 18px 20px;
+    transition: background .2s;
+  }
+  .card:hover { background: var(--bg-lift); }
+  .card-ico { font-size: 14px; color: var(--acc); margin-bottom: 10px; opacity: .7; }
+  .card-lbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .card-val { font-size: 24px; font-weight: 400; color: var(--text); line-height: 1; }
+  .card-val.sm { font-size: 15px; font-weight: 400; }
+  .card-unit { font-size: 10px; color: var(--muted); margin-top: 5px; letter-spacing: .3px; }
+
+  /* ── APH / CUR BOX ──────────────────────────────── */
   #aph-box, #u-box, #cur-box { display: none; }
   #aph-box.on, #u-box.on, #cur-box.on {
     display: block;
-    background: #FFFBEB; border: 1px solid #FDE68A;
+    background: rgba(234,179,8,.05); border: 1px solid rgba(234,179,8,.15);
     border-radius: var(--r); padding: 12px 16px;
-    font-size: 13px; color: #92400E; margin-bottom: 14px;
+    font-size: 13px; color: #FCD34D; margin-bottom: 16px;
   }
-  #aph-box.on a, #u-box.on a, #cur-box.on a { color: var(--acc); }
+  #aph-box.on a { color: var(--acc); }
 
-  /* ── RETIROS ────────────────────────────────── */
-  .retiros-wrap {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px;
-    box-shadow: var(--shadow);
-  }
-  .retiros-title { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
-  .retiros-grid { display: flex; gap: 16px; }
-  .ret-item { flex: 1; }
-  .ret-dir { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
-  .ret-val { font-size: 15px; font-weight: 600; color: var(--text); margin-top: 2px; }
-
-  /* ── USOS ───────────────────────────────────── */
-  .usos-wrap {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 16px 18px; margin-bottom: 14px;
-    box-shadow: var(--shadow);
-  }
-  .usos-title { font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
-  .uchip {
-    display: inline-block; font-size: 12px;
-    background: var(--acc-light); color: var(--acc);
-    border: 1px solid rgba(196,98,45,.2);
-    border-radius: 20px; padding: 4px 12px; margin: 3px 4px 3px 0;
-  }
-  .uchip.main { background: var(--acc); color: #fff; border-color: var(--acc); }
-
-  /* ── CALC BLOCK ─────────────────────────────── */
+  /* ── CALC BLOCK ─────────────────────────────────── */
   #calc-block {
     display: none;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 20px 22px; margin-bottom: 14px;
-    box-shadow: var(--shadow); position: relative;
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 24px 24px 20px;
+    margin-bottom: 16px;
+    position: relative;
   }
   #calc-block::before {
-    content: 'CÁLCULOS DEL LOTE'; position: absolute; top: -1px; right: 20px;
-    font-size: 8px; letter-spacing: 3px; font-weight: 600;
-    background: var(--acc); color: #fff; padding: 2px 10px;
-    border-radius: 0 0 6px 6px;
+    content: 'CÁLCULOS DEL LOTE';
+    position: absolute; top: -1px; right: 20px;
+    font-size: 8px; letter-spacing: 3px;
+    background: var(--bg); color: var(--acc);
+    padding: 0 10px;
   }
-  .cgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; }
-  .citem { }
-  .clbl { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-  .cval { font-size: 22px; font-weight: 600; color: var(--text); }
-  .cunit { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .cgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .citem { background: var(--bg-card); padding: 16px 18px; }
+  .clbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .cval { font-size: 20px; font-weight: 400; color: var(--text); }
+  .cunit { font-size: 10px; color: var(--muted); margin-top: 4px; }
+
   .cval-input {
-    width: 100%; background: transparent;
-    border: none; border-bottom: 1.5px dashed var(--border);
-    color: var(--acc); font-family: inherit; font-size: 22px; font-weight: 600;
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px dashed rgba(200,169,110,.3);
+    color: var(--acc); font-family: inherit; font-size: 20px; font-weight: 400;
     padding: 2px 0; outline: none; cursor: text;
     -moz-appearance: textfield; appearance: textfield;
     transition: border-color .2s;
@@ -269,85 +277,93 @@
   .cval-input::-webkit-outer-spin-button,
   .cval-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-  /* ── FIN BLOCK (financiero) ─────────────────── */
+  /* ── FINANCIERO ─────────────────────────────────── */
   #fin-block { display: none; }
+  #fin-block .slabel { color: var(--green); }
+  #fin-block .slabel::after { background: rgba(90,158,122,.2); }
 
-  /* ── MAP ─────────────────────────────────────── */
+  /* ── MAP ─────────────────────────────────────────── */
   #map-wrap {
-    border-radius: var(--r); overflow: hidden; margin-bottom: 14px;
-    border: 1px solid var(--border); box-shadow: var(--shadow);
-    height: 300px;
+    border-radius: var(--r); overflow: hidden;
+    border: 1px solid var(--border);
+    height: 280px; margin-bottom: 16px;
   }
   #map { height: 100%; }
 
-  /* ── NOTA ───────────────────────────────────── */
+  /* ── NOTA ───────────────────────────────────────── */
   .nnote {
-    font-size: 12px; color: var(--muted);
+    font-size: 11.5px; color: var(--muted);
     padding: 10px 14px;
-    background: var(--bg-card); border: 1px solid var(--border);
+    border: 1px solid var(--border);
     border-radius: var(--r); margin-bottom: 14px;
+    letter-spacing: .2px;
   }
-  .nnote a { color: var(--acc); }
+  .nnote a { color: var(--acc); text-decoration: none; }
 
-  .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
 
-  /* ── DEBUG ───────────────────────────────────── */
-  #debug-panel { display: none; background: #FFF9F5; border: 1px solid #FDE68A;
+  /* ── REFERENCE SECTION ──────────────────────────── */
+  .ref-section {
+    border: 1px solid var(--border);
+    border-radius: var(--r); padding: 16px 20px; margin-bottom: 14px;
+  }
+  .ref-section details summary {
+    cursor: pointer; font-size: 10px; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase;
+    list-style: none; display: flex; align-items: center; gap: 10px;
+    user-select: none;
+  }
+  .ref-section details summary::before { content: '+'; color: var(--acc); font-size: 14px; }
+  .ref-section details[open] summary::before { content: '−'; }
+  .dist-table { margin-top: 14px; }
+  .dist-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .dist-row:last-child { border-bottom: none; }
+  .dist-code { font-weight: 500; width: 90px; color: var(--text); }
+  .dist-h { color: var(--muted); font-size: 12px; flex: 1; }
+  .dist-cpu { font-size: 11px; color: var(--muted); }
+
+  #debug-panel { display: none; background: rgba(200,169,110,.04); border: 1px solid rgba(200,169,110,.1);
     border-radius: var(--r); padding: 12px 14px; font-size: 11px; font-family: monospace;
     color: var(--muted); margin-top: 8px; }
 
-  /* ── CALC SOURCE ─────────────────────────────── */
-  #calc-source { font-size: 10px; color: var(--muted); text-align: right; margin-top: 8px; letter-spacing: .5px; }
+  #calc-source { font-size: 10px; color: var(--muted); text-align: right;
+    margin-top: 10px; letter-spacing: .5px; }
 
-  /* ── FOOTER ──────────────────────────────────── */
+  /* ── FOOTER ─────────────────────────────────────── */
   footer {
     border-top: 1px solid var(--border);
-    padding: 20px 32px;
+    padding: 20px 40px;
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 11px; color: var(--muted);
+    font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
   }
   footer a { color: var(--acc); text-decoration: none; }
-  .footer-by { font-style: italic; }
-
-  /* ── REFERENCE SECTION ───────────────────────── */
-  .ref-section {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--r); padding: 16px 20px; margin-bottom: 14px;
-    box-shadow: var(--shadow);
-  }
-  .ref-section details summary {
-    cursor: pointer; font-size: 12px; color: var(--muted);
-    letter-spacing: 1px; text-transform: uppercase;
-    list-style: none; display: flex; align-items: center; gap: 8px;
-    user-select: none;
-  }
-  .ref-section details summary::before { content: '+'; color: var(--acc); font-weight: 700; font-size: 16px; }
-  .ref-section details[open] summary::before { content: '−'; }
-  .dist-table { margin-top: 12px; }
-  .dist-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
-  }
-  .dist-row:last-child { border-bottom: none; }
-  .dist-code { font-weight: 600; width: 90px; color: var(--text); }
-  .dist-h { color: var(--muted); font-size: 12px; flex: 1; }
-  .dist-cpu { font-size: 11px; color: var(--muted); text-align: right; }
 </style>
 </head>
 <body>
 
+<div class="topbar">
+  <span class="topbar-name">Karen Marini</span>
+  <div class="topbar-right">
+    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
+    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">CUR · Ley 6099 ↗</a>
+  </div>
+</div>
 <header>
   <div class="logo-wrap">
     <div class="logo-mark">E</div>
     <div>
-      <span class="logo-name">Edifica<span>.IA</span></span>
+      <div class="logo-name">Edifica<span>.IA</span></div>
+      <div class="logo-sub">Pre-factibilidad urbanística · CABA</div>
     </div>
-    <span class="logo-sub">pre-factibilidad · CABA</span>
   </div>
-  <div class="header-right">
-    <span class="hbadge"><a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a></span>
-    <span class="hbadge"><a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">CUR · Ley 6099 ↗</a></span>
-  </div>
+  <nav class="header-nav">
+    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D</a>
+    <a href="#" onclick="document.querySelector('.ref-section details').toggleAttribute('open');return false">Referencia</a>
+  </nav>
 </header>
 
 <main>
@@ -420,7 +436,7 @@
       <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos indicativos</div></div>
       <div class="card"><div class="card-ico">∑</div><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
       <div class="card"><div class="card-ico">▣</div><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
-      <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div>
+      <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div><div class="card"><div class="card-ico">↔</div><div class="card-lbl">Frente</div><div class="card-val sm" id="res-fr">—</div><div class="card-unit">metros</div></div><div class="card"><div class="card-ico">↕</div><div class="card-lbl">Fondo</div><div class="card-val sm" id="res-fo">—</div><div class="card-unit">metros</div></div>
     </div>
     <div class="twocol">
       <div class="ibox">
@@ -484,7 +500,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · Edifica.IA v10.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · Edifica.IA v10.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -867,6 +883,8 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   eid('res-fot').textContent = fot ? fot : '—';
   eid('res-fos').textContent = '—';
   eid('res-dis').textContent = cpu || '?';
+  const frEl = eid('res-fr'); if (frEl) frEl.textContent = (parcel && parcel.fr) ? parcel.fr + 'm' : '—';
+  const foEl = eid('res-fo'); if (foEl) foEl.textContent = (parcel && parcel.fo) ? parcel.fo + 'm' : '—';
 
   // Retiros — no disponibles a nivel parcelario, redirigir a plancheta
   ['res-rf','res-ro','res-rl'].forEach(id => {
@@ -1038,8 +1056,28 @@ setTimeout(() => {
 }, 600);
 </script>
 <footer>
-  <div>© 2025 <strong>Edifica.IA</strong> · Datos: CUR 2024 · Catastro AGIP/EPOK</div>
-  <div class="footer-by">Desarrollado por <strong>Karen Marini</strong> · BRAKO Construcciones</div>
+  <div>Edifica.IA · Datos: CUR 2024 · Catastro AGIP/EPOK</div>
+  <div>Desarrollado por <a href="#">Karen Marini</a></div>
 </footer>
 </body>
-</html>
+</html<div class="search-section">
+  <label class="inp-label" for="inp-addr">Dirección <span>*</span></label>
+  <div class="acwrap">
+    <input type="text" id="inp-addr" placeholder="Ej: Junín 1490, CABA" autocomplete="off">
+    <div id="suggestions"></div>
+  </div>
+  <div class="search-actions">
+    <button class="btn-consultar" onclick="consultarParcela()">Consultar →</button>
+    <div class="sel-wrap" style="display:none">
+      <select id="inp-distrito"><option value="">— auto —</option></select>
+    </div>
+  </div>
+  <input type="hidden" id="inp-frente">
+  <input type="hidden" id="inp-fondo">
+  <div id="msg-err"  class="msg"></div>
+  <div id="msg-warn" class="msg"></div>
+  <div id="msg-info" class="msg"></div>
+  <div id="debug-panel"><div id="debug-log"></div></div>
+</div>
+
+>
