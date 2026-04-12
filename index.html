@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.2<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -461,6 +461,10 @@ async function getDistrito(lat, lng) {
   if (!base) return null;
 
   base.source = 'Estimado';
+  // IMPORTANTE: no usar fr/fo del JSON en fallback — son MBR aproximados
+  // Solo se usan los valores de EPOK (fuente oficial)
+  delete base.fr;
+  delete base.fo;
 
   try {
     const revR = await fetch(
@@ -682,6 +686,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     if (lblPb) lblPb.textContent = 'm² · ' + bandaLabel;
     const srcEl = eid('calc-source');
     if (srcEl) srcEl.textContent = 'Datos obtenidos de: ' + (parcel.source || 'Estimado');
+    cb.style.display = 'block';
     recalcularRendimiento();  // calcular totales por primera vez
     const fb = eid('fin-block');
     if (fb) fb.style.display = 'block';
