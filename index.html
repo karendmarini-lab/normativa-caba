@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Edifica.IA — Consulta Normativa Urbanística CABA</title>
+  <title>Edificia — Consulta Normativa Urbanística CABA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -72,7 +72,7 @@
     font-size: 22px; color: var(--text);
     font-weight: 300; letter-spacing: 1px;
   }
-  .logo-name span { color: var(--acc); }
+  .logo-name em { color: var(--acc); font-style: normal; }
   .logo-sub {
     font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
     color: var(--muted); margin-top: 1px;
@@ -348,21 +348,20 @@
 <div class="topbar">
   <span class="topbar-name">Karen Marini</span>
   <div class="topbar-right">
-    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
-    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">CUR · Ley 6099 ↗</a>
+    <span>Pre-factibilidad urbanística · CABA</span>
   </div>
 </div>
 <header>
   <div class="logo-wrap">
     <div class="logo-mark">E</div>
     <div>
-      <div class="logo-name">Edifica<span>.IA</span></div>
+      <div class="logo-name">Edificia</div>
       <div class="logo-sub">Pre-factibilidad urbanística · CABA</div>
     </div>
   </div>
   <nav class="header-nav">
-    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D</a>
-    <a href="#" onclick="document.querySelector('.ref-section details').toggleAttribute('open');return false">Referencia</a>
+    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
+    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
   </nav>
 </header>
 
@@ -500,7 +499,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · Edifica.IA v10.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · Edificia v10.2<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -690,7 +689,7 @@ async function getDistrito(lat, lng) {
         epokSmp = usigSmp;  // smpNorm() normaliza en el lookup
       }
     }
-  } catch(e) { console.warn('[Edifica.IA] revgeo:', e.message); }
+  } catch(e) { console.warn('[Edificia] revgeo:', e.message); }
 
   // PASO 2: búsqueda EXACTA por SMP en el JSON (O(1))
   let base = null;
@@ -705,7 +704,7 @@ async function getDistrito(lat, lng) {
     if (idx < 0) return null;
     base   = { ...(_curData[idx]), dist: Math.round(dist) };
     source = 'KD-Tree (' + Math.round(dist) + 'm)';
-    console.warn('[Edifica.IA] SMP no en JSON, KD-Tree fallback:', epokSmp);
+    console.warn('[Edificia] SMP no en JSON, KD-Tree fallback:', epokSmp);
   }
 
   // PASO 3: escudo sanitizador CUR (corrige bugs del Shapefile)
@@ -730,7 +729,7 @@ async function getDistrito(lat, lng) {
         base.smp    = ed.smp || smpFetch;
         source += ' · EPOK catastro';
       }
-    } catch(e) { console.warn('[Edifica.IA] EPOK:', e.message); }
+    } catch(e) { console.warn('[Edificia] EPOK:', e.message); }
   }
 
   base.source = source;
@@ -1056,7 +1055,7 @@ setTimeout(() => {
 }, 600);
 </script>
 <footer>
-  <div>Edifica.IA · Datos: CUR 2024 · Catastro AGIP/EPOK</div>
+  <div>Edificia · Datos: CUR 2024 · Catastro AGIP/EPOK</div>
   <div>Desarrollado por <a href="#">Karen Marini</a></div>
 </footer>
 </body>
