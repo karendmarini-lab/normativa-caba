@@ -452,7 +452,25 @@ async function getDistrito(lat, lng) {
     await loadCurData();
     const { idx, dist } = nearestNeighbor(lat, lng);
     if (idx < 0) return null;
-    return { ...(_curData[idx]), dist: Math.round(dist) };
+    const base = { ...(_curData[idx]), dist: Math.round(dist) };
+
+    // Enriquecer con superficie oficial de catastro (EPOK) si está disponible
+    try {
+      const ep = await fetch(
+        `https://epok.buenosaires.gob.ar/catastro/parcela/?lat=${lat}&lng=${lng}`,
+        { signal: AbortSignal.timeout(4000) });
+      if (ep.ok) {
+        const ed = await ep.json();
+        const supOficial = parseFloat(ed.superficie_total);
+        if (supOficial > 0) {
+          base.area = Math.round(supOficial);  // superficie catastro oficial
+          base.smp  = ed.smp || base.smp;
+          base.dir  = ed.direccion || '';
+        }
+      }
+    } catch(_) { /* EPOK no disponible, usar Shoelace del JSON */ }
+
+    return base;
   } catch(e) {
     console.warn('[NORM·AR] KD-Tree:', e.message);
     return null;
@@ -623,9 +641,14 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     // Auto-llenar inputs editables con datos oficiales
     const altRef = (plano && plano > 0) ? plano : (h || 0);
     const pisosEst = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
-    window._pisosEstimados = pisosEst;  // guardar para recalcularRendimiento
+    window._pisosEstimados = pisosEst;
+    // Pisada: usa pisada_pct del JSON (LFI real por tipo de unidad) o 0.65 por defecto
+    const pisadaPct = parcel.pisada_pct || 0.65;
     eid('c-sup').value = Math.round(area);
-    eid('c-pb').value  = Math.round(area * 0.65);
+    eid('c-pb').value  = Math.round(area * pisadaPct);
+    // Mostrar % de pisada en el label
+    const lblPb = document.querySelector('#c-pb')?.closest('.citem')?.querySelector('.cunit');
+    if (lblPb) lblPb.textContent = `m² · ${Math.round(pisadaPct*100)}% LFI estimado`;
     cb.style.display = 'block';
     recalcularRendimiento();  // calcular totales por primera vez
     const fb = eid('fin-block');
