@@ -188,11 +188,11 @@
       </div>
       <div class="field">
         <label class="flabel">Frente <span style="color:var(--muted)">opt.</span></label>
-        <input type="number" id="inp-frente" placeholder="m" min="0" step="0.01"/>
+        <input type="number" id="inp-frente" style="display:none" placeholder="m" min="0" step="0.01"/>
       </div>
       <div class="field">
         <label class="flabel">Fondo <span style="color:var(--muted)">opt.</span></label>
-        <input type="number" id="inp-fondo" placeholder="m" min="0" step="0.01"/>
+        <input type="number" id="inp-fondo" style="display:none" placeholder="m" min="0" step="0.01"/>
       </div>
       <div class="field">
         <label class="flabel">Distrito <span style="color:var(--muted)">manual</span></label>
@@ -264,7 +264,7 @@
       <div class="cgrid">
         <div class="citem"><div class="clbl">Sup. del Lote</div><div class="cval" id="c-sup">—</div><div class="cunit">m²</div></div>
         <div class="citem"><div class="clbl">M² Edificables (FOT)</div><div class="cval" id="c-edif">—</div><div class="cunit">m² totales</div></div>
-        <div class="citem"><div class="clbl">M² PB Máx. (FOS)</div><div class="cval" id="c-pb">—</div><div class="cunit">m² planta baja</div></div>
+        <div class="citem"><div class="clbl">Pisada (65%)</div><div class="cval" id="c-pb">—</div><div class="cunit">m² m² construibles</div></div>
         <div class="citem"><div class="clbl">M² Vendibles Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">× 0.85 efic.</div></div>
       </div>
     </div>
@@ -585,21 +585,27 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
 
   // Calculadora (frente × fondo)
   const cb = eid('calc-block');
-  if (frente && fondo && fot) {
-    const sup = frente * fondo;
+  const area = parcel ? parcel.area : 0;
+  if (area && area > 0 && fot) {
+    const sup   = area;
+    const edif  = sup * fot;
+    const pb    = sup * 0.65;  // Pisada 65%
+    const vend  = edif * 0.85;
     eid('c-sup').textContent  = fmt(sup);
-    eid('c-edif').textContent = fmt(sup * fot);
-    eid('c-pb').textContent   = fmt(sup * 0.60);   // FOS típico CABA
-    eid('c-vend').textContent = fmt(sup * fot * 0.85);
+    eid('c-edif').textContent = fmt(edif);
+    eid('c-pb').textContent   = fmt(pb);
+    eid('c-vend').textContent = fmt(vend);
     cb.style.display = 'block';
-    // Alimentar módulo financiero
-    _finMetrosTotales   = sup * fot;
-    _finMetrosVendibles = sup * fot * 0.85;
+    // Alimentar módulo financiero automáticamente
+    _finMetrosTotales   = edif;
+    _finMetrosVendibles = vend;
     const fb = eid('fin-block');
     if (fb) fb.style.display = 'block';
     calcularFinanzas();
   } else {
     if (cb) cb.style.display = 'none';
+    const fb = eid('fin-block');
+    if (fb) fb.style.display = 'none';
   }
 
   if (lat && lng) initMap(lat, lng, addr);
