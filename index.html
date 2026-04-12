@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.8<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.9<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -692,10 +692,10 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   const planoEl = eid('res-plano');
   if (planoEl) planoEl.textContent = planoSan ? planoSan : '—';
 
-  // FIX 2: pisos calculados sobre plano sanitizado
+  // FIX 2: pisos calculados sobre plano sanitizado — formato PB + N
   if (planoSan > 0) {
-    const pisos = 1 + Math.floor((planoSan - 3.30) / 2.90);
-    eid('res-pis').textContent = '≈' + Math.max(1, pisos);
+    const pisos = Math.max(1, 1 + Math.floor((planoSan - 3.30) / 2.90));
+    eid('res-pis').textContent = pisos <= 1 ? 'PB' : 'PB + ' + (pisos - 1);
     const u = eid('res-pis').closest?.('.card')?.querySelector('.card-unit');
     if (u) u.textContent = 'pisos · PL ' + planoSan + 'm';
   } else {
