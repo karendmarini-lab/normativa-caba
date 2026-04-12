@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.5<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.6<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -428,7 +428,17 @@ function findByNearest(lng, lat, centroids) {
 let _curData = null;
 let _curPoints = null;
 
-let _smpIndex = null;  // SMP → índice en _curData
+let _smpIndex = null;  // SMP normalizado → índice en _curData
+
+// Normaliza SMP quitando ceros: '011-049-026' y '11-049-026' → '11-49-26'
+function smpNorm(s) {
+  if (!s) return '';
+  return s.toUpperCase().split('-').map(p => {
+    const digits  = p.replace(/[^0-9]/g,'');
+    const letters = p.replace(/[^A-Z]/g,'');
+    return digits ? String(parseInt(digits)) + letters : p;
+  }).join('-');
+}
 
 async function loadCurData() {
   if (_curData) return;
@@ -437,10 +447,11 @@ async function loadCurData() {
   const d = await r.json();
   _curPoints = d.points;
   _curData   = d.data;
-  // Construir índice SMP → índice para búsqueda exacta O(1)
+  // Índice con SMP normalizado (sin ceros) → O(1)
   _smpIndex = {};
   for (let i = 0; i < _curData.length; i++) {
-    if (_curData[i].smp) _smpIndex[_curData[i].smp] = i;
+    const norm = smpNorm(_curData[i].smp);
+    if (norm) _smpIndex[norm] = i;
   }
 }
 
@@ -475,9 +486,7 @@ async function getDistrito(lat, lng) {
       const usigSmp = JSON.parse(raw).parcela || '';
       if (usigSmp) {
         const parts = usigSmp.split('-');
-        epokSmp = parts.length === 3
-          ? String(parseInt(parts[0])).padStart(3,'0') + '-' + parts[1] + '-' + parts[2]
-          : usigSmp;
+        epokSmp = usigSmp;  // smpNorm() normaliza en el lookup
       }
     }
   } catch(e) { console.warn('[NORM-AR] revgeo:', e.message); }
@@ -485,8 +494,9 @@ async function getDistrito(lat, lng) {
   // PASO 2: búsqueda EXACTA por SMP en el JSON (O(1))
   let base = null;
   let source = '';
-  if (epokSmp && _smpIndex && _smpIndex[epokSmp] !== undefined) {
-    base   = { ...(_curData[_smpIndex[epokSmp]]), dist: 0 };
+  const smpKey = smpNorm(epokSmp);
+  if (smpKey && _smpIndex && _smpIndex[smpKey] !== undefined) {
+    base   = { ...(_curData[_smpIndex[smpKey]]), dist: 0 };
     source = 'Exacto por SMP';
   } else {
     // Fallback KD-Tree si el SMP no está en el JSON
