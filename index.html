@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.7<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.8<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -483,6 +483,9 @@ function sanitizarDatosCUR(parcela) {
 
   // REGLA 4: U.S.A.A. — asegura 29.8m de plano límite
   if (p.plano > 29 && p.plano < 30) { p.plano = 29.8; }
+
+  // REGLA 5: plano=0 en CUR → usar h como fallback
+  if (!p.plano || p.plano <= 0) { p.plano = p.h || 0; }
 
   return p;
 }
@@ -805,10 +808,14 @@ async function consultarParcela() {
 
     // VALIDACIÓN ESTRICTA DE DISTANCIA
     if (!parcel || parcel.dist > 30) {
-      setMsg('err',
-        'No se pudo asociar la dirección a una parcela con precisión suficiente' +
-        (parcel ? ` (distancia: ${parcel.dist}m > 30m)` : '') +
-        '. Verifique manualmente en ciudad3d.buenosaires.gob.ar');
+      // Distinguir: parcela sin normativa CUR vs dirección no encontrada
+      const sinNorm = parcel && parcel.dist === 0;
+      const msg = sinNorm
+        ? 'Esta parcela no tiene normativa CUR asignada (vía, lote especial o área sin regulación). Verificá en ciudad3d.buenosaires.gob.ar'
+        : 'No se pudo asociar la dirección a una parcela con precisión suficiente' +
+          (parcel ? ` (parcela más cercana a ${parcel.dist}m)` : '') +
+          '. Verificá en ciudad3d.buenosaires.gob.ar';
+      setMsg('err', msg);
       mostrar(norm.direccion, null, null, lat, lng, null, null);
       return;
     }
