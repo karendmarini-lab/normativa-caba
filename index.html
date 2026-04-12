@@ -454,7 +454,7 @@ async function getDistrito(lat, lng) {
     if (idx < 0) return null;
     const base = { ...(_curData[idx]), dist: Math.round(dist) };
 
-    // Enriquecer con superficie oficial de catastro (EPOK) si está disponible
+    // Enriquecer con datos oficiales de catastro (EPOK): sup, frente, fondo
     try {
       const ep = await fetch(
         `https://epok.buenosaires.gob.ar/catastro/parcela/?lat=${lat}&lng=${lng}`,
@@ -462,13 +462,15 @@ async function getDistrito(lat, lng) {
       if (ep.ok) {
         const ed = await ep.json();
         const supOficial = parseFloat(ed.superficie_total);
-        if (supOficial > 0) {
-          base.area = Math.round(supOficial);  // superficie catastro oficial
-          base.smp  = ed.smp || base.smp;
-          base.dir  = ed.direccion || '';
-        }
+        const frEpok     = parseFloat(ed.frente);
+        const foEpok     = parseFloat(ed.fondo);
+        if (supOficial > 0) base.area = Math.round(supOficial);
+        if (frEpok > 0)     base.fr   = frEpok;
+        if (foEpok > 0)     base.fo   = foEpok;
+        base.smp = ed.smp || base.smp;
+        base.dir = ed.direccion || '';
       }
-    } catch(_) { /* EPOK no disponible, usar Shoelace del JSON */ }
+    } catch(_) { /* EPOK no disponible — usar MBR del JSON */ }
 
     return base;
   } catch(e) {
@@ -642,13 +644,44 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     const altRef = (plano && plano > 0) ? plano : (h || 0);
     const pisosEst = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
     window._pisosEstimados = pisosEst;
-    // Pisada: usa pisada_pct del JSON (LFI real por tipo de unidad) o 0.65 por defecto
-    const pisadaPct = parcel.pisada_pct || 0.65;
+    // Pisada LFI real: fórmula CUR CABA
+    const fr = parcel.fr || 0;
+    const fo = parcel.fo || 0;
+    let pisadaCalc;
+    if (fo > 0 && fr > 0) {
+      if (fo <= 16) {
+        // Parcela corta: sin pulmón, 100% edificable
+        pisadaCalc = Math.round(fr * fo);
+      } else {
+        // Banda edificable = menor entre 22m y 2/3 del fondo (más conservador)
+        const banda = Math.min(22, fo * 2 / 3);
+        pisadaCalc  = Math.round(fr * banda);
+      }
+    } else {
+      // Fallback: % por altura si no hay fr/fo
+      pisadaCalc = Math.round(area * (parcel.pisada_pct || 0.65));
+    }
+    window._pisadaFr = fr;
+    window._pisadaFo = fo;
     eid('c-sup').value = Math.round(area);
-    eid('c-pb').value  = Math.round(area * pisadaPct);
-    // Mostrar % de pisada en el label
+    // Subtítulo con dimensiones oficiales
+    const lblSup = document.querySelector('#c-sup')?.closest('.citem')?.querySelector('.cunit');
+    if (lblSup) {
+      lblSup.textContent = (fr > 0 && fo > 0)
+        ? `m² · ${fr.toFixed(1)} × ${fo.toFixed(1)} m`
+        : 'm² · catastro oficial';
+    }
+    eid('c-pb').value  = pisadaCalc;
+    // Label con dimensiones reales
     const lblPb = document.querySelector('#c-pb')?.closest('.citem')?.querySelector('.cunit');
-    if (lblPb) lblPb.textContent = `m² · ${Math.round(pisadaPct*100)}% LFI estimado`;
+    if (lblPb) {
+      if (fr > 0 && fo > 0) {
+        const banda = fo <= 16 ? fo : Math.min(22, fo*2/3);
+        lblPb.textContent = `m² · ${fr.toFixed(1)}×${banda.toFixed(1)}m LFI`;
+      } else {
+        lblPb.textContent = `m² · LFI estimado`;
+      }
+    }
     cb.style.display = 'block';
     recalcularRendimiento();  // calcular totales por primera vez
     const fb = eid('fin-block');
