@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.6<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.7<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -466,6 +466,27 @@ function nearestNeighbor(lat, lng) {
   return { idx: bestIdx, dist: Math.sqrt(bestD2) * 111000 };
 }
 
+
+// ── ESCUDO SANITIZADOR CUR ───────────────────────────────────────
+// Corrige errores del Shapefile aplicando reglas duras del CUR
+function sanitizarDatosCUR(parcela) {
+  const p = { ...parcela };
+
+  // REGLA 1: Distritos bajos (U.S.A.B.) — plano = h
+  if (p.h > 0 && p.h <= 14.6) { p.plano = p.h; }
+
+  // REGLA 2: Corredor Alto — corrige bug 39.2m → 38.2m del Shapefile
+  if (p.plano > 38 && p.plano < 40) { p.plano = 38.2; }
+
+  // REGLA 3: Corredor Medio — asegura 31.2m
+  if (p.plano > 31 && p.plano < 32) { p.plano = 31.2; }
+
+  // REGLA 4: U.S.A.A. — asegura 29.8m de plano límite
+  if (p.plano > 29 && p.plano < 30) { p.plano = 29.8; }
+
+  return p;
+}
+
 async function getDistrito(lat, lng) {
   const GK_OX=107253.769166, GK_OY=102807.160072;
   const LNG_O=-58.384222,    LAT_O=-34.603939;
@@ -507,10 +528,8 @@ async function getDistrito(lat, lng) {
     console.warn('[NORM-AR] SMP no en JSON, KD-Tree fallback:', epokSmp);
   }
 
-  // PASO 3: sanitización universal del plano límite
-  if (base.h && (base.h <= 14.6 || !base.plano || base.plano < base.h)) {
-    base.plano = base.h;
-  }
+  // PASO 3: escudo sanitizador CUR (corrige bugs del Shapefile)
+  base = sanitizarDatosCUR(base);
 
   // PASO 4: EPOK por SMP -> fr, fo, area oficiales
   const smpFetch = epokSmp || base.smp;
