@@ -323,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.4<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.5<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -428,13 +428,20 @@ function findByNearest(lng, lat, centroids) {
 let _curData = null;
 let _curPoints = null;
 
+let _smpIndex = null;  // SMP → índice en _curData
+
 async function loadCurData() {
   if (_curData) return;
   const r = await fetch('./cur_optimizado.json', { signal: AbortSignal.timeout(20000) });
   if (!r.ok) throw new Error('No se pudo cargar cur_optimizado.json');
   const d = await r.json();
-  _curPoints = d.points;  // [[lat,lng], ...]
-  _curData   = d.data;    // [{h,fot,plano,cpu}, ...]
+  _curPoints = d.points;
+  _curData   = d.data;
+  // Construir índice SMP → índice para búsqueda exacta O(1)
+  _smpIndex = {};
+  for (let i = 0; i < _curData.length; i++) {
+    if (_curData[i].smp) _smpIndex[_curData[i].smp] = i;
+  }
 }
 
 function nearestNeighbor(lat, lng) {
@@ -449,54 +456,75 @@ function nearestNeighbor(lat, lng) {
 }
 
 async function getDistrito(lat, lng) {
-  const gkx = 107253.769166 + (lng - (-58.384222)) * 91724.6547;
-  const gky = 102807.160072 + (lat - (-34.603939)) * 111003.9032;
+  const GK_OX=107253.769166, GK_OY=102807.160072;
+  const LNG_O=-58.384222,    LAT_O=-34.603939;
+  const M_LNG=91724.6547,    M_LAT=111003.9032;
+  const gkx = GK_OX + (lng - LNG_O) * M_LNG;
+  const gky = GK_OY + (lat - LAT_O) * M_LAT;
 
-  let base = null;
-  try {
-    await loadCurData();
-    const { idx, dist } = nearestNeighbor(lat, lng);
-    if (idx >= 0) base = { ...(_curData[idx]), dist: Math.round(dist) };
-  } catch(e) { console.warn('[NORM-AR] KD-Tree:', e.message); }
-  if (!base) return null;
+  await loadCurData();
 
-  base.source = 'Estimado';
-  // IMPORTANTE: no usar fr/fo del JSON en fallback — son MBR aproximados
-  // Solo se usan los valores de EPOK (fuente oficial)
-  delete base.fr;
-  delete base.fo;
-
+  // PASO 1: SMP exacto via USIG reversegeocoding
+  let epokSmp = null;
   try {
     const revR = await fetch(
-      `https://ws.usig.buenosaires.gob.ar/geocoder/2.2/reversegeocoding?x=${gkx.toFixed(2)}&y=${gky.toFixed(2)}`,
+      `https://ws.usig.buenosaires.gob.ar/geocoder/2.2/reversegeocoding?x=${gkx.toFixed(3)}&y=${gky.toFixed(3)}`,
       { signal: AbortSignal.timeout(4000) });
     if (revR.ok) {
-      const raw = (await revR.text()).trim().replace(/^\(|\)$/g, '');
+      const raw     = (await revR.text()).trim().replace(/^\(|\)$/g,'');
       const usigSmp = JSON.parse(raw).parcela || '';
       if (usigSmp) {
-        const parts   = usigSmp.split('-');
-        const epokSmp = parts.length === 3
+        const parts = usigSmp.split('-');
+        epokSmp = parts.length === 3
           ? String(parseInt(parts[0])).padStart(3,'0') + '-' + parts[1] + '-' + parts[2]
           : usigSmp;
-        const epR = await fetch(
-          'https://epok.buenosaires.gob.ar/catastro/parcela/?smp=' + epokSmp,
-          { signal: AbortSignal.timeout(4000),
-            headers: { 'Referer': 'https://ciudad3d.buenosaires.gob.ar/' } });
-        if (epR.ok) {
-          const ed  = await epR.json();
-          const sup = parseFloat(ed.superficie_total);
-          const fr  = parseFloat(ed.frente);
-          const fo  = parseFloat(ed.fondo);
-          if (sup > 0) base.area = Math.round(sup);
-          if (fr  > 0) base.fr   = fr;
-          if (fo  > 0) base.fo   = fo;
-          base.smp    = ed.smp || epokSmp;
-          base.source = 'Catastro Oficial (AGIP/EPOK)';
-        }
       }
     }
-  } catch(e) { console.warn('[NORM-AR] EPOK:', e.message); }
+  } catch(e) { console.warn('[NORM-AR] revgeo:', e.message); }
 
+  // PASO 2: búsqueda EXACTA por SMP en el JSON (O(1))
+  let base = null;
+  let source = '';
+  if (epokSmp && _smpIndex && _smpIndex[epokSmp] !== undefined) {
+    base   = { ...(_curData[_smpIndex[epokSmp]]), dist: 0 };
+    source = 'Exacto por SMP';
+  } else {
+    // Fallback KD-Tree si el SMP no está en el JSON
+    const { idx, dist } = nearestNeighbor(lat, lng);
+    if (idx < 0) return null;
+    base   = { ...(_curData[idx]), dist: Math.round(dist) };
+    source = 'KD-Tree (' + Math.round(dist) + 'm)';
+    console.warn('[NORM-AR] SMP no en JSON, KD-Tree fallback:', epokSmp);
+  }
+
+  // PASO 3: sanitización universal del plano límite
+  if (base.h && (base.h <= 14.6 || !base.plano || base.plano < base.h)) {
+    base.plano = base.h;
+  }
+
+  // PASO 4: EPOK por SMP -> fr, fo, area oficiales
+  const smpFetch = epokSmp || base.smp;
+  if (smpFetch) {
+    try {
+      const epR = await fetch(
+        'https://epok.buenosaires.gob.ar/catastro/parcela/?smp=' + smpFetch,
+        { signal: AbortSignal.timeout(4000),
+          headers: { 'Referer': 'https://ciudad3d.buenosaires.gob.ar/' } });
+      if (epR.ok) {
+        const ed  = await epR.json();
+        const sup = parseFloat(ed.superficie_total);
+        const fr  = parseFloat(ed.frente);
+        const fo  = parseFloat(ed.fondo);
+        if (sup > 0) base.area = Math.round(sup);
+        if (fr  > 0) base.fr   = fr;
+        if (fo  > 0) base.fo   = fo;
+        base.smp    = ed.smp || smpFetch;
+        source += ' · EPOK catastro';
+      }
+    } catch(e) { console.warn('[NORM-AR] EPOK:', e.message); }
+  }
+
+  base.source = source;
   return base;
 }
 
