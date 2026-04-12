@@ -281,6 +281,7 @@
       </div>
     </div>
 
+    <div id="calc-source" style="margin-top:8px;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-align:right"></div>
     <!-- ── MÓDULO FINANCIERO ──────────────────────────────────────── -->
     <div id="fin-block" style="display:none">
       <div class="slabel" style="color:#4ade80">◈ Análisis de Inversión</div>
@@ -322,7 +323,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v8.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · NORM·AR v9.1<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -448,48 +449,62 @@ function nearestNeighbor(lat, lng) {
 }
 
 async function getDistrito(lat, lng) {
+  const gkx = 107253.769166 + (lng - (-58.384222)) * 91724.6547;
+  const gky = 102807.160072 + (lat - (-34.603939)) * 111003.9032;
+
+  let base = null;
   try {
     await loadCurData();
     const { idx, dist } = nearestNeighbor(lat, lng);
-    if (idx < 0) return null;
-    const base = { ...(_curData[idx]), dist: Math.round(dist) };
+    if (idx >= 0) base = { ...(_curData[idx]), dist: Math.round(dist) };
+  } catch(e) { console.warn('[NORM-AR] KD-Tree:', e.message); }
+  if (!base) return null;
 
-    // Enriquecer con datos oficiales de catastro (EPOK): sup, frente, fondo
-    try {
-      const ep = await fetch(
-        `https://epok.buenosaires.gob.ar/catastro/parcela/?lat=${lat}&lng=${lng}`,
-        { signal: AbortSignal.timeout(4000) });
-      if (ep.ok) {
-        const ed = await ep.json();
-        const supOficial = parseFloat(ed.superficie_total);
-        const frEpok     = parseFloat(ed.frente);
-        const foEpok     = parseFloat(ed.fondo);
-        if (supOficial > 0) base.area = Math.round(supOficial);
-        if (frEpok > 0)     base.fr   = frEpok;
-        if (foEpok > 0)     base.fo   = foEpok;
-        base.smp = ed.smp || base.smp;
-        base.dir = ed.direccion || '';
+  base.source = 'Estimado';
+
+  try {
+    const revR = await fetch(
+      `https://ws.usig.buenosaires.gob.ar/geocoder/2.2/reversegeocoding?x=${gkx.toFixed(2)}&y=${gky.toFixed(2)}`,
+      { signal: AbortSignal.timeout(4000) });
+    if (revR.ok) {
+      const raw = (await revR.text()).trim().replace(/^\(|\)$/g, '');
+      const usigSmp = JSON.parse(raw).parcela || '';
+      if (usigSmp) {
+        const parts   = usigSmp.split('-');
+        const epokSmp = parts.length === 3
+          ? String(parseInt(parts[0])).padStart(3,'0') + '-' + parts[1] + '-' + parts[2]
+          : usigSmp;
+        const epR = await fetch(
+          'https://epok.buenosaires.gob.ar/catastro/parcela/?smp=' + epokSmp,
+          { signal: AbortSignal.timeout(4000),
+            headers: { 'Referer': 'https://ciudad3d.buenosaires.gob.ar/' } });
+        if (epR.ok) {
+          const ed  = await epR.json();
+          const sup = parseFloat(ed.superficie_total);
+          const fr  = parseFloat(ed.frente);
+          const fo  = parseFloat(ed.fondo);
+          if (sup > 0) base.area = Math.round(sup);
+          if (fr  > 0) base.fr   = fr;
+          if (fo  > 0) base.fo   = fo;
+          base.smp    = ed.smp || epokSmp;
+          base.source = 'Catastro Oficial (AGIP/EPOK)';
+        }
       }
-    } catch(_) { /* EPOK no disponible — usar MBR del JSON */ }
+    }
+  } catch(e) { console.warn('[NORM-AR] EPOK:', e.message); }
 
-    return base;
-  } catch(e) {
-    console.warn('[NORM·AR] KD-Tree:', e.message);
-    return null;
-  }
+  return base;
 }
 
-
-
-// ── RECALCULAR RENDIMIENTO (inputs editables) ────────────────────
 function recalcularRendimiento() {
   const pisosEst = window._pisosEstimados || 1;
   const supInput = eid('c-sup');
   const pbInput  = eid('c-pb');
   if (!supInput || !pbInput) return;
 
-  const nuevaPisada   = parseFloat(pbInput.value)  || 0;
-  const nuevoVolumen  = nuevaPisada * pisosEst;
+  const nuevaPisada = parseFloat(pbInput.value) || 0;
+  const pisosNorm  = Math.max(1, pisosEst - 2);
+  const nuevoVolumen = (nuevaPisada * pisosNorm) + (nuevaPisada * 0.8 * Math.min(2, pisosEst));
   const nuevosVendibles = nuevoVolumen * 0.85;
 
   eid('c-edif').textContent = fmt(nuevoVolumen);
@@ -644,45 +659,29 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     const altRef = (plano && plano > 0) ? plano : (h || 0);
     const pisosEst = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
     window._pisosEstimados = pisosEst;
-    // Pisada LFI real: fórmula CUR CABA
     const fr = parcel.fr || 0;
     const fo = parcel.fo || 0;
-    let pisadaCalc;
-    if (fo > 0 && fr > 0) {
+    let pisadaCalc, bandaLabel;
+    if (fr > 0 && fo > 0) {
       if (fo <= 16) {
-        // Parcela corta: sin pulmón, 100% edificable
         pisadaCalc = Math.round(fr * fo);
+        bandaLabel = fr.toFixed(2) + ' x ' + fo.toFixed(2) + ' m (100%)';
       } else {
-        // Banda edificable = menor entre 22m y 2/3 del fondo (más conservador)
-        const banda = Math.min(22, fo * 2 / 3);
-        pisadaCalc  = Math.round(fr * banda);
+        pisadaCalc = Math.round(fr * 22);
+        bandaLabel = fr.toFixed(2) + ' x 22 m (LFI)';
       }
     } else {
-      // Fallback: % por altura si no hay fr/fo
       pisadaCalc = Math.round(area * (parcel.pisada_pct || 0.65));
+      bandaLabel = 'estimado ' + Math.round((parcel.pisada_pct||0.65)*100) + '%';
     }
-    window._pisadaFr = fr;
-    window._pisadaFo = fo;
     eid('c-sup').value = Math.round(area);
-    // Subtítulo con dimensiones oficiales
-    const lblSup = document.querySelector('#c-sup')?.closest('.citem')?.querySelector('.cunit');
-    if (lblSup) {
-      lblSup.textContent = (fr > 0 && fo > 0)
-        ? `m² · ${fr.toFixed(1)} × ${fo.toFixed(1)} m`
-        : 'm² · catastro oficial';
-    }
     eid('c-pb').value  = pisadaCalc;
-    // Label con dimensiones reales
+    const lblSup = document.querySelector('#c-sup')?.closest('.citem')?.querySelector('.cunit');
+    if (lblSup) lblSup.textContent = (fr && fo) ? 'm² · ' + fr.toFixed(2) + ' x ' + fo.toFixed(2) + ' m' : 'm² · catastro';
     const lblPb = document.querySelector('#c-pb')?.closest('.citem')?.querySelector('.cunit');
-    if (lblPb) {
-      if (fr > 0 && fo > 0) {
-        const banda = fo <= 16 ? fo : Math.min(22, fo*2/3);
-        lblPb.textContent = `m² · ${fr.toFixed(1)}×${banda.toFixed(1)}m LFI`;
-      } else {
-        lblPb.textContent = `m² · LFI estimado`;
-      }
-    }
-    cb.style.display = 'block';
+    if (lblPb) lblPb.textContent = 'm² · ' + bandaLabel;
+    const srcEl = eid('calc-source');
+    if (srcEl) srcEl.textContent = 'Datos obtenidos de: ' + (parcel.source || 'Estimado');
     recalcularRendimiento();  // calcular totales por primera vez
     const fb = eid('fin-block');
     if (fb) fb.style.display = 'block';
