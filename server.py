@@ -87,10 +87,12 @@ def startup():
 
 @app.get("/api/auth/debug")
 def auth_debug(request: Request):
+    from auth import JWT_SECRET
     return {
         "cookies": dict(request.cookies),
         "user": get_current_user(request),
-        "headers": {k: v for k, v in request.headers.items() if k in ("host", "x-forwarded-proto", "cookie")},
+        "jwt_secret_prefix": JWT_SECRET[:10],
+        "env_jwt": os.environ.get("JWT_SECRET", "NOT_IN_ENV")[:10],
     }
 
 
