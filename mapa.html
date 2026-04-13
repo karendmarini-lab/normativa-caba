@@ -119,7 +119,6 @@
     <div class="stat"><div class="stat-label">Parcelas</div><div class="stat-value" id="statCount">-</div></div>
     <div class="stat"><div class="stat-label">Vol. total</div><div class="stat-value" id="statVol">-</div></div>
     <div class="stat"><div class="stat-label">Delta prom.</div><div class="stat-value" id="statDelta">-</div></div>
-    <div class="stat"><div class="stat-label">Reconversión</div><div class="stat-value" id="statReconv">-</div></div>
   </div>
 
   <div class="parcel-card" id="parcelCard">
@@ -132,16 +131,8 @@
     </div>
   </div>
 
-  <details style="margin-top:4px">
-    <summary style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none">Metodología</summary>
-    <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.7">
-      <p><strong>Delta altura</strong> = Plano Límite (CUR) − Altura construida (tejido fotogramétrico). Parcelas sin dato de tejido no se incluyen en el cálculo.</p>
-      <p style="margin-top:6px"><strong>Vol. edificable</strong> = Pisada edificable × pisos estimados. Pisada = frente × min(fondo, LFI). Pisos = 1 + floor((PL − 3.30) / 2.90).</p>
-      <p style="margin-top:6px"><strong>Reconversión</strong> = parcelas con uso actual: garage comercial, industrial, sin uso identificado, estación de servicio.</p>
-      <p style="margin-top:6px"><strong>Normalización</strong>: percentiles p5–p95 para la escala de color.</p>
-      <p style="margin-top:8px;font-size:10px;color:rgba(255,255,255,.25)">Datos orientativos. Verificar en ciudad3d.buenosaires.gob.ar</p>
-    </div>
-  </details>
+  <div style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.7" id="metricDesc"></div>
+  <p style="margin-top:6px;font-size:9px;color:rgba(255,255,255,.2)">Escala de color normalizada por percentiles p5–p95. Datos orientativos.</p>
 
   <div id="parcelDocs" style="display:none;margin-top:4px">
     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Documentos oficiales</div>
@@ -150,7 +141,7 @@
 </div>
 
 <div class="legend">
-  <div class="legend-title" id="legendTitle">Delta altura</div>
+  <div class="legend-title" id="legendTitle">Delta oportunidad</div>
   <div class="legend-bar"></div>
   <div class="legend-labels"><span id="legendLow">Bajo</span><span id="legendHigh">Alto</span></div>
 </div>
@@ -170,11 +161,14 @@ let activeBarrio = null; // null = all CABA (circles mode)
 let selectedSmp = null;
 
 const METRICS = [
-  { id: 'delta', label: 'Delta altura' },
-  { id: 'vol', label: 'Vol. edificable' },
-  { id: 'pisos', label: 'Pisos' },
-  { id: 'reconversion', label: 'Reconversión' },
-  { id: 'area', label: 'Área lote' },
+  { id: 'delta', label: 'Delta oportunidad',
+    desc: 'Score = Plano Límite (CUR) − Altura construida (tejido fotogramétrico GCBA), en metros. Ejemplo: PL 38m − tejido 12m = delta 26m. Parcelas sin dato de tejido se excluyen (score = 0). Fuente alturas: relevamiento fotogramétrico GCBA. Fuente PL: CUR Ley 6099/2018 vía cur_optimizado.json.' },
+  { id: 'vol', label: 'm² vendibles',
+    desc: 'Score = vol_edificable, en m². Cálculo: pisada × pisos × 0.85. Pisada = frente × min(fondo, 22m) si fondo > 16m, sino frente × fondo. Si no hay frente/fondo: área × 0.65. Pisos = 1 + floor((Plano Límite − 3.30) / 2.90). El 0.85 descuenta circulaciones. Fuente dimensiones: EPOK catastro GCBA.' },
+  { id: 'pisos', label: 'Pisos',
+    desc: 'Score = pisos permitidos (entero). Cálculo: 1 + floor((Plano Límite − 3.30) / 2.90). PB = 3.30m libre, pisos tipo = 2.90m entrepiso. No contempla premios por sustentabilidad, enrase ni basamento diferenciado. Fuente: Plano Límite del CUR Ley 6099/2018.' },
+  { id: 'area', label: 'Superficie',
+    desc: 'Score = área del lote en m², según catastro EPOK/AGIP. Sin transformación. Fuente: epok.buenosaires.gob.ar/catastro/parcela.' },
 ];
 
 let BARRIOS = [];
@@ -251,10 +245,17 @@ function setupFilters() {
       activeMetric = m.id;
       mRow.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
+      updateMetricDesc();
       if (activeBarrio) loadParcels(); else renderCircles();
     };
     mRow.appendChild(chip);
   });
+  updateMetricDesc();
+}
+
+function updateMetricDesc() {
+  const m = METRICS.find(m => m.id === activeMetric);
+  document.getElementById('metricDesc').textContent = m ? m.desc : '';
 
   const sel = document.getElementById('barrioSelect');
   BARRIOS.forEach(b => {
@@ -278,8 +279,11 @@ function showParcel(props) {
   const card = document.getElementById('parcelCard');
   card.classList.add('visible');
   document.getElementById('parcelTitle').textContent = props.dir || props.smp;
-  document.getElementById('parcelSub').textContent =
-    [props.smp, props.cpu, props.barrio, props.uso].filter(Boolean).join(' · ');
+  const RECONVERSION_USOS = ['GARAGE COMERCIAL','INDUSTRIAL','SIN USO IDENTIFICADO','ESTACION DE SERVICIO'];
+  const isReconv = RECONVERSION_USOS.includes((props.uso || '').toUpperCase());
+  document.getElementById('parcelSub').innerHTML =
+    [props.smp, props.cpu, props.barrio, props.uso].filter(Boolean).join(' · ')
+    + (isReconv ? ' <span style="background:rgba(249,115,22,.2);color:#f97316;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:4px">Reconversión</span>' : '');
 
   const grid = document.getElementById('parcelGrid');
   const items = [
