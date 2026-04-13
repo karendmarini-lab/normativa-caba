@@ -927,7 +927,10 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     if (fb) fb.style.display = 'none';
   }
 
-  if (lat && lng) initMap(lat, lng, addr);
+  if (lat && lng) {
+    eid('map-wrap').style.display = 'block';
+    initMap(lat, lng, addr);
+  }
 
   const res = eid('results');
   res.classList.remove('on');
