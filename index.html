@@ -45,16 +45,10 @@
   .header-nav a:hover{color:var(--text)}
 
   /* ── SPLIT LAYOUT ── */
-  .split{display:grid;grid-template-columns:42% 58%;height:calc(100vh - 96px)}
+  .split{display:grid;grid-template-columns:1fr;height:calc(100vh - 96px)}
 
   /* ── LEFT: portrait + bio ── */
-  .split-left{
-    border-right:1px solid var(--border);
-    padding:52px 44px;
-    display:flex;flex-direction:column;justify-content:center;
-    gap:28px;
-    overflow:hidden;
-  }
+  .split-left{display:none}
   .portrait-wrap{
     width:100%;aspect-ratio:4/5;max-height:340px;
     border-radius:140px;overflow:hidden;
@@ -76,6 +70,7 @@
   .split-right{
     position:relative;overflow:hidden;background:#000;
     display:flex;align-items:center;justify-content:center;
+    min-height:0;
   }
   .map-bg{position:absolute;inset:0;width:100%;height:100%}
   .map-bg svg{width:100%;height:100%;display:block}
@@ -89,7 +84,7 @@
   /* Panel de búsqueda flotante */
   .search-panel{
     position:relative;z-index:5;
-    width:90%;max-width:480px;
+    width:92%;max-width:540px;
     display:flex;flex-direction:column;gap:14px;
   }
   .search-eyebrow{
@@ -165,12 +160,12 @@
 
   /* ── RESULTS (substitui o painel direito ao encontrar parcela) ── */
   #results{
-    display:none;opacity:0;transform:translateX(10px);transition:all .3s;
+    display:none;opacity:0;transition:opacity .3s;
     position:absolute;inset:0;z-index:20;
-    background:rgba(0,0,0,.96);backdrop-filter:blur(20px);
-    overflow-y:auto;padding:32px 36px;
+    background:rgba(0,0,0,.97);backdrop-filter:blur(20px);
+    overflow-y:auto;padding:28px 24px;
   }
-  #results.on{display:block;opacity:1;transform:none}
+  #results.on{display:block;opacity:1}
 
   .res-header{
     border:1px solid var(--border);border-radius:var(--r);
@@ -255,6 +250,27 @@
     display:flex;align-items:center;justify-content:space-between;
     font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.18)}
   footer a{color:rgba(255,255,255,.25);text-decoration:none}
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .topbar { padding: 0 20px; }
+    header  { padding: 0 20px; }
+    .logo-sub { display: none; }
+    .header-nav { gap: 20px; }
+    .header-nav a { font-size: 8px; letter-spacing: 2px; }
+    .search-panel { width: 96%; }
+    .btn-pill { padding: 14px 20px; font-size: 9px; }
+    .search-bar input { font-size: 12px; }
+  }
+  @media (max-width: 480px) {
+    header { height: 52px; }
+    .logo-name { font-size: 11px; letter-spacing: 4px; }
+    .logo-mark { width: 24px; height: 24px; font-size: 10px; }
+    .header-nav { display: none; }
+    .search-panel { width: 98%; }
+    .btn-pill { font-size: 8px; letter-spacing: 2px; padding: 13px 16px; }
+  }
+
 </style>
 </head>
 <body>
@@ -656,7 +672,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.7<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.8<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -1110,7 +1126,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   res.classList.remove('on');
   void res.offsetWidth;
   res.classList.add('on');
-  setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+  setTimeout(() => { res.scrollTop = 0; }, 50);
 }
 
 // ── CONSULTA PRINCIPAL ───────────────────────────────────────────
