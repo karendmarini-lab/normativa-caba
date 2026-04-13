@@ -9,390 +9,308 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500&display=swap');
 
   :root {
-    --bg:       #0A0A0A;
-    --bg-card:  #111111;
-    --bg-lift:  #191919;
-    --border:   rgba(255,255,255,.07);
-    --border-h: rgba(255,255,255,.15);
-    --text:     #FFFFFF;
-    --muted:    rgba(255,255,255,.38);
-    --acc:      #C9A84C;
-    --acc-dim:  rgba(201,168,76,.10);
-    --r:        6px;
+    --bg:     #000000;
+    --card:   #0D0D0D;
+    --lift:   #141414;
+    --border: rgba(255,255,255,.09);
+    --text:   #FFFFFF;
+    --muted:  rgba(255,255,255,.35);
+    --acc:    #FFFFFF;
+    --r:      4px;
   }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
+  html, body { height: 100%; }
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    font-size: 14px;
-    font-weight: 300;
-    line-height: 1.6;
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
+    background: var(--bg); color: var(--text);
+    font-size: 13px; font-weight: 300;
+    line-height: 1.6; -webkit-font-smoothing: antialiased;
   }
 
-  /* ── TOPBAR ──────────────────────────────────── */
+  /* ── TOPBAR ────────────────────────────────── */
   .topbar {
+    height: 36px; padding: 0 40px;
     border-bottom: 1px solid var(--border);
-    padding: 0 48px;
-    height: 34px;
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-    color: var(--muted);
+    font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted);
   }
-  .topbar-name { color: var(--acc); font-weight: 400; }
+  .topbar-name { color: rgba(255,255,255,.7); letter-spacing: 4px; }
   .topbar-right { display: flex; gap: 28px; }
-  .topbar-right a { color: var(--muted); text-decoration: none; transition: color .2s; font-size: 10px; letter-spacing: 2px; }
+  .topbar-right a { color: var(--muted); text-decoration: none; transition: color .2s; font-size: 9px; letter-spacing: 2.5px; }
   .topbar-right a:hover { color: var(--text); }
 
-  /* ── HEADER ──────────────────────────────────── */
+  /* ── HEADER ────────────────────────────────── */
   header {
-    padding: 0 48px;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 68px;
+    height: 60px; padding: 0 40px;
     border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
     position: sticky; top: 0; z-index: 100;
-    background: rgba(10,10,10,.92);
-    backdrop-filter: blur(12px);
+    background: rgba(0,0,0,.95); backdrop-filter: blur(16px);
   }
-  .logo-wrap { display: flex; align-items: center; gap: 12px; }
+  .logo-wrap { display: flex; align-items: center; gap: 14px; }
   .logo-mark {
-    width: 30px; height: 30px;
-    border: 1px solid var(--acc);
+    width: 28px; height: 28px; border: 1px solid rgba(255,255,255,.3);
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; color: var(--acc); font-weight: 500;
-    letter-spacing: 0;
+    font-size: 11px; font-weight: 400; color: var(--text); letter-spacing: 1px;
   }
   .logo-name {
-    font-size: 18px; color: var(--text); font-weight: 300;
-    letter-spacing: 3px; text-transform: uppercase;
+    font-size: 14px; font-weight: 300; color: var(--text);
+    letter-spacing: 5px; text-transform: uppercase;
   }
-  .logo-name em { color: var(--acc); font-style: normal; }
-  .header-nav { display: flex; align-items: center; gap: 36px; }
+  .logo-name em { color: rgba(255,255,255,.45); font-style: normal; }
+  .header-nav { display: flex; gap: 32px; }
   .header-nav a {
-    font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
     color: var(--muted); text-decoration: none; transition: color .2s;
   }
   .header-nav a:hover { color: var(--text); }
 
-  /* ── HERO SECTION ────────────────────────────── */
-  .hero {
+  /* ── HERO (no usada ahora, colapsada) ─────── */
+  .hero { display: none; }
+
+  /* ── SPLIT LAYOUT ──────────────────────────── */
+  .split {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    min-height: 420px;
+    grid-template-columns: 420px 1fr;
+    min-height: calc(100vh - 96px);
     border-bottom: 1px solid var(--border);
   }
-  .hero-left {
-    padding: 64px 48px 56px;
-    display: flex; flex-direction: column; justify-content: center;
+  .split-left {
     border-right: 1px solid var(--border);
+    padding: 52px 40px 52px 40px;
+    display: flex; flex-direction: column;
+    overflow-y: auto;
   }
-  .hero-tag {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--acc); margin-bottom: 24px;
-  }
-  .hero-tag::before {
-    content: ''; display: block;
-    width: 24px; height: 1px; background: var(--acc);
-  }
-  .hero-title {
-    font-size: clamp(32px, 4vw, 52px);
-    font-weight: 200; line-height: 1.1;
-    color: var(--text); letter-spacing: -1px;
-    margin-bottom: 20px;
-  }
-  .hero-sub {
-    font-size: 13px; color: var(--muted); font-weight: 300;
-    max-width: 340px; line-height: 1.7; margin-bottom: 36px;
-  }
-  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
-
-  .btn-primary {
-    background: var(--text); color: var(--bg);
-    border: none; border-radius: 100px;
-    padding: 13px 28px; font-family: inherit;
-    font-size: 11px; font-weight: 500;
-    letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer; transition: opacity .2s, transform .1s;
-    white-space: nowrap;
-  }
-  .btn-primary:hover { opacity: .88; }
-  .btn-primary:active { transform: scale(.97); }
-
-  .btn-ghost {
-    background: transparent; color: var(--text);
-    border: 1px solid var(--border-h); border-radius: 100px;
-    padding: 13px 28px; font-family: inherit;
-    font-size: 11px; font-weight: 400;
-    letter-spacing: 2px; text-transform: uppercase;
-    cursor: pointer; transition: border-color .2s, color .2s;
-    white-space: nowrap;
-  }
-  .btn-ghost:hover { border-color: var(--text); }
-
-  .hero-right {
-    display: flex; align-items: center; justify-content: center;
-    padding: 40px;
-    background: linear-gradient(135deg, #0f0f0f 0%, #141414 100%);
-  }
-  .hero-visual {
-    width: 100%; max-width: 320px; aspect-ratio: 3/4;
-    border-radius: 160px 160px 160px 160px;
-    background: linear-gradient(145deg, #1a1a1a, #232323);
-    border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden; position: relative;
-  }
-  .hero-visual-inner {
-    text-align: center; color: var(--muted);
-    font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-  }
-  .hero-visual-icon { font-size: 32px; margin-bottom: 12px; opacity: .3; }
-
-  /* ── MAIN CONTENT ────────────────────────────── */
-  main { max-width: 860px; margin: 0 auto; padding: 52px 24px 80px; }
-
-  /* ── SEARCH ──────────────────────────────────── */
-  .search-section {
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    padding: 32px 32px 28px;
-    margin-bottom: 32px;
-    position: relative;
-  }
-  .search-section::before {
-    content: 'CONSULTA DE PARCELA';
-    position: absolute; top: -1px; left: 28px;
-    font-size: 9px; letter-spacing: 3px;
-    background: var(--bg); color: var(--muted);
-    padding: 0 8px;
+  .split-right {
+    background: #000;
+    position: relative; overflow: hidden;
+    display: flex; flex-direction: column;
   }
 
-  .inp-label {
+  /* ── LEFT PANEL ────────────────────────────── */
+  .panel-eyebrow {
+    font-size: 9px; letter-spacing: 3.5px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 6px;
+  }
+  .panel-title {
+    font-size: 16px; font-weight: 300; letter-spacing: 4px;
+    text-transform: uppercase; color: var(--text);
+    margin-bottom: 40px; line-height: 1.4;
+  }
+  .panel-title span { display: block; color: rgba(255,255,255,.45); font-size: 11px; letter-spacing: 3px; margin-top: 4px; }
+
+  .field-group { margin-bottom: 22px; }
+  .field-label {
     font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
-    color: var(--muted); margin-bottom: 10px; display: block;
+    color: var(--muted); margin-bottom: 8px; display: flex; align-items: center; gap: 6px;
   }
-  .inp-label span { color: var(--acc); margin-left: 2px; }
+  .field-label .req { color: rgba(255,255,255,.6); }
+  .field-label .opt { color: rgba(255,255,255,.2); font-size: 8px; }
 
   input[type=text], input[type=number], select {
-    font-family: 'Inter', inherit; font-size: 15px; font-weight: 300;
-    background: var(--bg-card); color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: var(--r);
-    padding: 13px 16px; outline: none; width: 100%;
-    transition: border-color .2s;
-    letter-spacing: .2px;
+    font-family: 'Inter', inherit; font-size: 13px; font-weight: 300;
+    background: var(--card); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--r);
+    padding: 12px 14px; outline: none; width: 100%;
+    transition: border-color .25s; letter-spacing: .3px;
   }
-  input[type=text]::placeholder { color: rgba(255,255,255,.2); }
-  input[type=text]:focus, input[type=number]:focus { border-color: rgba(201,168,76,.4); }
+  input[type=text]::placeholder { color: rgba(255,255,255,.18); }
+  input[type=text]:focus, input[type=number]:focus, select:focus {
+    border-color: rgba(255,255,255,.3);
+  }
   input[type=number] { -moz-appearance: textfield; }
   input[type=number]::-webkit-inner-spin-button { display: none; }
-  select { -webkit-appearance: none; cursor: pointer; }
+  select { -webkit-appearance: none; cursor: pointer; color: rgba(255,255,255,.5); }
   select option { background: #111; }
 
-  .acwrap { position: relative; margin-bottom: 20px; }
+  .acwrap { position: relative; }
   #suggestions {
     display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
-    background: var(--bg-card); border: 1px solid var(--border);
+    background: var(--card); border: 1px solid var(--border);
     border-radius: var(--r); overflow: hidden;
   }
   .si {
-    padding: 11px 16px; cursor: pointer; font-size: 13px;
-    border-bottom: 1px solid var(--border); transition: background .15s;
-    color: var(--text);
+    padding: 11px 14px; cursor: pointer; font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text); transition: background .15s;
   }
   .si:last-child { border-bottom: none; }
-  .si:hover { background: var(--bg-lift); color: var(--acc); }
+  .si:hover { background: var(--lift); }
 
-  .search-actions { display: flex; align-items: center; gap: 12px; }
+  /* ── PILL BUTTONS ──────────────────────────── */
+  .action-stack { display: flex; flex-direction: column; gap: 10px; margin-top: 36px; }
 
-  .btn-consultar {
-    background: var(--text); color: var(--bg);
+  .btn-pill {
+    width: 100%; background: var(--text); color: var(--bg);
     border: none; border-radius: 100px;
-    padding: 13px 32px; font-family: inherit;
-    font-size: 10px; font-weight: 500;
-    letter-spacing: 2.5px; text-transform: uppercase;
+    padding: 16px 24px; font-family: 'Inter', inherit;
+    font-size: 10px; font-weight: 500; letter-spacing: 2.5px; text-transform: uppercase;
     cursor: pointer; transition: opacity .2s, transform .1s;
-    white-space: nowrap;
+    text-align: center;
   }
-  .btn-consultar:hover { opacity: .85; }
-  .btn-consultar:active { transform: scale(.98); }
-  .btn-consultar.loading { opacity: .4; pointer-events: none; }
+  .btn-pill:hover { opacity: .87; }
+  .btn-pill:active { transform: scale(.98); }
+  .btn-pill.loading { opacity: .3; pointer-events: none; }
+  .btn-pill.secondary {
+    background: transparent; color: var(--text);
+    border: 1px solid rgba(255,255,255,.2);
+  }
+  .btn-pill.secondary:hover { border-color: rgba(255,255,255,.5); }
 
-  .sel-wrap { display: flex; align-items: center; gap: 10px; flex: 1; max-width: 240px; }
-  .sel-lbl { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
-
-  /* ── MESSAGES ────────────────────────────────── */
-  .msg { display: none; padding: 12px 16px; border-radius: var(--r); font-size: 13px; margin-top: 12px; font-weight: 300; }
+  /* ── MESSAGES ──────────────────────────────── */
+  .msg { display: none; padding: 11px 14px; border-radius: var(--r);
+         font-size: 12px; margin-top: 14px; }
   .msg.on { display: block; }
-  #msg-err  { background: rgba(220,38,38,.06); color: #f87171; border: 1px solid rgba(220,38,38,.15); }
-  #msg-warn { background: rgba(234,179,8,.05); color: #fcd34d; border: 1px solid rgba(234,179,8,.15); }
-  #msg-info { background: rgba(59,130,246,.05); color: #93c5fd; border: 1px solid rgba(59,130,246,.15); }
+  #msg-err  { background: rgba(220,38,38,.07); color: #f87171; border: 1px solid rgba(220,38,38,.15); }
+  #msg-warn { background: rgba(234,179,8,.06); color: #fcd34d; border: 1px solid rgba(234,179,8,.15); }
+  #msg-info { background: rgba(255,255,255,.04); color: var(--muted); border: 1px solid var(--border); }
 
-  /* ── RESULTS ─────────────────────────────────── */
-  #results { display: none; opacity: 0; transform: translateY(10px); transition: all .35s; }
+  /* ── RIGHT: MAPA CABA SVG ──────────────────── */
+  .map-container {
+    flex: 1; position: relative;
+    display: flex; flex-direction: column;
+  }
+  .map-svg-wrap {
+    flex: 1; overflow: hidden; position: relative;
+  }
+  .map-svg-wrap svg {
+    width: 100%; height: 100%; display: block;
+  }
+  .map-footer-label {
+    padding: 18px 28px;
+    border-top: 1px solid var(--border);
+    font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+    color: rgba(255,255,255,.25); text-align: center;
+  }
+
+  /* ── RESULTS — overlay sobre el panel derecho ─ */
+  #results {
+    display: none; opacity: 0; transform: translateY(6px);
+    transition: all .3s;
+    padding: 28px 28px 20px;
+    overflow-y: auto;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+  }
   #results.on { display: block; opacity: 1; transform: none; }
 
   .res-header {
     border: 1px solid var(--border); border-radius: var(--r);
-    padding: 24px 28px; margin-bottom: 20px;
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding: 20px 22px; margin-bottom: 18px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
   }
-  #res-addr {
-    font-size: 24px; font-weight: 200; color: var(--text);
-    letter-spacing: -0.5px; line-height: 1.2;
-  }
-  #res-coords { font-size: 10px; color: var(--muted); margin-top: 5px; letter-spacing: .5px; }
+  #res-addr { font-size: 18px; font-weight: 200; color: var(--text); letter-spacing: -.3px; line-height: 1.2; }
+  #res-coords { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: .5px; }
 
   .dbadge {
-    font-size: 10px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase;
-    padding: 6px 16px; border-radius: 100px;
-    background: var(--acc-dim); color: var(--acc);
-    border: 1px solid rgba(201,168,76,.2);
-    white-space: nowrap; flex-shrink: 0;
+    font-size: 9px; font-weight: 500; letter-spacing: 2px; text-transform: uppercase;
+    padding: 5px 14px; border-radius: 100px;
+    background: rgba(255,255,255,.07); color: rgba(255,255,255,.6);
+    border: 1px solid rgba(255,255,255,.12); white-space: nowrap; flex-shrink: 0;
   }
-  .dbadge.unknown { background: transparent; color: var(--muted); border-color: var(--border); }
+  .dbadge.unknown { opacity: .5; }
 
-  /* ── SECTION LABELS ──────────────────────────── */
   .slabel {
-    font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
-    color: var(--muted); margin: 28px 0 14px;
-    display: flex; align-items: center; gap: 12px;
+    font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--muted); margin: 22px 0 12px;
+    display: flex; align-items: center; gap: 10px;
   }
   .slabel::after { content:''; flex:1; height:1px; background:var(--border); }
 
-  /* ── CARDS ───────────────────────────────────── */
   .cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 1px; background: var(--border);
     border: 1px solid var(--border); border-radius: var(--r);
-    overflow: hidden; margin-bottom: 16px;
+    overflow: hidden; margin-bottom: 14px;
   }
-  .card { background: var(--bg-card); padding: 18px 20px; transition: background .2s; }
-  .card:hover { background: var(--bg-lift); }
-  .card-ico { font-size: 13px; color: var(--acc); margin-bottom: 10px; opacity: .6; }
-  .card-lbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .card-val { font-size: 22px; font-weight: 300; color: var(--text); line-height: 1; }
-  .card-val.sm { font-size: 14px; font-weight: 400; letter-spacing: .5px; }
-  .card-unit { font-size: 10px; color: var(--muted); margin-top: 5px; }
+  .card { background: var(--card); padding: 16px 18px; transition: background .2s; }
+  .card:hover { background: var(--lift); }
+  .card-ico { font-size: 12px; color: rgba(255,255,255,.3); margin-bottom: 10px; }
+  .card-lbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .card-val { font-size: 20px; font-weight: 300; color: var(--text); line-height: 1; }
+  .card-val.sm { font-size: 13px; font-weight: 400; letter-spacing: .5px; }
+  .card-unit { font-size: 9px; color: var(--muted); margin-top: 4px; }
 
-  /* ── APH / CUR BOX ───────────────────────────── */
   #aph-box, #u-box, #cur-box { display: none; }
   #aph-box.on, #u-box.on, #cur-box.on {
-    display: block;
-    background: rgba(234,179,8,.04); border: 1px solid rgba(234,179,8,.12);
-    border-radius: var(--r); padding: 12px 16px;
-    font-size: 12.5px; color: #fcd34d; margin-bottom: 16px;
+    display: block; background: rgba(234,179,8,.04);
+    border: 1px solid rgba(234,179,8,.12); border-radius: var(--r);
+    padding: 11px 14px; font-size: 12px; color: #fcd34d; margin-bottom: 14px;
   }
-  #aph-box.on a { color: var(--acc); }
 
-  /* ── CALC BLOCK ──────────────────────────────── */
   #calc-block {
     display: none; border: 1px solid var(--border); border-radius: var(--r);
-    padding: 24px 24px 20px; margin-bottom: 16px; position: relative;
+    padding: 20px; margin-bottom: 14px; position: relative;
   }
   #calc-block::before {
-    content: 'CÁLCULOS DEL LOTE'; position: absolute; top: -1px; right: 20px;
-    font-size: 8px; letter-spacing: 3px;
-    background: var(--bg); color: var(--acc); padding: 0 10px;
+    content: 'CÁLCULOS DEL LOTE'; position: absolute; top: -1px; right: 16px;
+    font-size: 7px; letter-spacing: 3px; background: var(--bg);
+    color: rgba(255,255,255,.3); padding: 0 8px;
   }
   .cgrid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 1px; background: var(--border);
-    border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+    border: 1px solid var(--border); border-radius: 3px; overflow: hidden;
   }
-  .citem { background: var(--bg-card); padding: 16px 18px; }
-  .clbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
-  .cval { font-size: 20px; font-weight: 300; color: var(--text); }
-  .cunit { font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .citem { background: var(--card); padding: 14px 16px; }
+  .clbl { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); margin-bottom: 7px; }
+  .cval { font-size: 18px; font-weight: 300; color: var(--text); }
+  .cunit { font-size: 9px; color: var(--muted); margin-top: 3px; }
   .cval-input {
     width: 100%; background: transparent; border: none;
-    border-bottom: 1px dashed rgba(201,168,76,.25);
-    color: var(--acc); font-family: inherit; font-size: 20px; font-weight: 300;
+    border-bottom: 1px dashed rgba(255,255,255,.12);
+    color: rgba(255,255,255,.75); font-family: inherit; font-size: 18px; font-weight: 300;
     padding: 2px 0; outline: none; cursor: text;
     -moz-appearance: textfield; appearance: textfield;
   }
-  .cval-input:focus { border-bottom-color: var(--acc); }
+  .cval-input:focus { border-bottom-color: rgba(255,255,255,.3); }
   .cval-input::-webkit-outer-spin-button,
   .cval-input::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-  /* ── FINANCIERO ──────────────────────────────── */
   #fin-block { display: none; }
+  #map-wrap { display: none; }
 
-  /* ── MAP ─────────────────────────────────────── */
-  #map-wrap {
-    border-radius: var(--r); overflow: hidden;
-    border: 1px solid var(--border); height: 280px; margin-bottom: 16px;
-  }
-  #map { height: 100%; }
+  .nnote { font-size: 10px; color: var(--muted); padding: 9px 12px;
+    border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 12px; }
+  .nnote a { color: rgba(255,255,255,.5); text-decoration: none; }
 
-  /* ── NOTA ────────────────────────────────────── */
-  .nnote {
-    font-size: 11px; color: var(--muted); padding: 10px 14px;
-    border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 14px;
-  }
-  .nnote a { color: var(--acc); text-decoration: none; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 22px 0; }
 
-  .divider { border: none; border-top: 1px solid var(--border); margin: 28px 0; }
-
-  /* ── REF ─────────────────────────────────────── */
-  .ref-section { border: 1px solid var(--border); border-radius: var(--r); padding: 16px 20px; margin-bottom: 14px; }
+  .ref-section { border: 1px solid var(--border); border-radius: var(--r); padding: 14px 18px; margin-bottom: 12px; }
   .ref-section details summary {
-    cursor: pointer; font-size: 9px; color: var(--muted);
+    cursor: pointer; font-size: 8px; color: var(--muted);
     letter-spacing: 2.5px; text-transform: uppercase;
     list-style: none; display: flex; align-items: center; gap: 10px; user-select: none;
   }
-  .ref-section details summary::before { content: '+'; color: var(--acc); font-size: 14px; }
+  .ref-section details summary::before { content: '+'; color: rgba(255,255,255,.4); font-size: 13px; }
   .ref-section details[open] summary::before { content: '−'; }
-  .dist-table { margin-top: 14px; }
-  .dist-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .dist-table { margin-top: 12px; }
+  .dist-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
   .dist-row:last-child { border-bottom: none; }
-  .dist-code { font-weight: 500; width: 90px; color: var(--text); }
-  .dist-h { color: var(--muted); font-size: 12px; flex: 1; }
-  .dist-cpu { font-size: 11px; color: var(--muted); }
+  .dist-code { font-weight: 500; width: 90px; }
+  .dist-h { color: var(--muted); font-size: 11px; flex: 1; }
+  .dist-cpu { font-size: 10px; color: var(--muted); }
 
-  #debug-panel { display: none; background: rgba(201,168,76,.03); border: 1px solid rgba(201,168,76,.08);
-    border-radius: var(--r); padding: 12px; font-size: 11px; font-family: monospace; color: var(--muted); margin-top: 8px; }
-  #calc-source { font-size: 10px; color: var(--muted); text-align: right; margin-top: 10px; letter-spacing: .5px; }
+  #debug-panel { display: none; background: rgba(255,255,255,.02); border: 1px solid var(--border);
+    border-radius: var(--r); padding: 10px; font-size: 10px; font-family: monospace; color: var(--muted); margin-top: 8px; }
+  #calc-source { font-size: 9px; color: var(--muted); text-align: right; margin-top: 8px; letter-spacing: .5px; }
 
-  /* ── LOGO CLOUD ──────────────────────────────── */
-  .logo-cloud {
-    border-top: 1px solid var(--border);
-    padding: 32px 48px;
-    display: flex; align-items: center; justify-content: center;
-    gap: 48px; flex-wrap: wrap;
-  }
-  .logo-cloud-label {
-    font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
-    color: rgba(255,255,255,.2); white-space: nowrap;
-  }
-  .logo-cloud-items { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; justify-content: center; }
-  .lc-item {
-    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
-    color: rgba(255,255,255,.18); font-weight: 500; white-space: nowrap;
-    transition: color .2s;
-  }
-  .lc-item:hover { color: rgba(255,255,255,.4); }
+  /* ── LOGO CLOUD ─────────────────────────────── */
+  .logo-cloud { border-top: 1px solid var(--border); padding: 24px 40px;
+    display: flex; align-items: center; justify-content: center; gap: 40px; flex-wrap: wrap; }
+  .logo-cloud-label { font-size: 8px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.15); }
+  .logo-cloud-items { display: flex; gap: 36px; align-items: center; flex-wrap: wrap; justify-content: center; }
+  .lc-item { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,.15); font-weight: 500; }
 
-  /* ── FOOTER ──────────────────────────────────── */
   footer {
-    border-top: 1px solid var(--border);
-    padding: 20px 48px;
+    border-top: 1px solid var(--border); padding: 18px 40px;
     display: flex; align-items: center; justify-content: space-between;
-    font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+    font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: rgba(255,255,255,.2);
   }
-  footer a { color: rgba(201,168,76,.7); text-decoration: none; transition: color .2s; }
-  footer a:hover { color: var(--acc); }
+  footer a { color: rgba(255,255,255,.3); text-decoration: none; }
 </style>
 </head>
 <body>
@@ -417,69 +335,20 @@
   </nav>
 </header>
 
-<section class="hero">
-  <div class="hero-left">
-    <div class="hero-tag">Inteligencia Artificial · Urbanismo CABA</div>
-    <h1 class="hero-title">Pre-factibilidad<br>constructiva<br>en segundos.</h1>
-    <p class="hero-sub">Consultá la normativa CUR de cualquier parcela de Buenos Aires. Altura, plano límite, pisada y volumen edificable al instante.</p>
-    <div class="hero-actions">
-      <button class="btn-primary" onclick="document.querySelector('#inp-addr').focus(); document.querySelector('.search-section').scrollIntoView({behavior:'smooth'})">Consultar parcela →</button>
-      <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank"><button class="btn-ghost">Ciudad 3D ↗</button></a>
-    </div>
-  </div>
-  <div class="hero-right">
-    <div class="hero-visual">
-      <div class="hero-visual-inner">
-        <div class="hero-visual-icon">⬡</div>
-        <div>Mapa normativo<br>CABA 2024</div>
-      </div>
-    </div>
-  </div>
-</section>
 
-<main>
-  <div style="margin-bottom:44px">
-    <div class="slabel">Consulta de Parcela</div>
-    <div class="srow">
-      <div class="field f1 acwrap">
-        <label class="flabel">Dirección <em>*</em></label>
-        <input type="text" id="inp-addr" placeholder="Ej: Corrientes 1234  ·  Av. Santa Fe 2500  ·  Estomba 3569" autocomplete="off"/>
-        <div class="sugg" id="suggestions" style="display:none"></div>
-      </div>
-      <div class="field">
-        <label class="flabel">Frente <span style="color:var(--muted)">opt.</span></label>
-        <input type="number" id="inp-frente" style="display:none" placeholder="m" min="0" step="0.01"/>
-      </div>
-      <div class="field">
-        <label class="flabel">Fondo <span style="color:var(--muted)">opt.</span></label>
-        <input type="number" id="inp-fondo" style="display:none" placeholder="m" min="0" step="0.01"/>
-      </div>
-      <div class="field">
-        <label class="flabel">Distrito <span style="color:var(--muted)">manual</span></label>
-        <select id="inp-distrito">
-          <option value="">— auto —</option>
-          <optgroup label="RESIDENCIAL"><option value="R1">R1</option><option value="R1b">R1b</option><option value="R2a">R2a</option><option value="R2b">R2b</option><option value="R2c">R2c</option><option value="R2d">R2d</option></optgroup>
-          <optgroup label="COMERCIAL"><option value="C1">C1</option><option value="C2">C2</option><option value="C2a">C2a</option><option value="C3">C3</option><option value="C3i">C3i</option><option value="CB">CB</option></optgroup>
-          <optgroup label="EQUIPAMIENTO"><option value="E1">E1</option><option value="E2">E2</option><option value="E3">E3</option></optgroup>
-          <optgroup label="INDUSTRIAL"><option value="I">I</option><option value="I1">I1</option></optgroup>
-          <optgroup label="MIXTO"><option value="VT">VT</option><option value="NCI">NCI</option></optgroup>
-          <optgroup label="APH"><option value="APH">APH</option><option value="APH1">APH1</option><option value="APH2">APH2</option><option value="APH3">APH3</option><option value="APH4">APH4</option><option value="APH5">APH5</option></optgroup>
-          <optgroup label="USO PÚBLICO"><option value="UP">UP</option></optgroup>
-        </select>
-      </div>
-      <button class="btn-q" id="btn-q" onclick="consultarParcela()">↗ CONSULTAR</button>
-    </div>
-    <div class="ltrack" id="ltrack"><div class="lfill"></div></div>
-    <div class="msg err" id="msg-err"></div>
-    <div class="msg warn" id="msg-warn"></div>
-    <div class="msg info" id="msg-info"></div>
-    <div id="debug-panel" style="display:none;margin-top:10px;padding:12px;background:#1a1f2e;border:1px solid #E8C547;font-size:11px;color:#a0f0ff;border-radius:3px">
-      <div style="font-size:9px;letter-spacing:2px;color:#E8C547;margin-bottom:8px">DEBUG — ¿POR QUÉ NO SE DETECTÓ EL DISTRITO?</div>
-      <div id="debug-log"></div>
-    </div>
-  </div>
 
-  <div id="results">
+<div class="split">
+  <!-- PANEL IZQUIERDO: formulario + resultados -->
+  <div class="split-left">
+    <div class="panel-eyebrow">EdificIA</div>
+    <div class="panel-title">
+      CONSULTA DE PARCELA
+      <span>NORMATIVA CUR · CABA</span>
+    </div>
+
+    
+
+    <div id="results">
     <div class="abanner">
       <div>
         <div style="font-size:8.5px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
@@ -567,7 +436,131 @@
       <tbody id="tbl-body"></tbody></table>
     </div>
   </div>
-</main>
+  </div>
+
+  <!-- PANEL DERECHO: mapa CABA -->
+  <div class="split-right">
+    <div class="map-container">
+      <div class="map-svg-wrap">
+        <svg viewBox="0 0 500 580" xmlns="http://www.w3.org/2000/svg"
+     style="position:absolute;inset:0;width:100%;height:100%;opacity:.75">
+  <defs>
+    <style>
+      .st { stroke:#fff; stroke-width:.4; fill:none; opacity:.5; }
+      .sh { stroke:#fff; stroke-width:.9; fill:none; opacity:.85; }
+      .lbl { fill:rgba(255,255,255,.4); font-family:'Inter',sans-serif; font-size:7px; letter-spacing:2px; text-transform:uppercase; }
+      .lbl-sm { fill:rgba(255,255,255,.25); font-family:'Inter',sans-serif; font-size:5.5px; letter-spacing:1.5px; }
+      .av { stroke:#fff; stroke-width:.6; fill:none; opacity:.3; stroke-dasharray: none; }
+    </style>
+  </defs>
+
+  <!-- Límite exterior CABA -->
+  <path class="sh" d="M60,40 L420,30 L460,80 L470,200 L450,320 L430,420 L380,500 L300,560 L200,565 L120,530 L70,460 L40,340 L30,200 L50,100 Z" opacity=".6"/>
+
+  <!-- RÍO DE LA PLATA (este) -->
+  <path d="M420,30 L460,80 L470,200 L450,320 L430,420" stroke="#fff" stroke-width=".3" fill="none" opacity=".15" stroke-dasharray="4,3"/>
+  <text class="lbl-sm" x="455" y="220" transform="rotate(80,455,220)">RÍO DE LA PLATA</text>
+
+  <!-- Avenidas principales -->
+  <!-- Gral Paz (límite norte/oeste) -->
+  <path class="av" d="M60,40 L50,100 L40,200 L35,300 L50,420 L80,500 L120,530"/>
+  <!-- Av. Rivadavia -->
+  <path class="av" d="M60,290 L430,260"/>
+  <!-- Av. Córdoba -->
+  <path class="av" d="M70,190 L440,175"/>
+  <!-- Av. Santa Fe -->
+  <path class="av" d="M75,160 L440,148"/>
+  <!-- Av. Corrientes -->
+  <path class="av" d="M65,230 L440,215"/>
+  <!-- Av. Independencia -->
+  <path class="av" d="M65,330 L420,310"/>
+  <!-- Av. San Juan -->
+  <path class="av" d="M70,360 L415,340"/>
+  <!-- Av. Belgrano -->
+  <path class="av" d="M68,305 L420,285"/>
+  <!-- Av. Cabildo -->
+  <path class="av" d="M180,40 L190,160"/>
+  <!-- Av. Santa Fe norte -->
+  <path class="av" d="M175,40 L200,160 L220,260 L250,350"/>
+  <!-- Av. Callao/Entre Ríos -->
+  <path class="av" d="M260,50 L265,200 L270,380 L280,500"/>
+  <!-- Av. Pueyrredón/Jujuy -->
+  <path class="av" d="M295,50 L300,200 L305,400 L310,520"/>
+  <!-- Av. 9 de Julio -->
+  <path d="M240,50 L244,200 L248,380 L252,520" stroke="#fff" stroke-width="1.2" fill="none" opacity=".5"/>
+  <!-- Paseo Colón / Leandro Alem -->
+  <path class="av" d="M400,80 L410,200 L415,320 L420,420"/>
+  <!-- Av. Figueroa Alcorta -->
+  <path class="av" d="M70,120 L180,100 L280,90 L360,85"/>
+
+  <!-- BARRIOS — polígonos suaves -->
+  <!-- Palermo -->
+  <path class="st" d="M120,80 L220,70 L250,90 L240,160 L180,175 L120,160 Z"/>
+  <!-- Belgrano -->
+  <path class="st" d="M120,40 L220,35 L230,75 L120,80 Z"/>
+  <!-- Recoleta -->
+  <path class="st" d="M240,80 L320,75 L330,140 L240,150 Z"/>
+  <!-- Retiro/San Nicolás -->
+  <path class="st" d="M320,80 L400,85 L410,150 L330,155 Z"/>
+  <!-- Villa Urquiza -->
+  <path class="st" d="M60,40 L120,40 L120,80 L60,90 Z"/>
+  <!-- Colegiales -->
+  <path class="st" d="M180,80 L240,75 L240,150 L180,160 Z"/>
+  <!-- Almagro -->
+  <path class="st" d="M180,190 L280,180 L285,260 L180,265 Z"/>
+  <!-- Caballito -->
+  <path class="st" d="M80,200 L180,190 L180,270 L80,275 Z"/>
+  <!-- Boedo -->
+  <path class="st" d="M180,260 L280,255 L285,330 L180,335 Z"/>
+  <!-- San Telmo / Montserrat -->
+  <path class="st" d="M320,280 L400,270 L410,340 L320,345 Z"/>
+  <!-- Puerto Madero -->
+  <path class="st" d="M400,180 L440,185 L445,310 L400,305 Z"/>
+  <!-- Flores -->
+  <path class="st" d="M60,280 L160,270 L165,360 L60,365 Z"/>
+  <!-- Floresta / V.del Parque -->
+  <path class="st" d="M60,180 L140,170 L140,270 L60,275 Z"/>
+  <!-- Villa Devoto -->
+  <path class="st" d="M60,90 L130,85 L130,170 L60,175 Z"/>
+  <!-- Mataderos / Liniers -->
+  <path class="st" d="M60,360 L160,355 L165,430 L60,435 Z"/>
+  <!-- Villa Lugano -->
+  <path class="st" d="M60,430 L200,425 L200,500 L60,500 Z"/>
+  <!-- Parque Patricios / Barracas -->
+  <path class="st" d="M240,340 L360,330 L370,420 L240,425 Z"/>
+  <!-- Balvanera -->
+  <path class="st" d="M240,190 L340,180 L345,260 L240,265 Z"/>
+  <!-- Nuñez -->
+  <path class="st" d="M200,40 L310,35 L320,80 L200,88 Z"/>
+
+  <!-- Etiquetas barrios -->
+  <text class="lbl" x="145" y="128">PALERMO</text>
+  <text class="lbl-sm" x="127" y="55">BELGRANO</text>
+  <text class="lbl-sm" x="252" y="115">RECOLETA</text>
+  <text class="lbl-sm" x="335" y="118">RETIRO</text>
+  <text class="lbl-sm" x="190" y="225">ALMAGRO</text>
+  <text class="lbl-sm" x="95" y="238">CABALLITO</text>
+  <text class="lbl-sm" x="340" y="310">PUERTO MADERO</text>
+  <text class="lbl-sm" x="82" y="318">FLORES</text>
+  <text class="lbl-sm" x="62" y="215">V. DEVOTO</text>
+  <text class="lbl-sm" x="210" y="60">NUÑEZ</text>
+  <text class="lbl-sm" x="260" y="305">BALVANERA</text>
+  <text class="lbl-sm" x="265" y="380">BARRACAS</text>
+  <text class="lbl-sm" x="75" y="460">LUGANO</text>
+  <text class="lbl-sm" x="75" y="400">MATADEROS</text>
+  <text class="lbl-sm" x="182" y="296">BOEDO</text>
+  <text class="lbl-sm" x="342" y="298">SAN TELMO</text>
+
+  <!-- Punto marcador / cursor -->
+  <circle id="map-pin" cx="0" cy="0" r="5" fill="none" stroke="#fff" stroke-width="1" opacity="0"/>
+  <circle id="map-pin-inner" cx="0" cy="0" r="2" fill="#fff" opacity="0"/>
+</svg>
+      </div>
+      <div class="map-footer-label">ESTUDIO DE NORMATIVA PARCELARIA &nbsp;·&nbsp; CABA</div>
+    </div>
+  </div>
+</div>
+
 
 
 <div class="logo-cloud">
@@ -584,10 +577,32 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.4<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.5<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
+'use strict';
+
+
+
+// ── HELPERS ─────────────────────────────────────────────────────
+const eid = id => document.getElementById(id);
+const fmt = n => Math.round(n).toLocaleString('es-AR');
+
+function setLoad(on) {
+  eid('ltrack').classList.toggle('on', on);
+  eid('btn-q').disabled = on;
+}
+
+function setMsg(type, text) {
+  ['err','warn','info'].forEach(t => {
+    const el = eid('msg-' + t);
+    if (t === type && text) { el.textContent = text; el.classList.add('on'); }
+    else { el.classList.remove('on'); }
+  });
+}
+
+// ── USIG NORMALIZAR ──────────
 'use strict';
 
 
@@ -1138,20 +1153,8 @@ setTimeout(() => {
   loadDistricts().catch(e => console.warn('districts preload:', e));
   loadCentroids().catch(e => console.warn('centroids preload:', e));
 }, 600);
-</script>
-<footer>
-  <div>EdificIA · Datos: CUR 2024 · Catastro AGIP/EPOK</div>
-  <div>Desarrollado por <a href="#">Karen Marini</a></div>
-</footer>
-</body>
-</html<div class="search-section">
-  <label class="inp-label" for="inp-addr">Dirección <span>*</span></label>
-  <div class="acwrap">
-    <input type="text" id="inp-addr" placeholder="Ej: Junín 1490, CABA" autocomplete="off">
-    <div id="suggestions"></div>
-  </div>
-  <div class="search-actions">
-    <button class="btn-consultar" onclick="consultarParcela()">Consultar →</button>
+">Generar informe de normativa</button>
+    <button class="btn-pill secondary" onclick="document.getElementById('inp-addr').value='';document.getElementById('results').classList.remove('on')">Consultar otra parcela</button></div>
     <div class="sel-wrap" style="display:none">
       <select id="inp-distrito"><option value="">— auto —</option></select>
     </div>
