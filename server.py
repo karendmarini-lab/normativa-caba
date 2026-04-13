@@ -38,7 +38,30 @@ from auth import (
     require_active_user,
 )
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response as StarletteResponse
+
+
+class AuthMiddleware(BaseHTTPMiddleware):
+    """Redirect to Google SSO if not authenticated."""
+
+    OPEN_PATHS = ("/api/auth/", "/api/health")
+
+    async def dispatch(self, request: Request, call_next) -> StarletteResponse:
+        path = request.url.path
+        # Let auth endpoints and health check through
+        if any(path.startswith(p) for p in self.OPEN_PATHS):
+            return await call_next(request)
+        # Check session cookie
+        user = get_current_user(request)
+        if not user:
+            login_url = str(request.base_url).rstrip("/") + "/api/auth/google"
+            return RedirectResponse(login_url, status_code=302)
+        return await call_next(request)
+
+
 app = FastAPI(title="EdificIA API", version="0.1.0")
+app.add_middleware(AuthMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
