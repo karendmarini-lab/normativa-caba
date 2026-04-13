@@ -1,0 +1,29 @@
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Data files (too large for git)
+data/
+cur_optimizado.json
+cur_centroids.json
+cpu_districts.json
+cur_wgs84.json
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Logs
+*.log
+
+# Screenshots & demos
+*.png
+demo_3d*.html
+
+# Playwright test artifacts
+.playwright-mcp/
+
+# OS
+.DS_Store
