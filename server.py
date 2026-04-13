@@ -85,6 +85,15 @@ def startup():
 
 # --- Auth routes ---
 
+@app.get("/api/auth/debug")
+def auth_debug(request: Request):
+    return {
+        "cookies": dict(request.cookies),
+        "user": get_current_user(request),
+        "headers": {k: v for k, v in request.headers.items() if k in ("host", "x-forwarded-proto", "cookie")},
+    }
+
+
 @app.get("/api/auth/google")
 def auth_google(request: Request):
     return handle_google_login(request)
