@@ -14,11 +14,6 @@
       --border:rgba(255,255,255,.08);--bh:rgba(255,255,255,.18);
       --text:#fff;--muted:rgba(255,255,255,.4);--r:6px;
     }
-    :root.light{
-      --bg:#f5f5f5;--card:#fff;--lift:#eee;
-      --border:rgba(0,0,0,.1);--bh:rgba(0,0,0,.2);
-      --text:#111;--muted:rgba(0,0,0,.45);
-    }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
       font-size:14px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased}
@@ -28,8 +23,6 @@
       display:flex;align-items:center;justify-content:space-between;
       font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
     .topbar-name{color:color-mix(in srgb, var(--text) 75%, transparent);letter-spacing:4px;font-weight:400}
-    .theme-btn{background:none;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:14px;line-height:1;padding:0}
-    .theme-btn:hover{border-color:var(--bh);color:var(--text)}
     .topbar-right{display:flex;gap:24px}
     .topbar-right a{color:var(--muted);text-decoration:none;font-size:9px;letter-spacing:2px;transition:color .2s}
     .topbar-right a:hover{color:var(--text)}
@@ -234,7 +227,7 @@
       background:color-mix(in srgb, var(--bg) 95%, transparent);backdrop-filter:blur(16px);
       border-right:1px solid var(--border);overflow:hidden}
     .sidebar:hover{width:200px}
-    .sidebar-hint{position:absolute;top:16px;left:6px;font-size:16px;color:var(--text);opacity:.5;transition:opacity .2s;pointer-events:none}
+    .sidebar-hint{position:absolute;top:14px;left:5px;font-size:22px;color:var(--text);opacity:.5;transition:opacity .2s;pointer-events:none}
     .sidebar:hover .sidebar-hint{opacity:0}
     .sidebar-inner{opacity:0;transition:opacity .2s ease .05s;padding:24px 20px;display:flex;flex-direction:column;gap:6px;min-width:200px}
     .sidebar:hover .sidebar-inner{opacity:1}
@@ -270,9 +263,7 @@
     </div>
   </div>
   <nav class="header-nav">
-    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
-    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
-    <button id="themeToggle" class="theme-btn" onclick="document.documentElement.classList.toggle('light');this.textContent=document.documentElement.classList.contains('light')?'☾':'☀'">☀</button>
+    <a href="mailto:karendmarini@gmail.com">Contacto</a>
   </nav>
 </header>
 
@@ -285,6 +276,8 @@
     <div class="sidebar-label">Externo</div>
     <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D GCBA ↗</a>
     <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa CUR ↗</a>
+    <div style="flex:1"></div>
+    <a href="mailto:karendmarini@gmail.com" style="margin-top:auto;border-top:1px solid var(--border);padding-top:12px">Contacto<span class="sidebar-desc">karendmarini@gmail.com</span></a>
   </div>
 </div>
 
