@@ -343,14 +343,23 @@ def parcelas_geo(
     barrio: str | None = Query(None),
     metric: str = Query("delta"),
     limit: int = Query(2000, ge=100, le=5000),
+    pisos_min: int | None = Query(None),
+    pisos_max: int | None = Query(None),
+    area_min: float | None = Query(None),
+    area_max: float | None = Query(None),
+    fot_min: float | None = Query(None),
+    pl_min: float | None = Query(None),
+    uso: str | None = Query(None),
+    aph: str | None = Query(None),
+    riesgo_hidrico: str | None = Query(None),
+    enrase: str | None = Query(None),
 ) -> dict[str, Any]:
-    """Return GeoJSON of top parcels by metric, optionally filtered by barrio."""
+    """Return GeoJSON of top parcels by metric, with optional filters."""
     metric_col = {
         "delta": "CASE WHEN tejido_altura_max IS NOT NULL THEN plano_san - tejido_altura_max ELSE 0 END",
         "vol": "COALESCE(vol_edificable, 0)",
         "pisos": "COALESCE(pisos, 0)",
         "area": "COALESCE(area, 0)",
-        "reconversion": "CASE WHEN uso_tipo1 IN ('GARAGE COMERCIAL','INDUSTRIAL','SIN USO IDENTIFICADO','ESTACION DE SERVICIO') THEN 1 ELSE 0 END",
     }.get(metric, "COALESCE(plano_san - COALESCE(tejido_altura_max, 0), 0)")
 
     where = "polygon_geojson IS NOT NULL AND area > 50"
@@ -358,13 +367,44 @@ def parcelas_geo(
     if barrio:
         where += " AND barrio = :barrio"
         params["barrio"] = barrio
+    if pisos_min is not None:
+        where += " AND pisos >= :pisos_min"
+        params["pisos_min"] = pisos_min
+    if pisos_max is not None:
+        where += " AND pisos <= :pisos_max"
+        params["pisos_max"] = pisos_max
+    if area_min is not None:
+        where += " AND area >= :area_min"
+        params["area_min"] = area_min
+    if area_max is not None:
+        where += " AND area <= :area_max"
+        params["area_max"] = area_max
+    if fot_min is not None:
+        where += " AND fot >= :fot_min"
+        params["fot_min"] = fot_min
+    if pl_min is not None:
+        where += " AND plano_san >= :pl_min"
+        params["pl_min"] = pl_min
+    if uso:
+        where += " AND uso_tipo1 = :uso"
+        params["uso"] = uso
+    if aph == "1":
+        where += " AND (es_aph = 1 OR edif_catalogacion_proteccion IN ('CAUTELAR','ESTRUCTURAL','GENERAL'))"
+    elif aph == "0":
+        where += " AND (es_aph IS NULL OR es_aph = 0) AND (edif_catalogacion_proteccion IS NULL OR edif_catalogacion_proteccion = 'DESESTIMADO')"
+    if riesgo_hidrico == "1":
+        where += " AND edif_riesgo_hidrico IS NOT NULL AND edif_riesgo_hidrico != ''"
+    if enrase == "1":
+        where += " AND edif_enrase = 1"
 
     with db_connect() as conn:
         rows = conn.execute(
             f"""SELECT smp, lat, lng, polygon_geojson,
                 cpu, barrio, area, pisos, plano_san, tejido_altura_max,
-                vol_edificable, sup_vendible, fot, uso_tipo1, epok_direccion,
-                frente, fondo, delta_pisos,
+                vol_edificable, sup_vendible, fot, uso_tipo1, uso_tipo2, epok_direccion,
+                frente, fondo, delta_pisos, epok_pisos_sobre,
+                es_aph, edif_catalogacion_proteccion, edif_riesgo_hidrico,
+                edif_enrase, edif_plusvalia_incidencia_uva, edif_plusvalia_alicuota,
                 {metric_col} as score
             FROM parcelas
             WHERE {where}
@@ -393,9 +433,17 @@ def parcelas_geo(
                 "vendible": r["sup_vendible"],
                 "fot": r["fot"],
                 "uso": r["uso_tipo1"],
+                "uso2": r["uso_tipo2"],
                 "fr": r["frente"],
                 "fo": r["fondo"],
                 "delta_pisos": r["delta_pisos"],
+                "pisos_actual": r["epok_pisos_sobre"],
+                "aph": r["es_aph"],
+                "catalogacion": r["edif_catalogacion_proteccion"],
+                "riesgo": r["edif_riesgo_hidrico"],
+                "enrase": r["edif_enrase"],
+                "plusvalia_uva": r["edif_plusvalia_incidencia_uva"],
+                "plusvalia_alic": r["edif_plusvalia_alicuota"],
                 "score": r["score"],
             },
         })

@@ -125,6 +125,47 @@
     </div>
   </div>
 
+  <details id="advancedFilters" style="margin-top:2px">
+    <summary style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none">Búsqueda avanzada</summary>
+    <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;font-size:12px">
+      <div style="display:flex;gap:8px">
+        <div style="flex:1"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Pisos mín</label><input id="fPisosMin" type="number" min="0" placeholder="—" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px"></div>
+        <div style="flex:1"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Pisos máx</label><input id="fPisosMax" type="number" min="0" placeholder="—" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Área mín m²</label><input id="fAreaMin" type="number" min="0" placeholder="—" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px"></div>
+        <div style="flex:1"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Área máx m²</label><input id="fAreaMax" type="number" min="0" placeholder="—" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <div style="flex:1"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">FOT mín</label><input id="fFotMin" type="number" min="0" step="0.5" placeholder="—" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px"></div>
+        <div style="flex:1"><label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">PL mín (m)</label><input id="fPlMin" type="number" min="0" placeholder="—" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px"></div>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Uso actual</label>
+        <select id="fUso" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(18,18,18,.98);color:var(--text);font:inherit;font-size:12px;color-scheme:dark">
+          <option value="">Todos</option>
+          <option>RESIDENCIAL</option><option>UNICOMERCIAL</option><option>INDUSTRIAL</option>
+          <option>EQUIPAMIENTO</option><option>OBRA EN CONSTRUCCION</option><option>OFICINAS</option>
+          <option>SIN USO IDENTIFICADO</option><option>GARAGE COMERCIAL</option><option>LOTE</option>
+          <option>ESTACION DE SERVICIO</option><option>MULTICOMERCIAL</option>
+        </select>
+      </div>
+      <div>
+        <label style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px">Protección patrimonial</label>
+        <select id="fAph" style="width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:rgba(18,18,18,.98);color:var(--text);font:inherit;font-size:12px;color-scheme:dark">
+          <option value="">Todos</option>
+          <option value="0">Sin protección</option>
+          <option value="1">APH / Protegido</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:12px">
+        <label style="font-size:11px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="fRiesgo" style="accent-color:var(--accent)"> Riesgo hídrico</label>
+        <label style="font-size:11px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="fEnrase" style="accent-color:var(--accent)"> Enrase</label>
+      </div>
+      <button onclick="applyFilters()" style="padding:8px;border-radius:8px;border:1px solid var(--accent);background:rgba(232,197,71,.1);color:var(--accent);font:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Aplicar filtros</button>
+    </div>
+  </details>
+
   <div class="stat-row">
     <div class="stat"><div class="stat-label">Parcelas</div><div class="stat-value" id="statCount">-</div></div>
     <div class="stat"><div class="stat-label">Vol. total</div><div class="stat-value" id="statVol">-</div></div>
@@ -308,22 +349,34 @@ function showParcel(props) {
   document.getElementById('parcelTitle').textContent = props.dir || props.smp;
   const RECONVERSION_USOS = ['GARAGE COMERCIAL','INDUSTRIAL','SIN USO IDENTIFICADO','ESTACION DE SERVICIO'];
   const isReconv = RECONVERSION_USOS.includes((props.uso || '').toUpperCase());
+  // Badges
+  const badges = [];
+  if (props.aph || (props.catalogacion && props.catalogacion !== 'DESESTIMADO'))
+    badges.push(['APH ' + (props.catalogacion || ''), 'rgba(239,68,68,.2)', '#ef4444']);
+  if (props.riesgo)
+    badges.push(['Riesgo hídrico', 'rgba(59,130,246,.2)', '#3b82f6']);
+  if (props.enrase)
+    badges.push(['Enrase', 'rgba(168,85,247,.2)', '#a855f7']);
+
   document.getElementById('parcelSub').innerHTML =
-    [props.smp, props.cpu, props.barrio, props.uso].filter(Boolean).join(' · ')
-    + (isReconv ? ' <span style="background:rgba(249,115,22,.2);color:#f97316;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:4px">Reconversión</span>' : '');
+    [props.smp, props.cpu, props.barrio].filter(Boolean).join(' · ')
+    + badges.map(([t,bg,c]) => ` <span style="background:${bg};color:${c};padding:1px 6px;border-radius:4px;font-size:10px;margin-left:2px">${t}</span>`).join('');
 
   const grid = document.getElementById('parcelGrid');
   const fmtM2 = v => v ? Math.round(v).toLocaleString('es-AR') + ' m²' : '-';
   const items = [
     ['m² vendibles', fmtM2(props.vendible)],
-    ['Pisos', props.pisos || '-'],
+    ['Pisos permitidos', props.pisos || '-'],
+    ['Pisos actuales', props.pisos_actual || '-'],
     ['FOT', props.fot || '-'],
     ['PL', props.pl ? props.pl + 'm' : '-'],
     ['Lote', fmtM2(props.area)],
     ['Frente', props.fr ? props.fr + 'm' : '-'],
     ['Fondo', props.fo ? props.fo + 'm' : '-'],
-    ['Delta', props.tj ? (props.pl - props.tj).toFixed(1) + 'm' : '-'],
+    ['Uso', props.uso ? (props.uso + (props.uso2 ? ' / ' + props.uso2 : '')) : '-'],
+    ['Delta altura', props.tj ? (props.pl - props.tj).toFixed(1) + 'm' : '-'],
     ['Tejido', props.tj ? props.tj + 'm' : '-'],
+    ['Plusvalía', props.plusvalia_uva ? props.plusvalia_uva + ' UVA (' + (props.plusvalia_alic*100).toFixed(0) + '%)' : '-'],
   ];
   grid.innerHTML = items.map(([l, v]) =>
     `<div class="parcel-metric"><div class="parcel-metric-label">${l}</div><div class="parcel-metric-value">${v}</div></div>`
@@ -357,11 +410,36 @@ function showParcel(props) {
     }).catch(() => {});
 }
 
+function getFilterParams() {
+  const p = new URLSearchParams();
+  const v = id => document.getElementById(id)?.value;
+  const c = id => document.getElementById(id)?.checked;
+  if (v('fPisosMin')) p.set('pisos_min', v('fPisosMin'));
+  if (v('fPisosMax')) p.set('pisos_max', v('fPisosMax'));
+  if (v('fAreaMin')) p.set('area_min', v('fAreaMin'));
+  if (v('fAreaMax')) p.set('area_max', v('fAreaMax'));
+  if (v('fFotMin')) p.set('fot_min', v('fFotMin'));
+  if (v('fPlMin')) p.set('pl_min', v('fPlMin'));
+  if (v('fUso')) p.set('uso', v('fUso'));
+  if (v('fAph')) p.set('aph', v('fAph'));
+  if (c('fRiesgo')) p.set('riesgo_hidrico', '1');
+  if (c('fEnrase')) p.set('enrase', '1');
+  return p;
+}
+
+function applyFilters() {
+  if (activeBarrio) loadParcels(); else renderCircles();
+}
+
 async function loadParcels() {
   document.getElementById('loading').classList.add('active');
   document.getElementById('parcelCard').classList.remove('visible');
 
-  const url = `/api/parcelas_geo?barrio=${encodeURIComponent(activeBarrio)}&metric=${activeMetric}&limit=3000`;
+  const filters = getFilterParams();
+  filters.set('barrio', activeBarrio);
+  filters.set('metric', activeMetric);
+  filters.set('limit', '3000');
+  const url = `/api/parcelas_geo?${filters.toString()}`;
 
   try {
     const resp = await fetch(url);
