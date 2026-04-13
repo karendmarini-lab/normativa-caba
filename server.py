@@ -82,6 +82,9 @@ def load_polygons() -> None:
     if _POLYGONS:
         return
 
+    if not CSV_PATH.exists():
+        return
+
     with CSV_PATH.open(newline="", errors="replace") as handle:
         reader = csv.DictReader(handle)
         for row in reader:
