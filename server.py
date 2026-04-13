@@ -12,6 +12,7 @@ Then open:
 from __future__ import annotations
 
 import json
+import os
 import re
 import sqlite3
 from pathlib import Path
@@ -48,6 +49,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
     OPEN_PATHS = ("/api/auth/", "/api/health")
 
     async def dispatch(self, request: Request, call_next) -> StarletteResponse:
+        # Skip auth entirely if no Google credentials configured (local dev)
+        if not os.environ.get("GOOGLE_CLIENT_ID"):
+            return await call_next(request)
         path = request.url.path
         # Let auth endpoints and health check through
         if any(path.startswith(p) for p in self.OPEN_PATHS):
