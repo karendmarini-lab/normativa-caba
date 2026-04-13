@@ -17,7 +17,7 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -25,6 +25,18 @@ from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "caba_normativa.db"
+
+from auth import (
+    get_current_user,
+    handle_google_callback,
+    handle_google_login,
+    handle_login,
+    handle_logout,
+    handle_me,
+    handle_register,
+    init_users_table,
+    require_active_user,
+)
 
 app = FastAPI(title="EdificIA API", version="0.1.0")
 app.add_middleware(
@@ -35,6 +47,42 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.on_event("startup")
+def startup():
+    init_users_table()
+
+
+# --- Auth routes ---
+
+@app.get("/api/auth/google")
+def auth_google(request: Request):
+    return handle_google_login(request)
+
+
+@app.get("/api/auth/callback")
+def auth_callback(request: Request, code: str = Query(...)):
+    return handle_google_callback(request, code)
+
+
+@app.post("/api/auth/register")
+def auth_register(email: str = Query(...), password: str = Query(...), nombre: str = Query("")):
+    return handle_register(email, password, nombre)
+
+
+@app.post("/api/auth/login")
+def auth_login_password(email: str = Query(...), password: str = Query(...)):
+    return handle_login(email, password)
+
+
+@app.get("/api/auth/logout")
+def auth_logout():
+    return handle_logout()
+
+
+@app.get("/api/auth/me")
+def auth_me(request: Request):
+    return handle_me(request)
 
 
 class SearchResult(BaseModel):
