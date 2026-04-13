@@ -181,9 +181,10 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     conn.commit()
     conn.close()
 
-    # Set JWT cookie and redirect
+    # Set JWT cookie and redirect to full HTTPS URL
     token = _create_token(user_id, email)
-    response = RedirectResponse("/", status_code=302)
+    base = str(request.base_url).rstrip("/")
+    response = RedirectResponse(base + "/", status_code=302)
     response.set_cookie(
         "session", token,
         httponly=True,
