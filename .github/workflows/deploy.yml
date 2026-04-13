@@ -43,8 +43,8 @@ jobs:
 
       - name: Health check
         run: |
-          sleep 5
-          STATUS=$(curl -sf --max-time 15 http://136.109.202.124:8765/api/health || echo 'FAIL')
+          sleep 15
+          STATUS=$(curl -sf --max-time 30 http://136.109.202.124:8765/api/health || echo 'FAIL')
           if [ "$STATUS" = "FAIL" ]; then
             echo "::error::Health check failed"
             gcloud compute ssh juanwisznia@edificia-server \
