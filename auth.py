@@ -31,6 +31,13 @@ JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_SECONDS = 30 * 24 * 3600  # 30 days
 
+
+def _base_url(request: Request) -> str:
+    """Get base URL respecting X-Forwarded-Proto from nginx."""
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("host", request.url.netloc)
+    return f"{proto}://{host}"
+
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
@@ -119,7 +126,7 @@ def require_active_user(request: Request) -> dict[str, Any]:
 
 def handle_google_login(request: Request) -> RedirectResponse:
     """Redirect to Google OAuth2 consent screen."""
-    callback = str(request.base_url).rstrip("/") + "/api/auth/callback"
+    callback = _base_url(request) + "/api/auth/callback"
     params = {
         "client_id": GOOGLE_CLIENT_ID,
         "redirect_uri": callback,
@@ -133,7 +140,7 @@ def handle_google_login(request: Request) -> RedirectResponse:
 
 def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     """Exchange Google auth code for user info, create/update user, set cookie."""
-    callback = str(request.base_url).rstrip("/") + "/api/auth/callback"
+    callback = _base_url(request) + "/api/auth/callback"
 
     # Exchange code for tokens
     token_resp = requests.post(GOOGLE_TOKEN_URL, data={
@@ -183,7 +190,7 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
 
     # Set JWT cookie and redirect to full HTTPS URL
     token = _create_token(user_id, email)
-    base = str(request.base_url).rstrip("/")
+    base = _base_url(request)
     response = RedirectResponse(base + "/", status_code=302)
     response.set_cookie(
         "session", token,
