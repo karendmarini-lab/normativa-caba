@@ -229,11 +229,13 @@
     footer a{color:rgba(255,255,255,.28);text-decoration:none}
 
     /* SIDEBAR */
-    .sidebar{position:fixed;left:0;top:92px;bottom:0;width:4px;z-index:300;
+    .sidebar{position:fixed;left:0;top:92px;bottom:0;width:28px;z-index:300;
       display:flex;flex-direction:column;transition:width .25s ease;
       background:color-mix(in srgb, var(--bg) 95%, transparent);backdrop-filter:blur(16px);
       border-right:1px solid var(--border);overflow:hidden}
     .sidebar:hover{width:200px}
+    .sidebar-hint{position:absolute;top:50%;left:8px;transform:translateY(-50%);font-size:12px;color:var(--muted);transition:opacity .2s;pointer-events:none}
+    .sidebar:hover .sidebar-hint{opacity:0}
     .sidebar-inner{opacity:0;transition:opacity .2s ease .05s;padding:24px 20px;display:flex;flex-direction:column;gap:6px;min-width:200px}
     .sidebar:hover .sidebar-inner{opacity:1}
     .sidebar-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;margin-top:12px}
@@ -275,6 +277,7 @@
 </header>
 
 <div class="sidebar">
+  <span class="sidebar-hint">›</span>
   <div class="sidebar-inner">
     <div class="sidebar-label">Herramientas</div>
     <a href="/mapa.html">Mapa de oportunidades<span class="sidebar-desc">Heatmap por barrio y métrica</span></a>
