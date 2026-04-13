@@ -107,7 +107,7 @@
     <select id="barrioSelect" style="
       width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--line);
       background:rgba(255,255,255,.04); color:var(--text); font:inherit; font-size:13px;
-      cursor:pointer; outline:none; appearance:none;
+      cursor:pointer; outline:none; appearance:none; color-scheme:dark;
       background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22><path fill=%22%23999%22 d=%22M6 8L1 3h10z%22/></svg>');
       background-repeat:no-repeat; background-position:right 12px center;
     ">
@@ -177,9 +177,10 @@ const METRIC_KEYS = { delta:'d', vol:'v', pisos:'p', reconversion:'r', area:'ta'
 
 function colorForScore(score, min, max) {
   const t = Math.max(0, Math.min(1, (score - min) / (max - min || 1)));
+  // indigo(75,50,120) → gold(232,197,71) → orange(249,125,22)
   if (t < 0.5) {
     const s = t * 2;
-    return `rgb(${26 + Math.round(206*s)},${26 + Math.round(171*s)},${46 + Math.round(25*s)})`;
+    return `rgb(${75 + Math.round(157*s)},${50 + Math.round(147*s)},${120 - Math.round(49*s)})`;
   }
   const s = (t - 0.5) * 2;
   return `rgb(${232 + Math.round(17*s)},${197 - Math.round(72*s)},${71 - Math.round(49*s)})`;
