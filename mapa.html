@@ -111,15 +111,18 @@
 
   <div class="filter-group">
     <div class="filter-label">Barrio</div>
-    <select id="barrioSelect" style="
-      width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--line);
-      background:rgba(255,255,255,.04); color:var(--text); font:inherit; font-size:13px;
-      cursor:pointer; outline:none; appearance:none; color-scheme:dark;
-      background-image:url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 12 12%22><path fill=%22%23999%22 d=%22M6 8L1 3h10z%22/></svg>');
-      background-repeat:no-repeat; background-position:right 12px center;
-    ">
-      <option value="">Todo CABA</option>
-    </select>
+    <div id="barrioDropdown" style="position:relative">
+      <button id="barrioBtn" style="
+        width:100%; padding:10px 14px; border-radius:12px; border:1px solid var(--line);
+        background:rgba(255,255,255,.04); color:var(--text); font:inherit; font-size:13px;
+        cursor:pointer; outline:none; text-align:left;
+      ">Todo CABA</button>
+      <div id="barrioList" style="
+        display:none; position:absolute; top:100%; left:0; right:0; margin-top:4px;
+        max-height:280px; overflow-y:auto; background:rgba(18,18,18,.98); border:1px solid var(--line);
+        border-radius:12px; backdrop-filter:blur(16px); z-index:100; padding:4px;
+      "></div>
+    </div>
   </div>
 
   <div class="stat-row">
@@ -225,7 +228,7 @@ function renderCircles() {
       color: 'rgba(255,255,255,0.1)', weight: 0.5,
     }).on('click', () => {
       activeBarrio = mz.b;
-      document.getElementById('barrioSelect').value = mz.b || '';
+      document.getElementById('barrioBtn').textContent = mz.b || 'Todo CABA';
       loadParcels();
     }).addTo(circleLayer);
 
@@ -265,22 +268,38 @@ function updateMetricDesc() {
   const m = METRICS.find(m => m.id === activeMetric);
   document.getElementById('metricDesc').textContent = m ? m.desc : '';
 
-  const sel = document.getElementById('barrioSelect');
+  const btn = document.getElementById('barrioBtn');
+  const list = document.getElementById('barrioList');
+  const itemStyle = 'padding:8px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--text);';
+
+  function selectBarrio(b) {
+    activeBarrio = b || null;
+    btn.textContent = b || 'Todo CABA';
+    list.style.display = 'none';
+    if (activeBarrio) { loadParcels(); } else { map.setView([-34.615, -58.435], 13); renderCircles(); }
+  }
+
+  // "Todo CABA" option
+  const allEl = document.createElement('div');
+  allEl.style.cssText = itemStyle;
+  allEl.textContent = 'Todo CABA';
+  allEl.onmouseenter = () => allEl.style.background = 'rgba(255,255,255,.08)';
+  allEl.onmouseleave = () => allEl.style.background = 'none';
+  allEl.onclick = () => selectBarrio(null);
+  list.appendChild(allEl);
+
   BARRIOS.forEach(b => {
-    const opt = document.createElement('option');
-    opt.value = b;
-    opt.textContent = b;
-    sel.appendChild(opt);
+    const el = document.createElement('div');
+    el.style.cssText = itemStyle;
+    el.textContent = b;
+    el.onmouseenter = () => el.style.background = 'rgba(255,255,255,.08)';
+    el.onmouseleave = () => el.style.background = 'none';
+    el.onclick = () => selectBarrio(b);
+    list.appendChild(el);
   });
-  sel.onchange = () => {
-    activeBarrio = sel.value || null;
-    if (activeBarrio) {
-      loadParcels();
-    } else {
-      map.setView([-34.615, -58.435], 13);
-      renderCircles();
-    }
-  };
+
+  btn.onclick = () => { list.style.display = list.style.display === 'none' ? 'block' : 'none'; };
+  document.addEventListener('click', e => { if (!document.getElementById('barrioDropdown').contains(e.target)) list.style.display = 'none'; });
 }
 
 function showParcel(props) {
