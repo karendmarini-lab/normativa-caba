@@ -2,231 +2,252 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EdificIA — Consulta Normativa Urbanística CABA</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache">
+  <title>EdificIA · Pre-factibilidad CABA</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
-  :root {
-    --bg:#000; --card:#0f0f0f; --lift:#181818;
-    --border:rgba(255,255,255,.08); --bh:rgba(255,255,255,.16);
-    --text:#fff; --muted:rgba(255,255,255,.4); --r:6px;
-  }
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-    font-size:14px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
-    min-height:100vh}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+    :root{
+      --bg:#000;--card:#0e0e0e;--lift:#181818;
+      --border:rgba(255,255,255,.08);--bh:rgba(255,255,255,.18);
+      --text:#fff;--muted:rgba(255,255,255,.4);--r:6px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
+      font-size:14px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased}
 
-  /* ── TOPBAR ── */
-  .topbar{height:34px;padding:0 40px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;
-    font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
-  .topbar-name{color:rgba(255,255,255,.7);letter-spacing:4px;font-weight:400}
-  .topbar-right{display:flex;gap:24px}
-  .topbar-right a{color:var(--muted);text-decoration:none;font-size:9px;letter-spacing:2.5px;transition:color .2s}
-  .topbar-right a:hover{color:var(--text)}
+    /* TOPBAR */
+    .topbar{height:34px;padding:0 40px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+    .topbar-name{color:rgba(255,255,255,.75);letter-spacing:4px;font-weight:400}
+    .topbar-right{display:flex;gap:24px}
+    .topbar-right a{color:var(--muted);text-decoration:none;font-size:9px;letter-spacing:2px;transition:color .2s}
+    .topbar-right a:hover{color:var(--text)}
 
-  /* ── HEADER ── */
-  header{height:58px;padding:0 40px;border-bottom:1px solid var(--border);
-    display:flex;align-items:center;justify-content:space-between;
-    position:sticky;top:0;z-index:100;
-    background:rgba(0,0,0,.95);backdrop-filter:blur(20px)}
-  .logo-wrap{display:flex;align-items:center;gap:14px}
-  .logo-mark{width:28px;height:28px;border:1px solid rgba(255,255,255,.2);
-    display:flex;align-items:center;justify-content:center;
-    font-size:11px;font-weight:400;letter-spacing:1px}
-  .logo-name{font-size:13px;font-weight:300;letter-spacing:5px;text-transform:uppercase}
-  .logo-name em{color:rgba(255,255,255,.35);font-style:normal}
-  .logo-sub{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:1px}
-  .header-nav{display:flex;gap:32px}
-  .header-nav a{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
-    color:var(--muted);text-decoration:none;transition:color .2s}
-  .header-nav a:hover{color:var(--text)}
+    /* HEADER */
+    header{height:58px;padding:0 40px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      position:sticky;top:0;z-index:200;
+      background:rgba(0,0,0,.92);backdrop-filter:blur(20px)}
+    .logo-wrap{display:flex;align-items:center;gap:14px}
+    .logo-mark{width:28px;height:28px;border:1px solid rgba(255,255,255,.2);
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:400;letter-spacing:1px}
+    .logo-text{display:flex;flex-direction:column}
+    .logo-name{font-size:13px;font-weight:300;letter-spacing:5px;text-transform:uppercase}
+    .logo-name em{color:rgba(255,255,255,.38);font-style:normal}
+    .logo-sub{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+    .header-nav{display:flex;gap:32px}
+    .header-nav a{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+      color:var(--muted);text-decoration:none;transition:color .2s}
+    .header-nav a:hover{color:var(--text)}
 
-  /* ── MAIN ── */
-  .app-main{min-height:calc(100vh - 92px);display:flex;flex-direction:column}
+    /* HERO: MAPA FONDO + BUSQUEDA CENTRADA */
+    .hero{
+      position:relative;
+      min-height:calc(100vh - 92px);
+      display:flex;align-items:center;justify-content:center;
+      overflow:hidden;
+    }
+    /* Mapa SVG de fondo */
+    .map-bg{
+      position:absolute;inset:0;
+      display:flex;align-items:center;justify-content:center;
+      pointer-events:none;
+    }
+    .map-bg svg{width:100%;height:100%;max-height:100vh}
+    /* Degradado sobre el mapa para legibilidad */
+    .map-fade{
+      position:absolute;inset:0;
+      background:radial-gradient(ellipse at center, rgba(0,0,0,.45) 0%, rgba(0,0,0,.7) 100%);
+      pointer-events:none;
+    }
 
-  /* ── SEARCH HERO ── */
-  .search-hero{
-    flex:0 0 auto;
-    padding:64px 24px 48px;
-    display:flex;flex-direction:column;align-items:center;
-    border-bottom:1px solid var(--border);
-  }
-  .search-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;
-    color:var(--muted);margin-bottom:20px;text-align:center}
-  .search-bar{
-    width:100%;max-width:580px;
-    display:flex;align-items:center;gap:12px;
-    background:var(--card);border:1px solid var(--border);
-    border-radius:100px;padding:16px 26px;
-    transition:border-color .25s;margin-bottom:16px;
-  }
-  .search-bar:focus-within{border-color:rgba(255,255,255,.25)}
-  .search-ico{font-size:14px;opacity:.4;flex-shrink:0}
-  .search-bar input{
-    background:transparent;border:none;outline:none;
-    font-family:'Inter',inherit;font-size:15px;font-weight:300;
-    color:#fff;width:100%;letter-spacing:.2px;
-  }
-  .search-bar input::placeholder{color:rgba(255,255,255,.25);font-size:13px}
+    /* Panel de búsqueda */
+    .search-panel{
+      position:relative;z-index:10;
+      width:92%;max-width:560px;
+      display:flex;flex-direction:column;align-items:center;gap:14px;
+      padding:40px 32px;
+    }
+    .search-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;
+      color:rgba(255,255,255,.45);text-align:center;margin-bottom:4px}
 
-  .acwrap{position:relative;width:100%;max-width:580px}
-  #suggestions{
-    display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
-    background:rgba(8,8,8,.98);backdrop-filter:blur(20px);
-    border:1px solid var(--border);border-radius:16px;overflow:hidden;
-  }
-  .si{padding:12px 20px;cursor:pointer;font-size:13px;
-    border-bottom:1px solid var(--border);color:#fff;transition:background .15s}
-  .si:last-child{border-bottom:none}
-  .si:hover{background:var(--lift)}
+    /* Input barra */
+    .acwrap{position:relative;width:100%}
+    .search-bar{
+      width:100%;
+      display:flex;align-items:center;gap:12px;
+      background:rgba(0,0,0,.6);
+      backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.14);
+      border-radius:100px;
+      padding:16px 26px;
+      transition:border-color .25s;
+    }
+    .search-bar:focus-within{border-color:rgba(255,255,255,.32)}
+    .search-ico{font-size:14px;opacity:.45;flex-shrink:0}
+    #inp-addr{
+      background:transparent;border:none;outline:none;
+      font-family:'Inter',inherit;font-size:14px;font-weight:300;
+      color:#fff;width:100%;letter-spacing:.2px;
+    }
+    #inp-addr::placeholder{color:rgba(255,255,255,.28);font-size:13px}
+    #suggestions{
+      display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
+      background:rgba(6,6,6,.97);backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;
+    }
+    .si{padding:12px 20px;cursor:pointer;font-size:13px;
+      border-bottom:1px solid rgba(255,255,255,.06);color:#fff;transition:background .15s}
+    .si:last-child{border-bottom:none}
+    .si:hover{background:rgba(255,255,255,.06)}
 
-  .pill-stack{display:flex;flex-direction:column;gap:10px;width:100%;max-width:580px}
-  .btn-pill{
-    width:100%;background:#fff;color:#000;
-    border:none;border-radius:100px;
-    padding:15px 28px;font-family:'Inter',inherit;
-    font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
-    cursor:pointer;transition:opacity .2s,transform .1s;
-    display:flex;align-items:center;justify-content:center;gap:10px;
-  }
-  .btn-pill:hover{opacity:.85}
-  .btn-pill:active{transform:scale(.98)}
-  .btn-pill.loading{opacity:.35;pointer-events:none}
-  .btn-pill .arr{font-size:12px}
-  .btn-pill.secondary{background:transparent;color:#fff;
-    border:1px solid rgba(255,255,255,.18)}
-  .btn-pill.secondary:hover{border-color:rgba(255,255,255,.4)}
+    /* Mensajes */
+    .msg{display:none;padding:10px 16px;border-radius:100px;font-size:12.5px;width:100%;text-align:center}
+    .msg.on{display:block}
+    #msg-err {background:rgba(220,38,38,.1);color:#f87171;border:1px solid rgba(220,38,38,.2)}
+    #msg-warn{background:rgba(234,179,8,.08);color:#fcd34d;border:1px solid rgba(234,179,8,.2)}
+    #msg-info{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
+    #debug-panel{display:none}
 
-  /* ── MESSAGES ── */
-  .msg{display:none;padding:10px 16px;border-radius:var(--r);font-size:13px;
-    width:100%;max-width:580px;margin-top:2px}
-  .msg.on{display:block}
-  #msg-err {background:rgba(220,38,38,.07);color:#f87171;border:1px solid rgba(220,38,38,.18)}
-  #msg-warn{background:rgba(234,179,8,.06);color:#fcd34d;border:1px solid rgba(234,179,8,.18)}
-  #msg-info{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
-  #debug-panel{display:none}
+    /* Botones pill */
+    .pill-stack{display:flex;flex-direction:column;gap:10px;width:100%}
+    .btn-pill{
+      width:100%;background:#fff;color:#000;
+      border:none;border-radius:100px;
+      padding:16px 28px;font-family:'Inter',inherit;
+      font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
+      cursor:pointer;transition:opacity .2s,transform .1s;
+      display:flex;align-items:center;justify-content:center;gap:10px;
+    }
+    .btn-pill:hover{opacity:.86}
+    .btn-pill:active{transform:scale(.98)}
+    .btn-pill.loading{opacity:.35;pointer-events:none}
+    .btn-pill.secondary{
+      background:rgba(0,0,0,.5);color:#fff;
+      backdrop-filter:blur(12px);
+      border:1px solid rgba(255,255,255,.2);
+    }
+    .btn-pill.secondary:hover{border-color:rgba(255,255,255,.45)}
 
-  /* ── RESULTS ── */
-  #results{display:none;opacity:0;transform:translateY(8px);transition:all .3s}
-  #results.on{display:block;opacity:1;transform:none}
-  .results-inner{max-width:860px;margin:0 auto;padding:36px 24px 60px}
+    /* RESULTADOS */
+    #results{display:none;opacity:0;transform:translateY(8px);transition:all .35s}
+    #results.on{display:block;opacity:1;transform:none}
+    .results-wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
 
-  .res-header{border:1px solid var(--border);border-radius:var(--r);
-    padding:22px 26px;margin-bottom:20px;
-    display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-  #res-addr{font-size:22px;font-weight:200;letter-spacing:-.5px;line-height:1.2}
-  #res-coords{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
-  .dbadge{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
-    padding:6px 16px;border-radius:100px;
-    background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);
-    border:1px solid rgba(255,255,255,.12);white-space:nowrap;flex-shrink:0}
-  .dbadge.unknown{opacity:.4}
+    .res-header{border:1px solid var(--border);border-radius:var(--r);
+      padding:22px 26px;margin-bottom:20px;
+      display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    #res-addr{font-size:22px;font-weight:200;letter-spacing:-.5px;line-height:1.2}
+    #res-coords{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
+    .dbadge{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+      padding:5px 16px;border-radius:100px;
+      background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);
+      border:1px solid rgba(255,255,255,.12);white-space:nowrap;flex-shrink:0}
+    .dbadge.unknown{opacity:.4}
 
-  .slabel{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
-    margin:24px 0 12px;display:flex;align-items:center;gap:10px}
-  .slabel::after{content:'';flex:1;height:1px;background:var(--border)}
+    .slabel{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
+      margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+    .slabel::after{content:'';flex:1;height:1px;background:var(--border)}
 
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-    gap:1px;background:var(--border);border:1px solid var(--border);
-    border-radius:var(--r);overflow:hidden;margin-bottom:16px}
-  .card{background:var(--card);padding:18px 20px;transition:background .2s}
-  .card:hover{background:var(--lift)}
-  .card-ico{font-size:13px;color:rgba(255,255,255,.25);margin-bottom:10px}
-  .card-lbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-  .card-val{font-size:22px;font-weight:300;line-height:1}
-  .card-val.sm{font-size:14px;font-weight:400;letter-spacing:.5px}
-  .card-unit{font-size:10px;color:var(--muted);margin-top:4px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+      gap:1px;background:var(--border);border:1px solid var(--border);
+      border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+    .card{background:var(--card);padding:18px 20px;transition:background .2s}
+    .card:hover{background:var(--lift)}
+    .card-ico{font-size:13px;color:rgba(255,255,255,.22);margin-bottom:10px}
+    .card-lbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+    .card-val{font-size:22px;font-weight:300;line-height:1}
+    .card-val.sm{font-size:14px;font-weight:400;letter-spacing:.4px}
+    .card-unit{font-size:10px;color:var(--muted);margin-top:4px}
 
-  #aph-box,#u-box,#cur-box{display:none}
-  #aph-box.on,#u-box.on,#cur-box.on{display:block;background:rgba(234,179,8,.04);
-    border:1px solid rgba(234,179,8,.12);border-radius:var(--r);
-    padding:12px 16px;font-size:12.5px;color:#fcd34d;margin-bottom:16px}
+    #aph-box,#u-box,#cur-box{display:none}
+    #aph-box.on,#u-box.on,#cur-box.on{display:block;background:rgba(234,179,8,.04);
+      border:1px solid rgba(234,179,8,.12);border-radius:var(--r);
+      padding:11px 14px;font-size:12.5px;color:#fcd34d;margin-bottom:14px}
 
-  #calc-block{display:none;border:1px solid var(--border);border-radius:var(--r);
-    padding:22px;margin-bottom:16px;position:relative}
-  #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:16px;
-    font-size:8px;letter-spacing:3px;background:var(--bg);color:rgba(255,255,255,.25);padding:0 8px}
-  .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
-    gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
-  .citem{background:var(--card);padding:16px 18px}
-  .clbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-  .cval{font-size:20px;font-weight:300}
-  .cunit{font-size:9px;color:var(--muted);margin-top:3px}
-  .cval-input{width:100%;background:transparent;border:none;
-    border-bottom:1px dashed rgba(255,255,255,.1);
-    color:rgba(255,255,255,.75);font-family:inherit;font-size:20px;font-weight:300;
-    padding:2px 0;outline:none;-moz-appearance:textfield;appearance:textfield}
-  .cval-input:focus{border-bottom-color:rgba(255,255,255,.3)}
-  .cval-input::-webkit-inner-spin-button{-webkit-appearance:none}
+    #calc-block{display:none;border:1px solid var(--border);border-radius:var(--r);
+      padding:22px;margin-bottom:14px;position:relative}
+    #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:16px;
+      font-size:8px;letter-spacing:3px;background:var(--bg);color:rgba(255,255,255,.22);padding:0 8px}
+    .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+      gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
+    .citem{background:var(--card);padding:15px 17px}
+    .clbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+    .cval{font-size:20px;font-weight:300}
+    .cunit{font-size:9px;color:var(--muted);margin-top:3px}
+    .cval-input{width:100%;background:transparent;border:none;
+      border-bottom:1px dashed rgba(255,255,255,.1);
+      color:rgba(255,255,255,.75);font-family:inherit;font-size:20px;font-weight:300;
+      padding:2px 0;outline:none;-moz-appearance:textfield;appearance:textfield}
+    .cval-input:focus{border-bottom-color:rgba(255,255,255,.3)}
+    .cval-input::-webkit-inner-spin-button{-webkit-appearance:none}
 
-  #fin-block{display:none}
-  .nnote{font-size:11px;color:var(--muted);padding:9px 14px;
-    border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
-  .nnote a{color:rgba(255,255,255,.45);text-decoration:none}
-  .divider{border:none;border-top:1px solid var(--border);margin:24px 0}
-  #map-wrap{display:none}
+    #fin-block{display:none}
+    #map-wrap{display:none}
+    .nnote{font-size:11px;color:var(--muted);padding:9px 14px;
+      border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
+    .nnote a{color:rgba(255,255,255,.4);text-decoration:none}
+    .divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+    #calc-source{font-size:9px;color:var(--muted);text-align:right;margin-top:8px;letter-spacing:.5px}
 
-  .ref-section{border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:12px}
-  .ref-section details summary{cursor:pointer;font-size:8px;color:var(--muted);
-    letter-spacing:2.5px;text-transform:uppercase;list-style:none;
-    display:flex;align-items:center;gap:10px;user-select:none}
-  .ref-section details summary::before{content:'+';color:rgba(255,255,255,.3);font-size:14px}
-  .ref-section details[open] summary::before{content:'−'}
-  .dist-table{margin-top:12px}
-  .dist-row{display:flex;align-items:center;gap:10px;padding:8px 0;
-    border-bottom:1px solid var(--border);font-size:13px}
-  .dist-row:last-child{border-bottom:none}
-  .dist-code{font-weight:500;width:90px}
-  .dist-h{color:var(--muted);font-size:11px;flex:1}
-  .dist-cpu{font-size:10px;color:var(--muted)}
-  #calc-source{font-size:9px;color:var(--muted);text-align:right;margin-top:8px;letter-spacing:.5px}
+    .ref-section{border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:12px}
+    .ref-section details summary{cursor:pointer;font-size:8px;color:var(--muted);
+      letter-spacing:2.5px;text-transform:uppercase;list-style:none;
+      display:flex;align-items:center;gap:10px;user-select:none}
+    .ref-section details summary::before{content:'+';color:rgba(255,255,255,.3);font-size:14px}
+    .ref-section details[open] summary::before{content:'−'}
+    .dist-table{margin-top:12px}
+    .dist-row{display:flex;align-items:center;gap:10px;padding:8px 0;
+      border-bottom:1px solid var(--border);font-size:13px}
+    .dist-row:last-child{border-bottom:none}
+    .dist-code{font-weight:500;width:90px}
+    .dist-h{color:var(--muted);font-size:11px;flex:1}
+    .dist-cpu{font-size:10px;color:var(--muted)}
 
-  /* ── LOGO CLOUD ── */
-  .logo-cloud{border-top:1px solid var(--border);padding:20px 40px;
-    display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;
-    font-size:9px;letter-spacing:3px;text-transform:uppercase}
-  .logo-cloud-label{color:rgba(255,255,255,.12)}
-  .logo-cloud-items{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
-  .lc-item{color:rgba(255,255,255,.12);font-weight:500}
+    /* LOGO CLOUD */
+    .logo-cloud{border-top:1px solid var(--border);padding:20px 40px;
+      display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
+    .logo-cloud-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.12)}
+    .logo-cloud-items{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
+    .lc-item{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.12);font-weight:500}
 
-  footer{border-top:1px solid var(--border);padding:16px 40px;
-    display:flex;align-items:center;justify-content:space-between;
-    font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.2)}
-  footer a{color:rgba(255,255,255,.28);text-decoration:none}
+    footer{border-top:1px solid var(--border);padding:16px 40px;
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.2)}
+    footer a{color:rgba(255,255,255,.28);text-decoration:none}
 
-  /* ── MOBILE ── */
-  @media(max-width:640px){
-    .topbar{padding:0 20px}
-    header{padding:0 20px;height:52px}
-    .logo-sub{display:none}
-    .header-nav{display:none}
-    .search-hero{padding:44px 16px 36px}
-    .results-inner{padding:24px 16px 48px}
-    .cards{grid-template-columns:repeat(2,1fr)}
-    .logo-cloud{padding:16px 20px;gap:20px}
-    footer{padding:14px 20px;flex-direction:column;gap:6px;text-align:center}
-  }
-</style>
+    @media(max-width:640px){
+      .topbar,.footer{padding:0 20px}
+      header{padding:0 20px;height:52px}
+      .logo-sub,.header-nav{display:none}
+      .search-panel{padding:24px 16px;width:96%}
+      .results-wrap{padding:28px 16px 60px}
+      .cards{grid-template-columns:repeat(2,1fr)}
+      footer{flex-direction:column;gap:6px;text-align:center;padding:14px 20px}
+    }
+  </style>
 </head>
 <body>
 
 <div class="topbar">
   <span class="topbar-name">Karen Marini</span>
   <div class="topbar-right">
-    <span>Pre-factibilidad urbanística · CABA</span>
+    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
+    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
   </div>
 </div>
+
 <header>
   <div class="logo-wrap">
     <div class="logo-mark">E</div>
-    <div>
-      <div class="logo-name">Edific<em>IA</em></div>
-      <div class="logo-sub">Pre-factibilidad urbanística · CABA</div>
+    <div class="logo-text">
+      <span class="logo-name">Edific<em>IA</em></span>
+      <span class="logo-sub">Pre-factibilidad urbanística · CABA</span>
     </div>
   </div>
   <nav class="header-nav">
@@ -234,17 +255,88 @@
     <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
   </nav>
 </header>
-<div class="app-main">
 
-  <!-- HERO: buscador centrado -->
-  <div class="search-hero">
-    <div class="search-eyebrow">⟡ &nbsp;Consulta de parcela · Normativa CUR</div>
+<!-- HERO: mapa fondo + búsqueda -->
+<div class="hero">
+  <!-- Mapa SVG de fondo -->
+  <div class="map-bg">
+    <svg viewBox="0 0 600 680" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="opacity:.35;position:absolute;inset:0;width:100%;height:100%">
+      <defs><style>
+        .sb{stroke:#fff;stroke-width:.5;fill:none;opacity:.5}
+        .av{stroke:#fff;stroke-width:.7;fill:none;opacity:.28}
+        .av2{stroke:#fff;stroke-width:1.1;fill:none;opacity:.45}
+        .lb{fill:rgba(255,255,255,.3);font-family:'Inter',sans-serif;font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase}
+        .lb2{fill:rgba(255,255,255,.18);font-family:'Inter',sans-serif;font-size:5.5px;letter-spacing:1.5px}
+      </style></defs>
+      <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
+      <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
+      <path class="av" d="M80,50 L55,130 L45,260 L50,380 L80,500 L140,580"/>
+      <path class="av2" d="M75,240 L520,220"/>
+      <path class="av" d="M80,180 L525,162"/>
+      <path class="av" d="M82,148 L525,133"/>
+      <path class="av" d="M78,290 L515,270"/>
+      <path class="av" d="M78,330 L510,312"/>
+      <path class="av" d="M78,365 L505,348"/>
+      <path class="av" d="M200,45 L225,280 L245,500 L258,630"/>
+      <path class="av2" d="M260,45 L268,250 L275,460 L282,630"/>
+      <path class="av" d="M320,42 L330,260 L340,480 L348,620"/>
+      <path class="av" d="M380,45 L395,260 L405,470"/>
+      <path class="av" d="M465,60 L480,240 L490,400 L495,520"/>
+      <path class="av" d="M140,46 L152,200 L162,380 L175,560"/>
+      <path class="av" d="M92,110 L200,95 L350,88 L450,84"/>
+      <path class="sb" d="M140,46 L260,40 L265,148 L200,162 L140,158 Z"/>
+      <path class="sb" d="M80,50 L140,46 L140,110 L80,118 Z"/>
+      <path class="sb" d="M265,42 L380,38 L385,88 L262,92 Z"/>
+      <path class="sb" d="M265,88 L385,84 L390,148 L265,155 Z"/>
+      <path class="sb" d="M265,148 L390,140 L395,220 L268,228 Z"/>
+      <path class="sb" d="M390,84 L465,78 L472,148 L392,155 Z"/>
+      <path class="sb" d="M392,148 L472,140 L478,220 L395,225 Z"/>
+      <path class="sb" d="M395,220 L478,215 L482,310 L398,315 Z"/>
+      <path class="sb" d="M90,158 L200,148 L205,240 L92,248 Z"/>
+      <path class="sb" d="M92,245 L205,238 L210,330 L95,338 Z"/>
+      <path class="sb" d="M95,335 L210,326 L215,408 L98,415 Z"/>
+      <path class="sb" d="M200,240 L268,228 L272,310 L205,318 Z"/>
+      <path class="sb" d="M270,225 L395,218 L398,310 L273,316 Z"/>
+      <path class="sb" d="M200,310 L275,306 L278,408 L203,413 Z"/>
+      <path class="sb" d="M275,306 L398,298 L402,390 L278,396 Z"/>
+      <path class="sb" d="M398,290 L480,284 L485,380 L403,386 Z"/>
+      <path class="sb" d="M480,148 L528,145 L535,290 L482,295 Z"/>
+      <path class="sb" d="M482,290 L535,285 L538,420 L485,425 Z"/>
+      <path class="sb" d="M98,410 L215,402 L220,500 L102,505 Z"/>
+      <path class="sb" d="M100,500 L220,495 L225,580 L105,582 L80,560 Z"/>
+      <path class="sb" d="M278,390 L403,383 L408,480 L282,485 Z"/>
+      <path class="sb" d="M403,380 L482,374 L488,465 L408,470 Z"/>
+      <text class="lb"  x="158" y="108">PALERMO</text>
+      <text class="lb2" x="88"  y="72">BELGRANO</text>
+      <text class="lb2" x="282" y="60">NÚÑEZ</text>
+      <text class="lb2" x="166" y="183">VILLA CRESPO</text>
+      <text class="lb2" x="276" y="183">RECOLETA</text>
+      <text class="lb2" x="100" y="193">V. DEL PARQUE</text>
+      <text class="lb2" x="210" y="270">ALMAGRO</text>
+      <text class="lb2" x="288" y="258">BALVANERA</text>
+      <text class="lb2" x="104" y="275">FLORES</text>
+      <text class="lb2" x="405" y="248">CABALLITO</text>
+      <text class="lb2" x="408" y="332">BOEDO</text>
+      <text class="lb2" x="412" y="326">SAN CRISTÓBAL</text>
+      <text class="lb2" x="295" y="338">P. PATRICIOS</text>
+      <text class="lb2" x="493" y="195">PTO. MADERO</text>
+      <text class="lb2" x="108" y="448">MATADEROS</text>
+      <text class="lb2" x="112" y="532">V. LUGANO</text>
+      <text class="lb2" x="415" y="415">LA BOCA</text>
+      <text class="lb2" x="295" y="432">BARRACAS</text>
+    </svg>
+  </div>
+  <div class="map-fade"></div>
+
+  <!-- Panel de búsqueda centrado -->
+  <div class="search-panel">
+    <div class="search-eyebrow">⟡ &nbsp;Consulta de parcela · Normativa CUR · CABA</div>
 
     <div class="acwrap">
       <div class="search-bar">
         <span class="search-ico">◎</span>
         <input type="text" id="inp-addr"
-          placeholder="Buscar parcela  (ej. Av. del Libertador 1234)"
+          placeholder="Buscar parcela  (ej. Junín 1490, CABA)"
           autocomplete="off">
       </div>
       <div id="suggestions"></div>
@@ -261,243 +353,94 @@
 
     <div class="pill-stack">
       <button class="btn-pill" id="btn-main" onclick="consultarParcela()">
-        Generar informe de normativa &nbsp;<span class="arr">↗</span>
+        Generar informe de normativa &nbsp;↗
       </button>
-      <button class="btn-pill secondary" onclick="
-        document.getElementById('inp-addr').value='';
-        document.getElementById('inp-addr').focus();
-        document.getElementById('results').classList.remove('on')">
-        Consultar otra parcela &nbsp;<span class="arr">↗</span>
+      <button class="btn-pill secondary" id="btn-reset" onclick="resetBusqueda()">
+        Consultar otra parcela &nbsp;↗
       </button>
     </div>
   </div>
+</div>
 
-  <!-- RESULTADOS: debajo del hero, cómodos -->
-  <div id="results">
-    <div class="results-inner">
+<!-- RESULTADOS -->
+<div id="results">
+  <div class="results-wrap">
 
-    <div class="abanner">
+    <div class="res-header">
       <div>
-        <div style="font-size:8.5px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
-        <div class="addr-main" id="res-addr">—</div>
-        <div class="addr-coords" id="res-coords">—</div>
+        <div id="res-addr">—</div>
+        <div id="res-coords"></div>
       </div>
-      <span class="dbadge" id="res-badge">—</span>
+      <div class="dbadge unknown" id="res-badge">—</div>
     </div>
-    <div class="aph-box" id="aph-box">⚠️
-      <div><strong>ÁREA DE PROTECCIÓN HISTÓRICA (APH)</strong><br>
-      Restricciones especiales de altura, retiros y materialidad. Consultar catálogo GCBA antes de proyectar.</div>
-    </div>
-    <div class="aph-box" id="u-box" style="border-color:#22d3ee;background:rgba(34,211,238,.07);color:#a0f0ff">⚠️
-      <div><strong id="u-box-title">URBANIZACIÓN ESPECIAL</strong><br>
-      Este predio pertenece a un distrito de normativa individualizada. Verificar plancheta de edificabilidad en el GCBA.</div>
-    </div>
-    <div class="aph-box" id="cur-box" style="border-color:#f59e0b;background:rgba(245,158,11,.08);color:#fcd34d">⚠️
-      <div><strong id="cur-box-title">VERIFICAR EN CIUDAD3D</strong><br>
-      La altura y el FOT varían por parcela según el CUR (Ley 6099). Verificá los valores exactos en
-      <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank" style="color:#f59e0b">ciudad3d.buenosaires.gob.ar</a>.</div>
-    </div>
+
+    <div id="aph-box" class="aph-box"><strong id="aph-box-title">APH</strong> — Área de Protección Histórica. Verificar con el organismo competente.</div>
+    <div id="u-box"><strong id="u-box-title">U</strong></div>
+    <div id="cur-box"><strong id="cur-box-title">CUR</strong> — <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Verificar en ciudad3d.buenosaires.gob.ar</a></div>
+
     <div class="slabel">Parámetros Normativos</div>
     <div class="cards">
-      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Dominante</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div><div class="card"><div class="card-ico">⬆</div><div class="card-lbl">Plano Límite</div><div class="card-val" id="res-plano">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Dominante</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-ico">⬆</div><div class="card-lbl">Plano Límite</div><div class="card-val" id="res-plano">—</div><div class="card-unit">metros</div></div>
       <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos indicativos</div></div>
       <div class="card"><div class="card-ico">∑</div><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
       <div class="card"><div class="card-ico">▣</div><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
-      <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div><div class="card"><div class="card-ico">↔</div><div class="card-lbl">Frente</div><div class="card-val sm" id="res-fr">—</div><div class="card-unit">metros</div></div><div class="card"><div class="card-ico">↕</div><div class="card-lbl">Fondo</div><div class="card-val sm" id="res-fo">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div>
+      <div class="card"><div class="card-ico">↔</div><div class="card-lbl">Frente</div><div class="card-val sm" id="res-fr">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Fondo</div><div class="card-val sm" id="res-fo">—</div><div class="card-unit">metros</div></div>
     </div>
-    <div class="twocol">
-      <div class="ibox">
-        <div class="ibox-lbl">Retiros Mínimos</div>
-        <div class="rgrid">
-          <div class="retiro"><div class="ret-lbl">↑ Frente</div><div class="ret-val" id="res-rf">—</div></div>
-          <div class="retiro"><div class="ret-lbl">↓ Fondo</div><div class="ret-val" id="res-ro">—</div></div>
-          <div class="retiro"><div class="ret-lbl">↔ Lateral</div><div class="ret-val" id="res-rl">—</div></div>
-        </div>
-      </div>
-      <div class="ibox"><div class="ibox-lbl">Usos Permitidos</div><div class="uwrap" id="res-usos">—</div></div>
-    </div>
+
     <div id="calc-block">
       <div class="cgrid">
-        <div class="citem"><div class="clbl">Superficie del Lote <span style="font-size:8px;color:var(--muted)">(editable)</span></div><input class="cval-input" id="c-sup" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · catastro oficial</div></div>
-        <div class="citem"><div class="clbl">Pisada Edificable <span style="font-size:8px;color:var(--muted)">(editable)</span></div><input class="cval-input" id="c-pb" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · ajustá por LFI</div></div>
+        <div class="citem"><div class="clbl">Superficie del Lote <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-sup" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · catastro oficial</div></div>
+        <div class="citem"><div class="clbl">Pisada Edificable <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-pb" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · ajustá por LFI</div></div>
         <div class="citem"><div class="clbl">Volumen Total Edificable</div><div class="cval" id="c-edif">—</div><div class="cunit">m² construibles</div></div>
         <div class="citem"><div class="clbl">Superficie Vendible Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">m² · efic. 85%</div></div>
       </div>
+      <div id="calc-source"></div>
     </div>
 
-    <div id="calc-source" style="margin-top:8px;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-align:right"></div>
-    <!-- ── MÓDULO FINANCIERO ──────────────────────────────────────── -->
+    <!-- Módulo financiero -->
     <div id="fin-block" style="display:none">
-      <div class="slabel" style="color:#4ade80">◈ Análisis de Inversión</div>
+      <div class="slabel" style="color:#5A9E7A">◈ Análisis de Inversión</div>
       <div style="background:#0d1f14;border:1px solid #22c55e33;border-radius:6px;padding:20px 22px;margin-bottom:14px">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
           <div>
             <div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Precio del Terreno (USD)</div>
             <input id="fin-terreno" type="number" min="0" placeholder="ej. 500000"
-              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;
-                     color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
+              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
               oninput="calcularFinanzas()">
           </div>
           <div>
             <div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Valor de Venta Esperado (USD/m²)</div>
             <input id="fin-precio-m2" type="number" min="0" placeholder="ej. 3000"
-              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;
-                     color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
+              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
               oninput="calcularFinanzas()">
           </div>
         </div>
         <div id="resultados-financieros"></div>
       </div>
     </div>
-    <div class="slabel">Ubicación en Mapa</div>
-    <div id="map-wrap"><div id="map"></div></div>
-    <div class="nnote" id="norm-note">Datos orientativos basados en el CUR CABA (Ley 6099/2018) y modificaciones vigentes.</div>
+
+    <div class="nnote" id="norm-note">Datos orientativos basados en el CUR CABA (Ley 6099/2018).</div>
+
     <div class="divider"></div>
-  </div>
 
-  <div>
-    <div class="slabel">Referencia Normativa Completa</div>
-    <button class="ttoggle" onclick="toggleTabla()">▶ Ver tabla CUR completa</button>
-    <div class="ntable" id="ntable">
-      <table><thead><tr><th>Distrito</th><th>Tipo</th><th>Alt.Máx</th><th>FOT</th><th>FOS</th><th>Ret.Frente</th><th>Ret.Fondo</th><th>Ret.Lateral</th><th>Uso Principal</th></tr></thead>
-      <tbody id="tbl-body"></tbody></table>
+    <div class="slabel">Referencia Normativa</div>
+    <div class="ref-section">
+      <details>
+        <summary>Ver tabla CUR completa</summary>
+        <div class="dist-table" id="dist-table-body"></div>
+      </details>
     </div>
-  </div>
-  </div>
 
-  <!-- PANEL DERECHO: mapa CABA -->
-  <div class="split-right">
-    <div class="map-container">
-      <div class="map-svg-wrap">
-        <svg viewBox="0 0 500 580" xmlns="http://www.w3.org/2000/svg"
-     style="position:absolute;inset:0;width:100%;height:100%;opacity:.75">
-  <defs>
-    <style>
-      .st { stroke:#fff; stroke-width:.4; fill:none; opacity:.5; }
-      .sh { stroke:#fff; stroke-width:.9; fill:none; opacity:.85; }
-      .lbl { fill:rgba(255,255,255,.4); font-family:'Inter',sans-serif; font-size:7px; letter-spacing:2px; text-transform:uppercase; }
-      .lbl-sm { fill:rgba(255,255,255,.25); font-family:'Inter',sans-serif; font-size:5.5px; letter-spacing:1.5px; }
-      .av { stroke:#fff; stroke-width:.6; fill:none; opacity:.3; stroke-dasharray: none; }
-    </style>
-  </defs>
+    <div id="map-wrap" style="display:none"><div id="map"></div></div>
 
-  <!-- Límite exterior CABA -->
-  <path class="sh" d="M60,40 L420,30 L460,80 L470,200 L450,320 L430,420 L380,500 L300,560 L200,565 L120,530 L70,460 L40,340 L30,200 L50,100 Z" opacity=".6"/>
-
-  <!-- RÍO DE LA PLATA (este) -->
-  <path d="M420,30 L460,80 L470,200 L450,320 L430,420" stroke="#fff" stroke-width=".3" fill="none" opacity=".15" stroke-dasharray="4,3"/>
-  <text class="lbl-sm" x="455" y="220" transform="rotate(80,455,220)">RÍO DE LA PLATA</text>
-
-  <!-- Avenidas principales -->
-  <!-- Gral Paz (límite norte/oeste) -->
-  <path class="av" d="M60,40 L50,100 L40,200 L35,300 L50,420 L80,500 L120,530"/>
-  <!-- Av. Rivadavia -->
-  <path class="av" d="M60,290 L430,260"/>
-  <!-- Av. Córdoba -->
-  <path class="av" d="M70,190 L440,175"/>
-  <!-- Av. Santa Fe -->
-  <path class="av" d="M75,160 L440,148"/>
-  <!-- Av. Corrientes -->
-  <path class="av" d="M65,230 L440,215"/>
-  <!-- Av. Independencia -->
-  <path class="av" d="M65,330 L420,310"/>
-  <!-- Av. San Juan -->
-  <path class="av" d="M70,360 L415,340"/>
-  <!-- Av. Belgrano -->
-  <path class="av" d="M68,305 L420,285"/>
-  <!-- Av. Cabildo -->
-  <path class="av" d="M180,40 L190,160"/>
-  <!-- Av. Santa Fe norte -->
-  <path class="av" d="M175,40 L200,160 L220,260 L250,350"/>
-  <!-- Av. Callao/Entre Ríos -->
-  <path class="av" d="M260,50 L265,200 L270,380 L280,500"/>
-  <!-- Av. Pueyrredón/Jujuy -->
-  <path class="av" d="M295,50 L300,200 L305,400 L310,520"/>
-  <!-- Av. 9 de Julio -->
-  <path d="M240,50 L244,200 L248,380 L252,520" stroke="#fff" stroke-width="1.2" fill="none" opacity=".5"/>
-  <!-- Paseo Colón / Leandro Alem -->
-  <path class="av" d="M400,80 L410,200 L415,320 L420,420"/>
-  <!-- Av. Figueroa Alcorta -->
-  <path class="av" d="M70,120 L180,100 L280,90 L360,85"/>
-
-  <!-- BARRIOS — polígonos suaves -->
-  <!-- Palermo -->
-  <path class="st" d="M120,80 L220,70 L250,90 L240,160 L180,175 L120,160 Z"/>
-  <!-- Belgrano -->
-  <path class="st" d="M120,40 L220,35 L230,75 L120,80 Z"/>
-  <!-- Recoleta -->
-  <path class="st" d="M240,80 L320,75 L330,140 L240,150 Z"/>
-  <!-- Retiro/San Nicolás -->
-  <path class="st" d="M320,80 L400,85 L410,150 L330,155 Z"/>
-  <!-- Villa Urquiza -->
-  <path class="st" d="M60,40 L120,40 L120,80 L60,90 Z"/>
-  <!-- Colegiales -->
-  <path class="st" d="M180,80 L240,75 L240,150 L180,160 Z"/>
-  <!-- Almagro -->
-  <path class="st" d="M180,190 L280,180 L285,260 L180,265 Z"/>
-  <!-- Caballito -->
-  <path class="st" d="M80,200 L180,190 L180,270 L80,275 Z"/>
-  <!-- Boedo -->
-  <path class="st" d="M180,260 L280,255 L285,330 L180,335 Z"/>
-  <!-- San Telmo / Montserrat -->
-  <path class="st" d="M320,280 L400,270 L410,340 L320,345 Z"/>
-  <!-- Puerto Madero -->
-  <path class="st" d="M400,180 L440,185 L445,310 L400,305 Z"/>
-  <!-- Flores -->
-  <path class="st" d="M60,280 L160,270 L165,360 L60,365 Z"/>
-  <!-- Floresta / V.del Parque -->
-  <path class="st" d="M60,180 L140,170 L140,270 L60,275 Z"/>
-  <!-- Villa Devoto -->
-  <path class="st" d="M60,90 L130,85 L130,170 L60,175 Z"/>
-  <!-- Mataderos / Liniers -->
-  <path class="st" d="M60,360 L160,355 L165,430 L60,435 Z"/>
-  <!-- Villa Lugano -->
-  <path class="st" d="M60,430 L200,425 L200,500 L60,500 Z"/>
-  <!-- Parque Patricios / Barracas -->
-  <path class="st" d="M240,340 L360,330 L370,420 L240,425 Z"/>
-  <!-- Balvanera -->
-  <path class="st" d="M240,190 L340,180 L345,260 L240,265 Z"/>
-  <!-- Nuñez -->
-  <path class="st" d="M200,40 L310,35 L320,80 L200,88 Z"/>
-
-  <!-- Etiquetas barrios -->
-  <text class="lbl" x="145" y="128">PALERMO</text>
-  <text class="lbl-sm" x="127" y="55">BELGRANO</text>
-  <text class="lbl-sm" x="252" y="115">RECOLETA</text>
-  <text class="lbl-sm" x="335" y="118">RETIRO</text>
-  <text class="lbl-sm" x="190" y="225">ALMAGRO</text>
-  <text class="lbl-sm" x="95" y="238">CABALLITO</text>
-  <text class="lbl-sm" x="340" y="310">PUERTO MADERO</text>
-  <text class="lbl-sm" x="82" y="318">FLORES</text>
-  <text class="lbl-sm" x="62" y="215">V. DEVOTO</text>
-  <text class="lbl-sm" x="210" y="60">NUÑEZ</text>
-  <text class="lbl-sm" x="260" y="305">BALVANERA</text>
-  <text class="lbl-sm" x="265" y="380">BARRACAS</text>
-  <text class="lbl-sm" x="75" y="460">LUGANO</text>
-  <text class="lbl-sm" x="75" y="400">MATADEROS</text>
-  <text class="lbl-sm" x="182" y="296">BOEDO</text>
-  <text class="lbl-sm" x="342" y="298">SAN TELMO</text>
-
-  <!-- Punto marcador / cursor -->
-  <circle id="map-pin" cx="0" cy="0" r="5" fill="none" stroke="#fff" stroke-width="1" opacity="0"/>
-  <circle id="map-pin-inner" cx="0" cy="0" r="2" fill="#fff" opacity="0"/>
-</svg>
-      </div>
-      <div class="map-footer-label">ESTUDIO DE NORMATIVA PARCELARIA &nbsp;·&nbsp; CABA</div>
-    </div>
-  </div>
-</div>
-
-
-
-<div
-
-    <div class="map-footer">Estudio de normativa parcelaria &nbsp;·&nbsp; CABA &nbsp;·&nbsp; CUR 2024</div>
   </div>
 </div>
 
 <div class="logo-cloud">
-  <span class="logo-cloud-label">Normativa oficial</span>
+  <span class="logo-cloud-label">Fuentes oficiales</span>
   <div class="logo-cloud-items">
     <span class="lc-item">CUR 2024</span>
     <span class="lc-item">AGIP</span>
@@ -509,12 +452,10 @@
 </div>
 
 <footer>
-  <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v11.1-1776048067<br>No reemplaza consulta oficial. Uso exclusivamente referencial.
-    </div>
-  </div>
+  <div>EdificIA · CUR 2024 · Catastro AGIP/EPOK</div>
+  <div>Desarrollado por <a href="#">Karen Marini</a></div>
+</footer>
 
-</div>
 <script>
 
 'use strict';
@@ -526,14 +467,11 @@ const eid = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('es-AR');
 
 function setLoad(on) {
-  // btn-main es el botón principal (pill)
   const btn = eid('btn-main');
   if (btn) {
     if (on) { btn.classList.add('loading'); btn.disabled = true; }
     else    { btn.classList.remove('loading'); btn.disabled = false; }
   }
-  const lt = eid('ltrack');
-  if (lt) lt.classList.toggle('on', on);
 }
 
 function setMsg(type, text) {
@@ -972,7 +910,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   res.classList.remove('on');
   void res.offsetWidth;
   res.classList.add('on');
-  setTimeout(() => { window.scrollTo({top: document.querySelector('.search-hero').offsetHeight + 96, behavior: 'smooth'}); }, 80);
+  setTimeout(() => { const el = eid('results'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
 }
 
 // ── CONSULTA PRINCIPAL ───────────────────────────────────────────
@@ -1071,6 +1009,17 @@ setTimeout(() => {
   loadDistricts().catch(e => console.warn('districts preload:', e));
   loadCentroids().catch(e => console.warn('centroids preload:', e));
 }, 600);
+
+function resetBusqueda() {
+  const addr = eid('inp-addr');
+  if (addr) { addr.value = ''; addr.focus(); }
+  const res = eid('results');
+  if (res) res.classList.remove('on');
+  ['err','warn','info'].forEach(t => {
+    const el = eid('msg-'+t);
+    if (el) el.classList.remove('on');
+  });
+}
 
 </script>
 </body>
