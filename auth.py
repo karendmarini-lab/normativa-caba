@@ -77,7 +77,7 @@ def _verify_password(password: str, stored: str) -> bool:
 
 def _create_token(user_id: int, email: str) -> str:
     payload = {
-        "sub": user_id,
+        "sub": str(user_id),
         "email": email,
         "exp": int(time.time()) + JWT_EXPIRY_SECONDS,
     }
@@ -103,7 +103,7 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
     conn.row_factory = sqlite3.Row
     row = conn.execute(
         "SELECT id, email, nombre, activo, plan FROM users WHERE id = ?",
-        (payload["sub"],),
+        (int(payload["sub"]),),
     ).fetchone()
     conn.close()
     if not row:
