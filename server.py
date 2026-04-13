@@ -11,7 +11,6 @@ Then open:
 
 from __future__ import annotations
 
-import csv
 import json
 import re
 import sqlite3
@@ -26,7 +25,6 @@ from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "caba_normativa.db"
-CSV_PATH = BASE_DIR / "data" / "parcelas.csv"
 
 app = FastAPI(title="EdificIA API", version="0.1.0")
 app.add_middleware(
@@ -37,7 +35,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-_POLYGONS: dict[str, list[list[float]]] = {}
 
 
 class SearchResult(BaseModel):
@@ -78,34 +75,12 @@ def normalize_query(value: str) -> str:
     return cleaned
 
 
-def load_polygons() -> None:
-    if _POLYGONS:
-        return
-
-    if not CSV_PATH.exists():
-        return
-
-    with CSV_PATH.open(newline="", errors="replace") as handle:
-        reader = csv.DictReader(handle)
-        for row in reader:
-            smp = smp_norm(row.get("\ufeffsmp", row.get("smp", "")))
-            geom = row.get("geometry", "")
-            if not smp or not geom:
-                continue
-
-            coords_str = geom
-            for remove in ["MULTIPOLYGON", "POLYGON", "(", ")"]:
-                coords_str = coords_str.replace(remove, "")
-
-            coords: list[list[float]] = []
-            for pair in coords_str.split(","):
-                parts = pair.strip().split()
-                if len(parts) != 2:
-                    continue
-                coords.append([float(parts[0]), float(parts[1])])
-
-            if coords:
-                _POLYGONS[smp] = coords
+def get_polygon(data: dict[str, Any]) -> list[list[float]] | None:
+    """Extract polygon from DB row's polygon_geojson field."""
+    raw = data.get("polygon_geojson")
+    if not raw:
+        return None
+    return json.loads(raw) if isinstance(raw, str) else raw
 
 
 def serialize_row(row: sqlite3.Row) -> dict[str, Any]:
@@ -216,10 +191,8 @@ def get_parcel(parcel_smp: str) -> dict[str, Any]:
     if row is None:
         raise HTTPException(status_code=404, detail="Parcel not found")
 
-    load_polygons()
     data = serialize_row(row)
-    norm = smp_norm(data["smp"])
-    data["polygon"] = _POLYGONS.get(norm)
+    data["polygon"] = get_polygon(data)
     data["has_polygon"] = data["polygon"] is not None
     data["has_cur3d"] = bool(data.get("cur3d_enriched"))
     data["has_epok"] = bool(data.get("epok_enriched"))
@@ -268,10 +241,8 @@ def get_parcel_by_query(
             )
         raise HTTPException(status_code=404, detail="Parcel not found")
 
-    load_polygons()
     data = serialize_row(row)
-    norm = smp_norm(data["smp"])
-    data["polygon"] = _POLYGONS.get(norm)
+    data["polygon"] = get_polygon(data)
     data["has_polygon"] = data["polygon"] is not None
     data["has_cur3d"] = bool(data.get("cur3d_enriched"))
     data["has_epok"] = bool(data.get("epok_enriched"))
@@ -365,12 +336,7 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
     data = dict(row)
 
     # Get polygon from DB or CSV fallback
-    polygon = None
-    if data.get("polygon_geojson"):
-        polygon = json.loads(data["polygon_geojson"])
-    else:
-        load_polygons()
-        polygon = _POLYGONS.get(smp_norm(data["smp"]))
+    polygon = get_polygon(data)
 
     if not polygon:
         raise HTTPException(status_code=404, detail="No polygon for this parcel")
