@@ -60,8 +60,11 @@ class AuthMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app = FastAPI(title="EdificIA API", version="0.1.0")
+app = FastAPI(title="EdificIA API", version="0.1.0", root_path="")
 app.add_middleware(AuthMiddleware)
+# Trust X-Forwarded-Proto from nginx so request.url.scheme = "https"
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
