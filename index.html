@@ -11,266 +11,206 @@
   <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
   :root {
-    --bg:#000; --card:rgba(255,255,255,.04); --border:rgba(255,255,255,.08);
-    --text:#fff; --muted:rgba(255,255,255,.38); --r:6px;
+    --bg:#000; --card:#0f0f0f; --lift:#181818;
+    --border:rgba(255,255,255,.08); --bh:rgba(255,255,255,.16);
+    --text:#fff; --muted:rgba(255,255,255,.4); --r:6px;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%}
   body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-    font-size:13px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;overflow:hidden}
+    font-size:14px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+    min-height:100vh}
 
   /* ── TOPBAR ── */
-  .topbar{height:38px;padding:0 40px;border-bottom:1px solid var(--border);
+  .topbar{height:34px;padding:0 40px;border-bottom:1px solid var(--border);
     display:flex;align-items:center;justify-content:space-between;
-    font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
-    position:relative;z-index:10}
-  .topbar-name{color:rgba(255,255,255,.75);letter-spacing:4px;font-weight:400}
-  .topbar-right{display:flex;gap:28px}
-  .topbar-right a{color:var(--muted);text-decoration:none;transition:color .2s;font-size:9px;letter-spacing:2.5px}
+    font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+  .topbar-name{color:rgba(255,255,255,.7);letter-spacing:4px;font-weight:400}
+  .topbar-right{display:flex;gap:24px}
+  .topbar-right a{color:var(--muted);text-decoration:none;font-size:9px;letter-spacing:2.5px;transition:color .2s}
   .topbar-right a:hover{color:var(--text)}
 
   /* ── HEADER ── */
   header{height:58px;padding:0 40px;border-bottom:1px solid var(--border);
     display:flex;align-items:center;justify-content:space-between;
-    position:relative;z-index:10;background:rgba(0,0,0,.9);backdrop-filter:blur(20px)}
+    position:sticky;top:0;z-index:100;
+    background:rgba(0,0,0,.95);backdrop-filter:blur(20px)}
   .logo-wrap{display:flex;align-items:center;gap:14px}
-  .logo-mark{width:28px;height:28px;border:1px solid rgba(255,255,255,.25);
+  .logo-mark{width:28px;height:28px;border:1px solid rgba(255,255,255,.2);
     display:flex;align-items:center;justify-content:center;
-    font-size:11px;font-weight:400;color:var(--text);letter-spacing:1px}
-  .logo-name{font-size:13px;font-weight:300;color:var(--text);letter-spacing:5px;text-transform:uppercase}
-  .logo-name em{color:rgba(255,255,255,.4);font-style:normal}
+    font-size:11px;font-weight:400;letter-spacing:1px}
+  .logo-name{font-size:13px;font-weight:300;letter-spacing:5px;text-transform:uppercase}
+  .logo-name em{color:rgba(255,255,255,.35);font-style:normal}
+  .logo-sub{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:1px}
   .header-nav{display:flex;gap:32px}
   .header-nav a{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
     color:var(--muted);text-decoration:none;transition:color .2s}
   .header-nav a:hover{color:var(--text)}
 
-  /* ── SPLIT LAYOUT ── */
-  .split{display:grid;grid-template-columns:1fr;height:calc(100vh - 96px)}
+  /* ── MAIN ── */
+  .app-main{min-height:calc(100vh - 92px);display:flex;flex-direction:column}
 
-  /* ── LEFT: portrait + bio ── */
-  .split-left{display:none}
-  .portrait-wrap{
-    width:100%;aspect-ratio:4/5;max-height:340px;
-    border-radius:140px;overflow:hidden;
-    border:1px solid var(--border);
-    background:linear-gradient(145deg,#0e0e0e,#1a1a1a);
-    display:flex;align-items:center;justify-content:center;
-    flex-shrink:0;
+  /* ── SEARCH HERO ── */
+  .search-hero{
+    flex:0 0 auto;
+    padding:64px 24px 48px;
+    display:flex;flex-direction:column;align-items:center;
+    border-bottom:1px solid var(--border);
   }
-  .portrait-placeholder{text-align:center;color:var(--muted);font-size:9px;letter-spacing:2.5px;text-transform:uppercase}
-  .portrait-placeholder svg{display:block;margin:0 auto 12px;opacity:.2}
-  .bio-tag{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
-    display:flex;align-items:center;gap:8px}
-  .bio-tag::before{content:'';width:20px;height:1px;background:rgba(255,255,255,.3)}
-  .bio-title{font-size:clamp(20px,2.8vw,30px);font-weight:200;letter-spacing:-.5px;
-    color:var(--text);line-height:1.15}
-  .bio-sub{font-size:11px;font-weight:300;color:var(--muted);line-height:1.7;max-width:300px}
-
-  /* ── RIGHT: mapa + búsqueda ── */
-  .split-right{
-    position:relative;overflow:hidden;background:#000;
-    display:flex;align-items:center;justify-content:center;
-    min-height:0;
-  }
-  .map-bg{position:absolute;inset:0;width:100%;height:100%}
-  .map-bg svg{width:100%;height:100%;display:block}
-
-  /* Overlay oscuro sobre el mapa para que el form sea legible */
-  .map-overlay{
-    position:absolute;inset:0;
-    background:linear-gradient(to bottom, rgba(0,0,0,.3) 0%, rgba(0,0,0,.15) 50%, rgba(0,0,0,.4) 100%);
-  }
-
-  /* Panel de búsqueda flotante */
-  .search-panel{
-    position:relative;z-index:5;
-    width:92%;max-width:540px;
-    display:flex;flex-direction:column;gap:14px;
-  }
-  .search-eyebrow{
-    font-size:9px;letter-spacing:4px;text-transform:uppercase;
-    color:rgba(255,255,255,.5);text-align:center;margin-bottom:4px;
-  }
-
-  /* Input grande translúcido */
+  .search-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;
+    color:var(--muted);margin-bottom:20px;text-align:center}
   .search-bar{
+    width:100%;max-width:580px;
     display:flex;align-items:center;gap:12px;
-    background:rgba(0,0,0,.55);
-    backdrop-filter:blur(24px);
-    border:1px solid rgba(255,255,255,.15);
-    border-radius:100px;
-    padding:16px 24px;
-    transition:border-color .25s;
+    background:var(--card);border:1px solid var(--border);
+    border-radius:100px;padding:16px 26px;
+    transition:border-color .25s;margin-bottom:16px;
   }
-  .search-bar:focus-within{border-color:rgba(255,255,255,.35)}
-  .search-bar .search-ico{font-size:14px;opacity:.5;flex-shrink:0}
+  .search-bar:focus-within{border-color:rgba(255,255,255,.25)}
+  .search-ico{font-size:14px;opacity:.4;flex-shrink:0}
   .search-bar input{
     background:transparent;border:none;outline:none;
-    font-family:'Inter',inherit;font-size:13px;font-weight:300;
+    font-family:'Inter',inherit;font-size:15px;font-weight:300;
     color:#fff;width:100%;letter-spacing:.2px;
   }
-  .search-bar input::placeholder{color:rgba(255,255,255,.35);font-size:12px}
+  .search-bar input::placeholder{color:rgba(255,255,255,.25);font-size:13px}
 
-  /* Autocomplete */
-  .acwrap{position:relative}
+  .acwrap{position:relative;width:100%;max-width:580px}
   #suggestions{
     display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
-    background:rgba(10,10,10,.95);backdrop-filter:blur(20px);
-    border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;
+    background:rgba(8,8,8,.98);backdrop-filter:blur(20px);
+    border:1px solid var(--border);border-radius:16px;overflow:hidden;
   }
-  .si{padding:11px 20px;cursor:pointer;font-size:12px;
-    border-bottom:1px solid rgba(255,255,255,.06);color:#fff;transition:background .15s}
+  .si{padding:12px 20px;cursor:pointer;font-size:13px;
+    border-bottom:1px solid var(--border);color:#fff;transition:background .15s}
   .si:last-child{border-bottom:none}
-  .si:hover{background:rgba(255,255,255,.07)}
+  .si:hover{background:var(--lift)}
 
-  /* Pill buttons */
-  .pill-stack{display:flex;flex-direction:column;gap:10px}
+  .pill-stack{display:flex;flex-direction:column;gap:10px;width:100%;max-width:580px}
   .btn-pill{
     width:100%;background:#fff;color:#000;
     border:none;border-radius:100px;
     padding:15px 28px;font-family:'Inter',inherit;
-    font-size:10px;font-weight:500;letter-spacing:2.5px;text-transform:uppercase;
+    font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
     cursor:pointer;transition:opacity .2s,transform .1s;
     display:flex;align-items:center;justify-content:center;gap:10px;
   }
   .btn-pill:hover{opacity:.85}
   .btn-pill:active{transform:scale(.98)}
-  .btn-pill.loading{opacity:.3;pointer-events:none}
-  .btn-pill .arr{font-size:12px;transform:rotate(-45deg);display:inline-block}
-  .btn-pill.secondary{background:rgba(0,0,0,.5);color:#fff;
-    border:1px solid rgba(255,255,255,.2);backdrop-filter:blur(10px)}
-  .btn-pill.secondary:hover{border-color:rgba(255,255,255,.45)}
-
-  /* Mapfooter */
-  .map-footer{
-    position:absolute;bottom:0;left:0;right:0;
-    padding:14px 24px;
-    font-size:8px;letter-spacing:4px;text-transform:uppercase;
-    color:rgba(255,255,255,.2);text-align:center;
-    border-top:1px solid rgba(255,255,255,.06);
-    background:rgba(0,0,0,.4);
-  }
+  .btn-pill.loading{opacity:.35;pointer-events:none}
+  .btn-pill .arr{font-size:12px}
+  .btn-pill.secondary{background:transparent;color:#fff;
+    border:1px solid rgba(255,255,255,.18)}
+  .btn-pill.secondary:hover{border-color:rgba(255,255,255,.4)}
 
   /* ── MESSAGES ── */
-  .msg{display:none;padding:11px 14px;border-radius:var(--r);font-size:12px;margin-top:4px}
+  .msg{display:none;padding:10px 16px;border-radius:var(--r);font-size:13px;
+    width:100%;max-width:580px;margin-top:2px}
   .msg.on{display:block}
-  #msg-err{background:rgba(220,38,38,.08);color:#f87171;border:1px solid rgba(220,38,38,.2)}
-  #msg-warn{background:rgba(234,179,8,.07);color:#fcd34d;border:1px solid rgba(234,179,8,.2)}
+  #msg-err {background:rgba(220,38,38,.07);color:#f87171;border:1px solid rgba(220,38,38,.18)}
+  #msg-warn{background:rgba(234,179,8,.06);color:#fcd34d;border:1px solid rgba(234,179,8,.18)}
   #msg-info{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border)}
+  #debug-panel{display:none}
 
-  /* ── RESULTS (substitui o painel direito ao encontrar parcela) ── */
-  #results{
-    display:none;opacity:0;transition:opacity .3s;
-    position:absolute;inset:0;z-index:20;
-    background:rgba(0,0,0,.97);backdrop-filter:blur(20px);
-    overflow-y:auto;padding:28px 24px;
-  }
-  #results.on{display:block;opacity:1}
+  /* ── RESULTS ── */
+  #results{display:none;opacity:0;transform:translateY(8px);transition:all .3s}
+  #results.on{display:block;opacity:1;transform:none}
+  .results-inner{max-width:860px;margin:0 auto;padding:36px 24px 60px}
 
-  .res-header{
-    border:1px solid var(--border);border-radius:var(--r);
-    padding:20px 22px;margin-bottom:18px;
-    display:flex;align-items:flex-start;justify-content:space-between;gap:12px
-  }
-  #res-addr{font-size:18px;font-weight:200;letter-spacing:-.3px;line-height:1.2}
+  .res-header{border:1px solid var(--border);border-radius:var(--r);
+    padding:22px 26px;margin-bottom:20px;
+    display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+  #res-addr{font-size:22px;font-weight:200;letter-spacing:-.5px;line-height:1.2}
   #res-coords{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
-  .dbadge{
-    font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;
-    padding:5px 14px;border-radius:100px;
-    background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);
-    border:1px solid rgba(255,255,255,.1);white-space:nowrap;flex-shrink:0
-  }
+  .dbadge{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+    padding:6px 16px;border-radius:100px;
+    background:rgba(255,255,255,.07);color:rgba(255,255,255,.7);
+    border:1px solid rgba(255,255,255,.12);white-space:nowrap;flex-shrink:0}
   .dbadge.unknown{opacity:.4}
-  .slabel{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
-    margin:20px 0 12px;display:flex;align-items:center;gap:10px}
+
+  .slabel{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
+    margin:24px 0 12px;display:flex;align-items:center;gap:10px}
   .slabel::after{content:'';flex:1;height:1px;background:var(--border)}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));
-    gap:1px;background:var(--border);
-    border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
-  .card{background:#0d0d0d;padding:16px 18px;transition:background .2s}
-  .card:hover{background:#141414}
-  .card-ico{font-size:12px;color:rgba(255,255,255,.25);margin-bottom:10px}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
+    gap:1px;background:var(--border);border:1px solid var(--border);
+    border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+  .card{background:var(--card);padding:18px 20px;transition:background .2s}
+  .card:hover{background:var(--lift)}
+  .card-ico{font-size:13px;color:rgba(255,255,255,.25);margin-bottom:10px}
   .card-lbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-  .card-val{font-size:20px;font-weight:300;line-height:1}
-  .card-val.sm{font-size:13px;font-weight:400;letter-spacing:.5px}
-  .card-unit{font-size:9px;color:var(--muted);margin-top:4px}
+  .card-val{font-size:22px;font-weight:300;line-height:1}
+  .card-val.sm{font-size:14px;font-weight:400;letter-spacing:.5px}
+  .card-unit{font-size:10px;color:var(--muted);margin-top:4px}
+
   #aph-box,#u-box,#cur-box{display:none}
   #aph-box.on,#u-box.on,#cur-box.on{display:block;background:rgba(234,179,8,.04);
     border:1px solid rgba(234,179,8,.12);border-radius:var(--r);
-    padding:10px 14px;font-size:12px;color:#fcd34d;margin-bottom:14px}
+    padding:12px 16px;font-size:12.5px;color:#fcd34d;margin-bottom:16px}
+
   #calc-block{display:none;border:1px solid var(--border);border-radius:var(--r);
-    padding:20px;margin-bottom:14px;position:relative}
+    padding:22px;margin-bottom:16px;position:relative}
   #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:16px;
-    font-size:7px;letter-spacing:3px;background:#000;color:rgba(255,255,255,.25);padding:0 8px}
+    font-size:8px;letter-spacing:3px;background:var(--bg);color:rgba(255,255,255,.25);padding:0 8px}
   .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
     gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
-  .citem{background:#0d0d0d;padding:14px 16px}
+  .citem{background:var(--card);padding:16px 18px}
   .clbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-  .cval{font-size:18px;font-weight:300}
+  .cval{font-size:20px;font-weight:300}
   .cunit{font-size:9px;color:var(--muted);margin-top:3px}
   .cval-input{width:100%;background:transparent;border:none;
     border-bottom:1px dashed rgba(255,255,255,.1);
-    color:rgba(255,255,255,.7);font-family:inherit;font-size:18px;font-weight:300;
-    padding:2px 0;outline:none;cursor:text;
-    -moz-appearance:textfield;appearance:textfield}
+    color:rgba(255,255,255,.75);font-family:inherit;font-size:20px;font-weight:300;
+    padding:2px 0;outline:none;-moz-appearance:textfield;appearance:textfield}
   .cval-input:focus{border-bottom-color:rgba(255,255,255,.3)}
-  .cval-input::-webkit-outer-spin-button,.cval-input::-webkit-inner-spin-button{-webkit-appearance:none}
+  .cval-input::-webkit-inner-spin-button{-webkit-appearance:none}
+
   #fin-block{display:none}
-  #map-wrap{display:none}
-  .nnote{font-size:10px;color:var(--muted);padding:9px 12px;
+  .nnote{font-size:11px;color:var(--muted);padding:9px 14px;
     border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
   .nnote a{color:rgba(255,255,255,.45);text-decoration:none}
-  .divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+  .divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+  #map-wrap{display:none}
+
   .ref-section{border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:12px}
   .ref-section details summary{cursor:pointer;font-size:8px;color:var(--muted);
     letter-spacing:2.5px;text-transform:uppercase;list-style:none;
     display:flex;align-items:center;gap:10px;user-select:none}
-  .ref-section details summary::before{content:'+';color:rgba(255,255,255,.35);font-size:13px}
+  .ref-section details summary::before{content:'+';color:rgba(255,255,255,.3);font-size:14px}
   .ref-section details[open] summary::before{content:'−'}
   .dist-table{margin-top:12px}
-  .dist-row{display:flex;align-items:center;gap:10px;padding:7px 0;
-    border-bottom:1px solid var(--border);font-size:12px}
+  .dist-row{display:flex;align-items:center;gap:10px;padding:8px 0;
+    border-bottom:1px solid var(--border);font-size:13px}
   .dist-row:last-child{border-bottom:none}
   .dist-code{font-weight:500;width:90px}
   .dist-h{color:var(--muted);font-size:11px;flex:1}
   .dist-cpu{font-size:10px;color:var(--muted)}
-  #debug-panel{display:none;background:rgba(255,255,255,.02);border:1px solid var(--border);
-    border-radius:var(--r);padding:10px;font-size:10px;font-family:monospace;color:var(--muted);margin-top:8px}
   #calc-source{font-size:9px;color:var(--muted);text-align:right;margin-top:8px;letter-spacing:.5px}
 
   /* ── LOGO CLOUD ── */
   .logo-cloud{border-top:1px solid var(--border);padding:20px 40px;
-    display:flex;align-items:center;justify-content:center;gap:36px;flex-wrap:wrap}
-  .logo-cloud-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.12)}
-  .logo-cloud-items{display:flex;gap:32px;align-items:center;flex-wrap:wrap;justify-content:center}
-  .lc-item{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.12);font-weight:500}
+    display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;
+    font-size:9px;letter-spacing:3px;text-transform:uppercase}
+  .logo-cloud-label{color:rgba(255,255,255,.12)}
+  .logo-cloud-items{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
+  .lc-item{color:rgba(255,255,255,.12);font-weight:500}
 
-  /* ── FOOTER ── */
   footer{border-top:1px solid var(--border);padding:16px 40px;
     display:flex;align-items:center;justify-content:space-between;
-    font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.18)}
-  footer a{color:rgba(255,255,255,.25);text-decoration:none}
+    font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.2)}
+  footer a{color:rgba(255,255,255,.28);text-decoration:none}
 
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .topbar { padding: 0 20px; }
-    header  { padding: 0 20px; }
-    .logo-sub { display: none; }
-    .header-nav { gap: 20px; }
-    .header-nav a { font-size: 8px; letter-spacing: 2px; }
-    .search-panel { width: 96%; }
-    .btn-pill { padding: 14px 20px; font-size: 9px; }
-    .search-bar input { font-size: 12px; }
+  /* ── MOBILE ── */
+  @media(max-width:640px){
+    .topbar{padding:0 20px}
+    header{padding:0 20px;height:52px}
+    .logo-sub{display:none}
+    .header-nav{display:none}
+    .search-hero{padding:44px 16px 36px}
+    .results-inner{padding:24px 16px 48px}
+    .cards{grid-template-columns:repeat(2,1fr)}
+    .logo-cloud{padding:16px 20px;gap:20px}
+    footer{padding:14px 20px;flex-direction:column;gap:6px;text-align:center}
   }
-  @media (max-width: 480px) {
-    header { height: 52px; }
-    .logo-name { font-size: 11px; letter-spacing: 4px; }
-    .logo-mark { width: 24px; height: 24px; font-size: 10px; }
-    .header-nav { display: none; }
-    .search-panel { width: 98%; }
-    .btn-pill { font-size: 8px; letter-spacing: 2px; padding: 13px 16px; }
-  }
-
 </style>
 </head>
 <body>
@@ -294,150 +234,48 @@
     <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
   </nav>
 </header>
+<div class="app-main">
 
-<div class="split">
-  <!-- IZQUIERDA: portrait + bio -->
-  <div class="split-left">
-    <div class="portrait-wrap"></div>
-    <div>
-      <div class="bio-tag">Arquitectura · CABA</div>
-      <div class="bio-title">Análisis de<br>normativa<br>parcelaria.</div>
+  <!-- HERO: buscador centrado -->
+  <div class="search-hero">
+    <div class="search-eyebrow">⟡ &nbsp;Consulta de parcela · Normativa CUR</div>
+
+    <div class="acwrap">
+      <div class="search-bar">
+        <span class="search-ico">◎</span>
+        <input type="text" id="inp-addr"
+          placeholder="Buscar parcela  (ej. Av. del Libertador 1234)"
+          autocomplete="off">
+      </div>
+      <div id="suggestions"></div>
     </div>
-    <div class="bio-sub">Consultá altura, plano límite y morfología edificable de cualquier parcela de Buenos Aires al instante.</div>
+
+    <input type="hidden" id="inp-frente">
+    <input type="hidden" id="inp-fondo">
+    <input type="hidden" id="inp-distrito" value="">
+
+    <div id="msg-err"  class="msg"></div>
+    <div id="msg-warn" class="msg"></div>
+    <div id="msg-info" class="msg"></div>
+    <div id="debug-panel"><div id="debug-log"></div></div>
+
+    <div class="pill-stack">
+      <button class="btn-pill" id="btn-main" onclick="consultarParcela()">
+        Generar informe de normativa &nbsp;<span class="arr">↗</span>
+      </button>
+      <button class="btn-pill secondary" onclick="
+        document.getElementById('inp-addr').value='';
+        document.getElementById('inp-addr').focus();
+        document.getElementById('results').classList.remove('on')">
+        Consultar otra parcela &nbsp;<span class="arr">↗</span>
+      </button>
+    </div>
   </div>
 
-  <!-- DERECHA: mapa + búsqueda -->
-  <div class="split-right">
-    <!-- Mapa SVG de fondo -->
-    <div class="map-bg"><svg viewBox="0 0 600 680" xmlns="http://www.w3.org/2000/svg"
-     preserveAspectRatio="xMidYMid slice"
-     style="width:100%;height:100%;display:block;opacity:.6">
-  <defs>
-    <style>
-      .sb{stroke:#fff;stroke-width:.5;fill:none;opacity:.45}
-      .av{stroke:#fff;stroke-width:.7;fill:none;opacity:.3}
-      .av2{stroke:#fff;stroke-width:1.2;fill:none;opacity:.45}
-      .lb{fill:rgba(255,255,255,.35);font-family:'Inter',sans-serif;font-size:8px;letter-spacing:2.5px;text-transform:uppercase}
-      .lb2{fill:rgba(255,255,255,.2);font-family:'Inter',sans-serif;font-size:6px;letter-spacing:1.5px}
-    </style>
-  </defs>
-  <!-- Contorno exterior CABA -->
-  <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".5"/>
-  <!-- Río de la Plata -->
-  <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".12" stroke-dasharray="5,4"/>
-  <!-- Av General Paz -->
-  <path class="av" d="M80,50 L55,130 L45,260 L50,380 L80,500 L140,580"/>
+  <!-- RESULTADOS: debajo del hero, cómodos -->
+  <div id="results">
+    <div class="results-inner">
 
-  <!-- Grandes avenidas horizontales -->
-  <path class="av2" d="M75,240 L520,220"/> <!-- 9 de Julio / Corrientes -->
-  <path class="av" d="M80,180 L525,162"/>  <!-- Córdoba -->
-  <path class="av" d="M82,148 L525,133"/>  <!-- Santa Fe -->
-  <path class="av" d="M78,290 L515,270"/>  <!-- Rivadavia -->
-  <path class="av" d="M78,330 L510,312"/>  <!-- Independencia -->
-  <path class="av" d="M78,365 L505,348"/>  <!-- San Juan -->
-  <path class="av" d="M78,405 L490,388"/>  <!-- Caseros -->
-  <path class="av" d="M78,450 L470,435"/>  <!-- Perito Moreno -->
-
-  <!-- Grandes avenidas verticales -->
-  <path class="av" d="M200,45 L225,280 L245,500 L258,630"/>  <!-- Pueyrredón -->
-  <path class="av2" d="M260,45 L268,250 L275,460 L282,630"/> <!-- Callao/Entre Ríos -->
-  <path class="av" d="M320,42 L330,260 L340,480 L348,620"/>  <!-- Jujuy/Catamarca -->
-  <path class="av" d="M380,45 L395,260 L405,470"/>            <!-- Boedo/Av. La Plata -->
-  <path class="av" d="M465,60 L480,240 L490,400 L495,520"/>   <!-- Paseo Colón -->
-  <path class="av" d="M140,46 L152,200 L162,380 L175,560"/>   <!-- Nazca/Warnes -->
-  <path class="av" d="M92,110 L200,95 L350,88 L450,84"/>      <!-- Figueroa Alcorta -->
-
-  <!-- Barrios: polígonos -->
-  <path class="sb" d="M140,46 L260,40 L265,148 L200,162 L140,158 Z"/>         <!-- Palermo -->
-  <path class="sb" d="M80,50 L140,46 L140,110 L80,118 Z"/>                    <!-- Belgrano O -->
-  <path class="sb" d="M140,46 L260,40 L265,46 L262,88 L180,95 L140,98 Z"/>   <!-- Núñez/Belgrano -->
-  <path class="sb" d="M265,42 L380,38 L385,88 L262,92 Z"/>                    <!-- Coghlan/V.Urquiza -->
-  <path class="sb" d="M265,88 L385,84 L390,148 L265,155 Z"/>                  <!-- Colegiales/Chacarita -->
-  <path class="sb" d="M265,148 L390,140 L395,220 L268,228 Z"/>                <!-- Recoleta/Villa Crespo -->
-  <path class="sb" d="M390,84 L465,78 L472,148 L392,155 Z"/>                  <!-- Saavedra/V.Pueyrredón -->
-  <path class="sb" d="M392,148 L472,140 L478,220 L395,225 Z"/>                <!-- Paternal/Almagro N -->
-  <path class="sb" d="M395,220 L478,215 L482,310 L398,315 Z"/>                <!-- Caballito E/Boedo N -->
-  <path class="sb" d="M90,158 L200,148 L205,240 L92,248 Z"/>                  <!-- V.del Parque/Devoto -->
-  <path class="sb" d="M92,245 L205,238 L210,330 L95,338 Z"/>                  <!-- Flores N -->
-  <path class="sb" d="M95,335 L210,326 L215,408 L98,415 Z"/>                  <!-- Flores S/Parque Chacabuco -->
-  <path class="sb" d="M200,240 L268,228 L272,310 L205,318 Z"/>                <!-- Almagro S -->
-  <path class="sb" d="M270,225 L395,218 L398,310 L273,316 Z"/>                <!-- Balvanera/San Cristóbal -->
-  <path class="sb" d="M200,310 L275,306 L278,408 L203,413 Z"/>                <!-- Boedo S/Nueva Pompeya N -->
-  <path class="sb" d="M275,306 L398,298 L402,390 L278,396 Z"/>                <!-- Parque Patricios -->
-  <path class="sb" d="M398,290 L480,284 L485,380 L403,386 Z"/>                <!-- San Telmo/Montserrat -->
-  <path class="sb" d="M480,148 L528,145 L535,290 L482,295 Z"/>                <!-- Puerto Madero N -->
-  <path class="sb" d="M482,290 L535,285 L538,420 L485,425 Z"/>                <!-- Puerto Madero S -->
-  <path class="sb" d="M98,410 L215,402 L220,500 L102,505 Z"/>                 <!-- Mataderos/Liniers -->
-  <path class="sb" d="M100,500 L220,495 L225,580 L105,582 L80,560 Z"/>        <!-- V.Lugano/Soldati -->
-  <path class="sb" d="M220,490 L340,485 L345,580 L225,582 Z"/>                <!-- V.Riachuelo/Barracas S -->
-  <path class="sb" d="M278,390 L403,383 L408,480 L282,485 Z"/>                <!-- Barracas N/Pompeya -->
-  <path class="sb" d="M403,380 L482,374 L488,465 L408,470 Z"/>                <!-- La Boca -->
-
-  <!-- Etiquetas barrios principales -->
-  <text class="lb" x="170" y="108">PALERMO</text>
-  <text class="lb2" x="88" y="72">BELGRANO</text>
-  <text class="lb2" x="288" y="64">NÚÑEZ</text>
-  <text class="lb2" x="396" y="68">V. URQUIZA</text>
-  <text class="lb2" x="168" y="185">VILLA CRESPO</text>
-  <text class="lb2" x="278" y="185">RECOLETA</text>
-  <text class="lb2" x="400" y="182">PATERNAL</text>
-  <text class="lb2" x="100" y="195">V. DEL PARQUE</text>
-  <text class="lb2" x="210" y="272">ALMAGRO</text>
-  <text class="lb2" x="290" y="258">BALVANERA</text>
-  <text class="lb2" x="105" y="278">FLORES</text>
-  <text class="lb2" x="400" y="250">CABALLITO</text>
-  <text class="lb2" x="410" y="335">BOEDO</text>
-  <text class="lb2" x="415" y="310">SAN CRISTÓBAL</text>
-  <text class="lb2" x="300" y="340">P. PATRICIOS</text>
-  <text class="lb2" x="415" y="327">MONTSERRAT</text>
-  <text class="lb2" x="492" y="195">PTO. MADERO</text>
-  <text class="lb2" x="108" y="450">MATADEROS</text>
-  <text class="lb2" x="112" y="535">V. LUGANO</text>
-  <text class="lb2" x="415" y="418">LA BOCA</text>
-  <text class="lb2" x="295" y="435">BARRACAS</text>
-  <text class="lb" x="220" y="540" opacity=".35">BUENOS AIRES</text>
-  <text class="lb2" x="535" y="200" transform="rotate(82,535,200)" opacity=".18">RÍO DE LA PLATA</text>
-</svg></div>
-    <div class="map-overlay"></div>
-
-    <!-- Panel de búsqueda flotante -->
-    <div class="search-panel">
-      <div class="search-eyebrow">🔍 &nbsp;CONSULTA DE PARCELA</div>
-
-      <div class="acwrap">
-        <div class="search-bar">
-          <span class="search-ico">⟡</span>
-          <input type="text" id="inp-addr"
-            placeholder="Buscar parcela (ej. Av. del Libertador 1234)"
-            autocomplete="off">
-        </div>
-        <div id="suggestions"></div>
-      </div>
-
-      <input type="hidden" id="inp-frente">
-      <input type="hidden" id="inp-fondo">
-      <input type="hidden" id="inp-distrito" value="">
-
-      <div id="msg-err"  class="msg"></div>
-      <div id="msg-warn" class="msg"></div>
-      <div id="msg-info" class="msg"></div>
-      <div id="debug-panel"><div id="debug-log"></div></div>
-
-      <div class="pill-stack">
-        <button class="btn-pill" id="btn-main" onclick="consultarParcela()">
-          Generar informe de normativa <span class="arr">↗</span>
-        </button>
-        <button class="btn-pill secondary" onclick="
-          document.getElementById('inp-addr').value='';
-          document.getElementById('inp-addr').focus();
-          document.getElementById('results').classList.remove('on')">
-          Consultar otra parcela <span class="arr">↗</span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Resultados superpuestos sobre el mapa -->
-    <div id="results">
     <div class="abanner">
       <div>
         <div style="font-size:8.5px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px">Dirección Normalizada</div>
@@ -672,9 +510,11 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.9<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
-</footer>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v11.0<br>No reemplaza consulta oficial. Uso exclusivamente referencial.
+    </div>
+  </div>
 
+</div>
 <script>
 
 'use strict';
@@ -1132,7 +972,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
   res.classList.remove('on');
   void res.offsetWidth;
   res.classList.add('on');
-  setTimeout(() => { res.scrollTop = 0; }, 50);
+  setTimeout(() => { window.scrollTo({top: document.querySelector('.search-hero').offsetHeight + 96, behavior: 'smooth'}); }, 80);
 }
 
 // ── CONSULTA PRINCIPAL ───────────────────────────────────────────
