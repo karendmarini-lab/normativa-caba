@@ -325,12 +325,16 @@
 
       <div class="grid">
         <div class="card">
-          <div class="card-label">SMP</div>
-          <div class="card-value sm" id="metricSmp">-</div>
+          <div class="card-label">m² vendibles</div>
+          <div class="card-value" id="metricVendible">-</div>
         </div>
         <div class="card">
-          <div class="card-label">Distrito</div>
-          <div class="card-value sm" id="metricCpu">-</div>
+          <div class="card-label">Pisos</div>
+          <div class="card-value" id="metricPisos">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">FOT</div>
+          <div class="card-value" id="metricFot">-</div>
         </div>
         <div class="card">
           <div class="card-label">Plano Límite</div>
@@ -341,20 +345,32 @@
           <div class="card-value" id="metricAltura">-</div>
         </div>
         <div class="card">
-          <div class="card-label">Área Lote</div>
+          <div class="card-label">Lote</div>
           <div class="card-value" id="metricArea">-</div>
         </div>
         <div class="card">
-          <div class="card-label">Planta Edificable</div>
+          <div class="card-label">Frente</div>
+          <div class="card-value" id="metricFrente">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Fondo</div>
+          <div class="card-value" id="metricFondo">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Planta Edif.</div>
           <div class="card-value" id="metricPlanta">-</div>
         </div>
         <div class="card">
-          <div class="card-label">Tejido Actual</div>
-          <div class="card-value" id="metricTejido">-</div>
+          <div class="card-label">Distrito</div>
+          <div class="card-value sm" id="metricCpu">-</div>
         </div>
         <div class="card">
-          <div class="card-label">Pisos Estimados</div>
-          <div class="card-value" id="metricPisos">-</div>
+          <div class="card-label">SMP</div>
+          <div class="card-value sm" id="metricSmp">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Tejido</div>
+          <div class="card-value" id="metricTejido">-</div>
         </div>
       </div>
 
@@ -492,14 +508,18 @@
     function renderInfo(parcel) {
       const title = parcel.epok_direccion || parcel.smp;
       $('title').textContent = title;
-      $('metricSmp').textContent = parcel.smp || '-';
-      $('metricCpu').textContent = parcel.cpu || parcel.cur_distrito || '-';
+      $('metricVendible').textContent = formatArea(parcel.sup_vendible);
+      $('metricPisos').textContent = parcel.pisos ?? '-';
+      $('metricFot').textContent = parcel.fot ?? '-';
       $('metricPlano').textContent = formatMeters(topHeight(parcel));
       $('metricAltura').textContent = formatMeters(firstHeight(parcel));
       $('metricArea').textContent = formatArea(parcel.area || parcel.edif_superficie_parcela);
+      $('metricFrente').textContent = formatMeters(parcel.frente || parcel.epok_frente);
+      $('metricFondo').textContent = formatMeters(parcel.fondo || parcel.epok_fondo);
       $('metricPlanta').textContent = formatArea(parcel.edif_sup_edificable_planta);
+      $('metricSmp').textContent = parcel.smp || '-';
+      $('metricCpu').textContent = parcel.cpu || parcel.cur_distrito || '-';
       $('metricTejido').textContent = formatMeters(currentHeight(parcel));
-      $('metricPisos').textContent = parcel.pisos ?? '-';
 
       $('metaDireccion').textContent = parcel.epok_direccion || 'Sin dirección EPOK todavía';
       $('metaContexto').textContent = [

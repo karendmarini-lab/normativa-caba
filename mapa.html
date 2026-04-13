@@ -286,13 +286,17 @@ function showParcel(props) {
     + (isReconv ? ' <span style="background:rgba(249,115,22,.2);color:#f97316;padding:1px 6px;border-radius:4px;font-size:10px;margin-left:4px">Reconversión</span>' : '');
 
   const grid = document.getElementById('parcelGrid');
+  const fmtM2 = v => v ? Math.round(v).toLocaleString('es-AR') + ' m²' : '-';
   const items = [
-    ['PL', props.pl ? props.pl + 'm' : '-'],
-    ['Tejido', props.tj ? props.tj + 'm' : '-'],
-    ['Delta', props.tj ? (props.pl - props.tj).toFixed(1) + 'm' : 'Sin dato'],
+    ['m² vendibles', fmtM2(props.vendible)],
     ['Pisos', props.pisos || '-'],
-    ['Área', props.area ? Math.round(props.area) + ' m²' : '-'],
-    ['Vol.', props.vol ? Math.round(props.vol).toLocaleString('es-AR') + ' m²' : '-'],
+    ['FOT', props.fot || '-'],
+    ['PL', props.pl ? props.pl + 'm' : '-'],
+    ['Lote', fmtM2(props.area)],
+    ['Frente', props.fr ? props.fr + 'm' : '-'],
+    ['Fondo', props.fo ? props.fo + 'm' : '-'],
+    ['Delta', props.tj ? (props.pl - props.tj).toFixed(1) + 'm' : '-'],
+    ['Tejido', props.tj ? props.tj + 'm' : '-'],
   ];
   grid.innerHTML = items.map(([l, v]) =>
     `<div class="parcel-metric"><div class="parcel-metric-label">${l}</div><div class="parcel-metric-value">${v}</div></div>`
