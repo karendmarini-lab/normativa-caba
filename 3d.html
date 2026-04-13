@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EdificIA · Viewer 3D</title>
+  <script src="https://cesium.com/downloads/cesiumjs/releases/1.122/Build/Cesium/Cesium.js"></script>
+  <link href="https://cesium.com/downloads/cesiumjs/releases/1.122/Build/Cesium/Widgets/widgets.css" rel="stylesheet">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    :root {
+      --bg: #060606;
+      --panel: rgba(10, 10, 10, 0.92);
+      --panel-2: rgba(255, 255, 255, 0.04);
+      --line: rgba(255, 255, 255, 0.1);
+      --text: #f7f7f7;
+      --muted: rgba(255, 255, 255, 0.55);
+      --accent: #e8c547;
+      --accent-2: #8fd3ff;
+      --danger: #f97316;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: radial-gradient(circle at top, #111 0%, #060606 60%);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+
+    .page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 380px 1fr;
+    }
+
+    .sidebar {
+      padding: 24px;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+      backdrop-filter: blur(24px);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .viewer-wrap {
+      position: relative;
+      min-height: 100vh;
+      background: #000;
+    }
+
+    #cesiumContainer {
+      width: 100%;
+      height: 100vh;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--muted);
+    }
+
+    h1 {
+      font-size: 30px;
+      font-weight: 300;
+      letter-spacing: -1px;
+      margin-top: 6px;
+    }
+
+    .sub {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .search-shell {
+      position: relative;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input, button {
+      font: inherit;
+    }
+
+    #query {
+      width: 100%;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 15px 18px;
+      outline: none;
+    }
+
+    #query:focus {
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 15px 18px;
+      cursor: pointer;
+      background: #fff;
+      color: #111;
+      font-weight: 600;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    .suggestions {
+      display: none;
+      position: absolute;
+      inset: calc(100% + 8px) 0 auto 0;
+      background: rgba(8, 8, 8, 0.98);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+      z-index: 20;
+    }
+
+    .suggestion {
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--line);
+      cursor: pointer;
+    }
+
+    .suggestion:last-child {
+      border-bottom: 0;
+    }
+
+    .suggestion:hover {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .suggestion-main {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .suggestion-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .status {
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .status.warn {
+      border-color: rgba(249, 115, 22, 0.35);
+      color: #fdba74;
+    }
+
+    .status.good {
+      border-color: rgba(143, 211, 255, 0.35);
+      color: #bae6fd;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1px;
+      background: var(--line);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .card {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .card-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 21px;
+      font-weight: 300;
+      line-height: 1.1;
+    }
+
+    .card-value.sm {
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .meta {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meta-row {
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .meta-k {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .meta-v {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .link {
+      display: inline-flex;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--text);
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 12px;
+    }
+
+    .viewer-note {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      width: min(420px, calc(100% - 36px));
+      background: rgba(8, 8, 8, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      backdrop-filter: blur(18px);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      z-index: 10;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    @media (max-width: 980px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        border-right: 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .viewer-wrap,
+      #cesiumContainer {
+        min-height: 72vh;
+        height: 72vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <aside class="sidebar">
+      <div>
+        <div class="eyebrow">EdificIA · Viewer 3D</div>
+        <h1 id="title">Buscar parcela</h1>
+        <p class="sub">Ingresá una dirección o código de parcela para ver la normativa y el volumen edificable.</p>
+      </div>
+
+      <div class="search-shell">
+        <div class="search-row">
+          <input id="query" placeholder="Ej. Guatemala 5416 o 017-029-007b" autocomplete="off">
+          <button class="btn" id="btnSearch">Abrir</button>
+        </div>
+        <div class="suggestions" id="suggestions"></div>
+      </div>
+
+      <div class="status" id="status">Esperando búsqueda.</div>
+
+      <div class="grid">
+        <div class="card">
+          <div class="card-label">SMP</div>
+          <div class="card-value sm" id="metricSmp">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Distrito</div>
+          <div class="card-value sm" id="metricCpu">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Plano Límite</div>
+          <div class="card-value" id="metricPlano">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Altura Máx.</div>
+          <div class="card-value" id="metricAltura">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Área Lote</div>
+          <div class="card-value" id="metricArea">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Planta Edificable</div>
+          <div class="card-value" id="metricPlanta">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Tejido Actual</div>
+          <div class="card-value" id="metricTejido">-</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Pisos Estimados</div>
+          <div class="card-value" id="metricPisos">-</div>
+        </div>
+      </div>
+
+      <div class="meta">
+        <div class="meta-row">
+          <span class="meta-k">Dirección</span>
+          <span class="meta-v" id="metaDireccion">-</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-k">Contexto</span>
+          <span class="meta-v" id="metaContexto">-</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-k">Lectura</span>
+          <span class="meta-v" id="metaLectura">-</span>
+        </div>
+      </div>
+
+      <div class="links" id="links"></div>
+
+      <details style="margin-top:4px">
+        <summary style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none">Metodología</summary>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted);line-height:1.7">
+          <p><strong>Sobre edificable</strong>: 3 secciones según CUR Ley 6099/2018.</p>
+          <p style="margin-top:4px">1. <strong>Cuerpo</strong> (0 a altura_max): planta edificable completa, recortada por LFI.</p>
+          <p style="margin-top:4px">2. <strong>Retiro 1</strong> (+3m): recortado 2m desde la línea oficial (frente).</p>
+          <p style="margin-top:4px">3. <strong>Retiro 2</strong> (hasta PL): recortado 4m desde frente y 4m desde LFI.</p>
+          <p style="margin-top:4px"><strong>Planta edificable</strong> = dato oficial de seccion_edificabilidad (GCBA CUR3D).</p>
+          <p style="margin-top:4px"><strong>Pisos</strong> = 1 + floor((PL − 3.30) / 2.90). PB = 3.30m, típico = 2.90m.</p>
+          <p style="margin-top:8px;font-size:10px;color:rgba(255,255,255,.25)">Datos orientativos. Verificar en <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank" style="color:rgba(255,255,255,.35)">ciudad3d.buenosaires.gob.ar</a></p>
+        </div>
+      </details>
+    </aside>
+
+    <main class="viewer-wrap">
+      <div id="cesiumContainer"></div>
+      <div class="viewer-note">
+        Huella parcelaria exacta (catastro GCBA). Alturas y retiros según CUR Ley 6099/2018. Datos orientativos.
+        <div class="legend">
+          <div class="legend-item"><span class="swatch" style="background: rgba(232, 197, 71, 0.45)"></span> Altura permitida</div>
+          <div class="legend-item"><span class="swatch" style="background: rgba(143, 211, 255, 0.95)"></span> Parcela exacta</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    let viewer;
+    let suggestionTimer = null;
+
+    function formatNumber(value, decimals = 1) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '-';
+      return Number(value).toLocaleString('es-AR', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: decimals,
+      });
+    }
+
+    function formatMeters(value) {
+      return value === null || value === undefined ? '-' : `${formatNumber(value, 1)} m`;
+    }
+
+    function formatArea(value) {
+      return value === null || value === undefined ? '-' : `${formatNumber(value, 0)} m²`;
+    }
+
+    function firstHeight(parcel) {
+      return parcel.edif_altura_max_1 || parcel.plano_san || parcel.h || null;
+    }
+
+    function topHeight(parcel) {
+      return parcel.edif_plano_limite || parcel.plano_san || parcel.h || null;
+    }
+
+    function currentHeight(parcel) {
+      if (parcel.tejido_altura_max) return parcel.tejido_altura_max;
+      if (parcel.epok_pisos_sobre) return parcel.epok_pisos_sobre * 3;
+      return null;
+    }
+
+    function setStatus(text, tone = '') {
+      const el = $('status');
+      el.textContent = text;
+      el.className = `status ${tone}`.trim();
+    }
+
+    function initViewer() {
+      viewer = new Cesium.Viewer('cesiumContainer', {
+        baseLayerPicker: false,
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false,
+        timeline: false,
+        animation: false,
+        fullscreenButton: false,
+        navigationHelpButton: false,
+        infoBox: false,
+        selectionIndicator: false,
+        baseLayer: false,
+      });
+
+      viewer.imageryLayers.addImageryProvider(new Cesium.UrlTemplateImageryProvider({
+        url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',
+        subdomains: ['a', 'b', 'c', 'd'],
+        maximumLevel: 20,
+      }));
+
+      viewer.cesiumWidget.creditContainer.style.display = 'none';
+      viewer.scene.globe.depthTestAgainstTerrain = false;
+    }
+
+    function centroid(polygon) {
+      const total = polygon.reduce((acc, point) => {
+        acc.lng += point[0];
+        acc.lat += point[1];
+        return acc;
+      }, { lng: 0, lat: 0 });
+      return {
+        lng: total.lng / polygon.length,
+        lat: total.lat / polygon.length,
+      };
+    }
+
+    function buildLinks(parcel) {
+      const links = [];
+      if (parcel.edif_croquis_url) links.push({ label: 'Croquis parcela', url: parcel.edif_croquis_url });
+      if (parcel.edif_plano_indice_url) links.push({ label: 'Plano índice', url: parcel.edif_plano_indice_url });
+      if (parcel.edif_perimetro_url) links.push({ label: 'Perímetro manzana', url: parcel.edif_perimetro_url });
+      if (parcel.smp) links.push({ label: 'Ciudad 3D', url: `https://ciudad3d.buenosaires.gob.ar/?smp=${parcel.smp}` });
+      return links;
+    }
+
+    function renderInfo(parcel) {
+      const title = parcel.epok_direccion || parcel.smp;
+      $('title').textContent = title;
+      $('metricSmp').textContent = parcel.smp || '-';
+      $('metricCpu').textContent = parcel.cpu || parcel.cur_distrito || '-';
+      $('metricPlano').textContent = formatMeters(topHeight(parcel));
+      $('metricAltura').textContent = formatMeters(firstHeight(parcel));
+      $('metricArea').textContent = formatArea(parcel.area || parcel.edif_superficie_parcela);
+      $('metricPlanta').textContent = formatArea(parcel.edif_sup_edificable_planta);
+      $('metricTejido').textContent = formatMeters(currentHeight(parcel));
+      $('metricPisos').textContent = parcel.pisos ?? '-';
+
+      $('metaDireccion').textContent = parcel.epok_direccion || 'Sin dirección EPOK todavía';
+      $('metaContexto').textContent = [
+        parcel.barrio || parcel.du_barrio,
+        parcel.comuna ? `Comuna ${parcel.comuna}` : parcel.du_comuna,
+        parcel.cpu || parcel.cur_distrito,
+      ].filter(Boolean).join(' · ') || '-';
+
+      const reading = [];
+      if (parcel.has_cur3d) reading.push('CUR3D real disponible');
+      if (parcel.edif_sup_edificable_planta && (parcel.area || parcel.edif_superficie_parcela)) {
+        const total = parcel.area || parcel.edif_superficie_parcela;
+        const ratio = total > 0 ? (parcel.edif_sup_edificable_planta / total) * 100 : null;
+        if (ratio !== null) reading.push(`Planta edificable ${formatNumber(ratio, 0)}% del lote`);
+      }
+      if (parcel.edif_riesgo_hidrico) reading.push('Riesgo hídrico');
+      if (parcel.edif_enrase) reading.push('Posible enrase');
+      $('metaLectura').textContent = reading.join(' · ') || 'Sin señales especiales cargadas';
+
+      const links = buildLinks(parcel);
+      $('links').innerHTML = links.map((item) =>
+        `<a class="link" href="${item.url}" target="_blank" rel="noreferrer">${item.label}</a>`
+      ).join('');
+    }
+
+    const SECTION_COLORS = [
+      'rgba(232, 197, 71, 0.30)',  // main body
+      'rgba(232, 167, 51, 0.28)',  // retiro 1
+      'rgba(232, 137, 41, 0.26)',  // retiro 2
+    ];
+
+    async function renderViewer(parcel) {
+      if (!viewer) initViewer();
+      viewer.entities.removeAll();
+
+      const polygon = parcel.polygon;
+      if (!polygon || !polygon.length) {
+        setStatus('La parcela no tiene polígono cargado.', 'warn');
+        return;
+      }
+
+      const top = topHeight(parcel);
+
+      // Parcel outline (blue, ground level)
+      const parcelPositions = Cesium.Cartesian3.fromDegreesArray(
+        polygon.flatMap(([lng, lat]) => [lng, lat])
+      );
+      viewer.entities.add({
+        polygon: {
+          hierarchy: new Cesium.PolygonHierarchy(parcelPositions),
+          height: 0.1,
+          material: Cesium.Color.fromCssColorString('rgba(143, 211, 255, 0.06)'),
+          outline: true,
+          outlineColor: Cesium.Color.fromCssColorString('rgba(143, 211, 255, 0.8)'),
+        },
+      });
+
+      // Try to fetch the stepped envelope
+      let usedEnvelope = false;
+      try {
+        const env = await fetchJson(`/api/envelope/${encodeURIComponent(parcel.smp)}`);
+        if (env.sections && env.sections.length > 0) {
+          usedEnvelope = true;
+          env.sections.forEach((section, i) => {
+            const positions = Cesium.Cartesian3.fromDegreesArray(
+              section.polygon.flatMap(([lng, lat]) => [lng, lat])
+            );
+            // Extruded volume
+            viewer.entities.add({
+              polygon: {
+                hierarchy: new Cesium.PolygonHierarchy(positions),
+                height: section.base,
+                extrudedHeight: section.top,
+                material: Cesium.Color.fromCssColorString(SECTION_COLORS[i] || SECTION_COLORS[0]),
+                outline: false,
+              },
+            });
+            // Top cap outline
+            viewer.entities.add({
+              polygon: {
+                hierarchy: new Cesium.PolygonHierarchy(positions),
+                height: section.top,
+                material: Cesium.Color.fromCssColorString('rgba(232, 197, 71, 0.06)'),
+                outline: true,
+                outlineColor: Cesium.Color.fromCssColorString('rgba(232, 197, 71, 0.7)'),
+              },
+            });
+          });
+        }
+      } catch (_) {
+        // Envelope not available — fall back to simple extrusion
+      }
+
+      // Fallback: simple extrusion if envelope failed
+      if (!usedEnvelope && top) {
+        viewer.entities.add({
+          polygon: {
+            hierarchy: new Cesium.PolygonHierarchy(parcelPositions),
+            height: 0,
+            extrudedHeight: top,
+            material: Cesium.Color.fromCssColorString('rgba(232, 197, 71, 0.25)'),
+            outline: false,
+          },
+        });
+      }
+
+      // Label
+      const center = centroid(polygon);
+      viewer.entities.add({
+        position: Cesium.Cartesian3.fromDegrees(center.lng, center.lat, (top || 0) + 6),
+        label: {
+          text: `${parcel.cpu || ''} · ${formatMeters(top)}`,
+          font: '12px Inter, sans-serif',
+          fillColor: Cesium.Color.fromCssColorString('#f7f7f7'),
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 3,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          verticalOrigin: Cesium.VerticalOrigin.BOTTOM,
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+
+      viewer.zoomTo(viewer.entities, new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(30),
+        Cesium.Math.toRadians(-34),
+        180
+      ));
+    }
+
+    function renderSuggestions(items) {
+      const box = $('suggestions');
+      if (!items.length) {
+        box.style.display = 'none';
+        box.innerHTML = '';
+        return;
+      }
+
+      box.innerHTML = items.map((item) => `
+        <div class="suggestion" data-smp="${item.smp}">
+          <div class="suggestion-main">${item.direccion || item.smp}</div>
+          <div class="suggestion-sub">${item.smp} · ${item.cpu || '-'} · ${item.barrio || '-'}</div>
+        </div>
+      `).join('');
+
+      box.style.display = 'block';
+      box.querySelectorAll('.suggestion').forEach((el) => {
+        el.addEventListener('click', () => {
+          box.style.display = 'none';
+          $('query').value = el.dataset.smp;
+          openParcel(el.dataset.smp);
+        });
+      });
+    }
+
+    async function fetchJson(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (_) {
+          payload = null;
+        }
+        throw { status: response.status, payload };
+      }
+      return response.json();
+    }
+
+    async function loadSuggestions(value) {
+      if (!value || value.trim().length < 2) {
+        renderSuggestions([]);
+        return;
+      }
+
+      try {
+        const items = await fetchJson(`/api/search?q=${encodeURIComponent(value.trim())}&limit=8`);
+        renderSuggestions(items);
+      } catch (_) {
+        renderSuggestions([]);
+      }
+    }
+
+    async function openParcel(value) {
+      const raw = value.trim();
+      if (!raw) return;
+
+      setStatus('Buscando parcela...', 'good');
+      renderSuggestions([]);
+
+      try {
+        let parcel;
+        const isSmp = /^[0-9]{1,3}-[0-9A-Z]{1,6}-[0-9A-Z]{1,6}$/i.test(raw);
+
+        if (isSmp) {
+          parcel = await fetchJson(`/api/parcela/${encodeURIComponent(raw)}`);
+        } else {
+          try {
+            parcel = await fetchJson(`/api/parcela?q=${encodeURIComponent(raw)}`);
+          } catch (error) {
+            if (error.status === 409 && error.payload && error.payload.detail && error.payload.detail.matches) {
+              renderSuggestions(error.payload.detail.matches);
+              setStatus('La búsqueda devolvió varias parcelas. Elegí una de la lista.', 'warn');
+              return;
+            }
+            throw error;
+          }
+        }
+
+        renderInfo(parcel);
+        await renderViewer(parcel);
+        const params = new URLSearchParams(window.location.search);
+        params.set('smp', parcel.smp);
+        params.delete('q');
+        history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+        setStatus(parcel.has_cur3d ? 'Parcela cargada con CUR3D real.' : 'Parcela cargada sin CUR3D real; usando datos base del lote.', parcel.has_cur3d ? 'good' : 'warn');
+      } catch (error) {
+        console.error(error);
+        setStatus('No pude cargar esa parcela con la API local.', 'warn');
+      }
+    }
+
+    function bootFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const smp = params.get('smp');
+      const q = params.get('q');
+      if (smp) {
+        $('query').value = smp;
+        openParcel(smp);
+      } else if (q) {
+        $('query').value = q;
+        openParcel(q);
+      }
+    }
+
+    $('btnSearch').addEventListener('click', () => openParcel($('query').value));
+    $('query').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') openParcel($('query').value);
+    });
+    $('query').addEventListener('input', (event) => {
+      clearTimeout(suggestionTimer);
+      suggestionTimer = setTimeout(() => loadSuggestions(event.target.value), 180);
+    });
+
+    initViewer();
+    bootFromUrl();
+  </script>
+</body>
+</html>
