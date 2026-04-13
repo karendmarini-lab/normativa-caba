@@ -672,7 +672,7 @@
 
 <footer>
   <div class="fwarn">⚠ DATOS ORIENTATIVOS — VERIFICAR SIEMPRE EN EL GCBA ANTES DE PROYECTAR</div>
-  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.8<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
+  <div class="fnote">Basado en CUR CABA · Ley 6099/2018 y modif. (Ley 6461/2021) · Fuente USIG / GCBA · EdificIA v10.9<br>No reemplaza consulta oficial. Uso exclusivamente referencial.</div>
 </footer>
 
 <script>
@@ -686,8 +686,14 @@ const eid = id => document.getElementById(id);
 const fmt = n => Math.round(n).toLocaleString('es-AR');
 
 function setLoad(on) {
-  eid('ltrack').classList.toggle('on', on);
-  eid('btn-q').disabled = on;
+  // btn-main es el botón principal (pill)
+  const btn = eid('btn-main');
+  if (btn) {
+    if (on) { btn.classList.add('loading'); btn.disabled = true; }
+    else    { btn.classList.remove('loading'); btn.disabled = false; }
+  }
+  const lt = eid('ltrack');
+  if (lt) lt.classList.toggle('on', on);
 }
 
 function setMsg(type, text) {
