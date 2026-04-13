@@ -363,8 +363,8 @@ def parcelas_geo(
         rows = conn.execute(
             f"""SELECT smp, lat, lng, polygon_geojson,
                 cpu, barrio, area, pisos, plano_san, tejido_altura_max,
-                vol_edificable, uso_tipo1, epok_direccion,
-                frente, fondo,
+                vol_edificable, sup_vendible, fot, uso_tipo1, epok_direccion,
+                frente, fondo, delta_pisos,
                 {metric_col} as score
             FROM parcelas
             WHERE {where}
@@ -390,9 +390,12 @@ def parcelas_geo(
                 "pl": r["plano_san"],
                 "tj": r["tejido_altura_max"],
                 "vol": r["vol_edificable"],
+                "vendible": r["sup_vendible"],
+                "fot": r["fot"],
                 "uso": r["uso_tipo1"],
                 "fr": r["frente"],
                 "fo": r["fondo"],
+                "delta_pisos": r["delta_pisos"],
                 "score": r["score"],
             },
         })
