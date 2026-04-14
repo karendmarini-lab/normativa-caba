@@ -418,6 +418,7 @@
       <div class="cgrid">
         <div class="citem"><div class="clbl">Superficie del Lote <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-sup" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · catastro oficial</div></div>
         <div class="citem"><div class="clbl">Pisada Edificable <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-pb" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · ajustá por LFI</div></div>
+        <div class="citem"><div class="clbl">Área Edif. Oficial <span style="font-size:7px;opacity:.5">(Ciudad 3D)</span></div><input class="cval-input" id="input-area-edificable" type="number" min="1" placeholder="Opcional (m²)" oninput="recalcularRendimiento()"><div class="cunit" id="lbl-area-edificable">Override para manzana atípica</div></div>
         <div class="citem"><div class="clbl">Volumen Total Edificable</div><div class="cval" id="c-edif">—</div><div class="cunit">m² construibles</div></div>
         <div class="citem"><div class="clbl">Superficie Vendible Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">m² · efic. 85%</div></div>
       </div>
@@ -726,8 +727,31 @@ function recalcularRendimiento() {
   const pbInput    = eid('c-pb');
   if (!supInput || !pbInput) return;
 
-  const nuevaPisada = parseFloat(pbInput.value) || 0;
+  // ── OVERRIDE MANZANA ATÍPICA ────────────────────────────────────
+  const inputAreaOficial    = document.getElementById('input-area-edificable');
+  const area_edificable_manual = inputAreaOficial ? parseFloat(inputAreaOficial.value) : NaN;
+  const areaLote = parseFloat(supInput.value) || 0;
+  const fo_act   = window._fondo  || 0;
+  const fr_act2  = window._frente || 0;
+
+  let nuevaPisada = 0;
+  let modoManzanaAtipica = false;
+  if (!isNaN(area_edificable_manual) && area_edificable_manual > 0) {
+    nuevaPisada = Math.min(area_edificable_manual, areaLote);
+    modoManzanaAtipica = true;
+  } else {
+    // Regla general LFI
+    const pbVal = parseFloat(pbInput.value) || 0;
+    nuevaPisada = pbVal > 0 ? pbVal
+      : (fo_act <= 16 ? areaLote : Math.min(fr_act2 * 22, areaLote));
+  }
   if (nuevaPisada <= 0 || pisosEst <= 0) return;
+
+  // Actualizar label pisada
+  const lblPisada = document.querySelector('#c-pb')?.closest('.citem')?.querySelector('.cunit');
+  if (lblPisada) lblPisada.textContent = modoManzanaAtipica
+    ? '⬡ Dato Oficial: Manzana Atípica'
+    : '✦ Calculado: LFI a 22m';
 
   // ── PROFUNDIDAD EFECTIVA DEL EDIFICIO ───────────────────────────────
   const profEdificio = frActual > 0 ? nuevaPisada / frActual : 20;
@@ -942,6 +966,7 @@ function mostrar(addr, parcel, lat, lng, frente, fondo) {
     window._pisosEstimados  = pisosEst;
     window._planoSanitizado = planoSan;
     window._frente          = parcel.fr || 0;
+    window._fondo           = parcel.fo || 0;
     const fr = parcel.fr || 0;
     const fo = parcel.fo || 0;
     let pisadaCalc, bandaLabel;
