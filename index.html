@@ -768,14 +768,24 @@ function recalcularRendimiento() {
 
   const nuevosVendibles = vendibleCubierto + totalBalcones;
 
+  // ── DISPLAY: tres líneas de desglose ──────────────────────────
   eid('c-edif').textContent = fmt(nuevoVolumen);
-  eid('c-vend').textContent = fmt(nuevosVendibles);
-  // Mostrar desglose en el unit
-  const unitVend = document.querySelector('#c-vend')?.closest('.citem')?.querySelector('.cunit');
-  if (unitVend) unitVend.textContent = 
-    'cub. ' + fmt(vendibleCubierto) + ' + balc. ' + fmt(totalBalcones) + ' m²  ·  ef. ' + Math.round(eficiencia*100) + '%';
   const unitEdif = document.querySelector('#c-edif')?.closest('.citem')?.querySelector('.cunit');
   if (unitEdif && frActual > 0) unitEdif.textContent = 'prof. edif. ' + profEdificio.toFixed(1) + 'm';
+
+  // Tarjeta c-vend: desglose en tres sub-líneas
+  const cvendEl = eid('c-vend');
+  if (cvendEl) {
+    cvendEl.innerHTML =
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:300">Vendible cubierto</div>' +
+      '<div style="font-size:20px;font-weight:400">' + fmt(vendibleCubierto) + ' <span style="font-size:10px;font-weight:300">m²</span></div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-bottom:8px">Eficiencia: ' + Math.round(eficiencia*100) + '%</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:300">Balcones (semicubierto)</div>' +
+      '<div style="font-size:20px;font-weight:400">' + fmt(totalBalcones) + ' <span style="font-size:10px;font-weight:300">m²</span></div>' +
+      '<div style="border-top:1px solid var(--border);margin:8px 0"></div>' +
+      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:300">Total vendible</div>' +
+      '<div style="font-size:24px;font-weight:500;color:var(--text)">' + fmt(nuevosVendibles) + ' <span style="font-size:11px;font-weight:300">m²</span></div>';
+  }
 
   // Actualizar módulo financiero
   _finMetrosTotales   = nuevoVolumen;
