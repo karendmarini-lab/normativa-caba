@@ -21,7 +21,7 @@ from urllib.parse import urlencode
 import jwt
 import requests
 from fastapi import Cookie, HTTPException, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 DB_PATH = Path(__file__).resolve().parent / "caba_normativa.db"
 
@@ -44,7 +44,7 @@ GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 
 def init_users_table() -> None:
-    """Create users table if it doesn't exist."""
+    """Create users table if it doesn't exist, seed whitelisted users."""
     conn = sqlite3.connect(str(DB_PATH), timeout=20)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -55,10 +55,25 @@ def init_users_table() -> None:
             google_id TEXT,
             activo INTEGER DEFAULT 0,
             plan TEXT DEFAULT 'free',
+            acceso_hasta TEXT,
             mp_payment_id TEXT,
             created_at REAL DEFAULT (strftime('%s', 'now'))
         )
     """)
+    # Add acceso_hasta column if missing (migration)
+    cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
+    if "acceso_hasta" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN acceso_hasta TEXT")
+    # Seed whitelisted users
+    for email in ("karendmarini@gmail.com", "juanwisznia@gmail.com"):
+        existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+        if not existing:
+            conn.execute(
+                "INSERT INTO users (email, activo, acceso_hasta) VALUES (?, 1, '2099-12-31')",
+                (email,),
+            )
+        else:
+            conn.execute("UPDATE users SET activo = 1, acceso_hasta = '2099-12-31' WHERE email = ?", (email,))
     conn.commit()
     conn.close()
 
@@ -102,13 +117,20 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
     conn = sqlite3.connect(str(DB_PATH), timeout=20)
     conn.row_factory = sqlite3.Row
     row = conn.execute(
-        "SELECT id, email, nombre, activo, plan FROM users WHERE id = ?",
+        "SELECT id, email, nombre, activo, plan, acceso_hasta FROM users WHERE id = ?",
         (int(payload["sub"]),),
     ).fetchone()
     conn.close()
     if not row:
         return None
-    return dict(row)
+    user = dict(row)
+    # Check expiry
+    if user.get("acceso_hasta"):
+        from datetime import date
+        if date.fromisoformat(user["acceso_hasta"]) < date.today():
+            user["activo"] = 0
+            user["expired"] = True
+    return user
 
 
 def require_active_user(request: Request) -> dict[str, Any]:
@@ -167,28 +189,48 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     nombre = info.get("name", "")
     google_id = info["id"]
 
-    # Upsert user
+    # Check whitelist
     conn = sqlite3.connect(str(DB_PATH), timeout=20)
     conn.row_factory = sqlite3.Row
-    existing = conn.execute("SELECT id, activo FROM users WHERE email = ?", (email,)).fetchone()
+    existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
 
-    if existing:
-        user_id = existing["id"]
-        conn.execute(
-            "UPDATE users SET google_id = ?, nombre = ? WHERE id = ?",
-            (google_id, nombre, user_id),
+    if not existing:
+        conn.close()
+        # Not whitelisted — show denial page
+        return HTMLResponse(
+            '<html><body style="background:#000;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column">'
+            f'<h2>Acceso denegado</h2>'
+            f'<p style="color:#999;margin-top:12px">{email} no tiene acceso.</p>'
+            '<p style="color:#999;margin-top:8px">Contacto: <a href="mailto:karendmarini@gmail.com" style="color:#e8c547">karendmarini@gmail.com</a></p>'
+            '</body></html>',
+            status_code=403,
         )
-    else:
-        cursor = conn.execute(
-            "INSERT INTO users (email, nombre, google_id, activo) VALUES (?, ?, ?, 0)",
-            (email, nombre, google_id),
+
+    user_id = existing["id"]
+    conn.execute(
+        "UPDATE users SET google_id = ?, nombre = ? WHERE id = ?",
+        (google_id, nombre, user_id),
+    )
+
+    # Check expiry
+    from datetime import date
+    acceso_hasta = existing["acceso_hasta"]
+    if acceso_hasta and date.fromisoformat(acceso_hasta) < date.today():
+        conn.commit()
+        conn.close()
+        return HTMLResponse(
+            '<html><body style="background:#000;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column">'
+            f'<h2>Acceso expirado</h2>'
+            f'<p style="color:#999;margin-top:12px">Tu acceso venció el {acceso_hasta}.</p>'
+            '<p style="color:#999;margin-top:8px">Contacto: <a href="mailto:karendmarini@gmail.com" style="color:#e8c547">karendmarini@gmail.com</a></p>'
+            '</body></html>',
+            status_code=403,
         )
-        user_id = cursor.lastrowid
 
     conn.commit()
     conn.close()
 
-    # Set JWT cookie and redirect to full HTTPS URL
+    # Set JWT cookie and redirect
     token = _create_token(user_id, email)
     base = _base_url(request)
     response = RedirectResponse(base + "/", status_code=302)
