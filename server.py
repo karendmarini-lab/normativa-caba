@@ -61,6 +61,16 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not user:
             login_url = str(request.base_url).rstrip("/") + "/api/auth/google"
             return RedirectResponse(login_url, status_code=302)
+        if not user.get("activo"):
+            from starlette.responses import HTMLResponse
+            msg = "Tu acceso expiró." if user.get("expired") else "Tu cuenta no está activa."
+            return HTMLResponse(
+                f'<html><body style="background:#000;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column">'
+                f'<h2>{msg}</h2>'
+                f'<p style="color:#999;margin-top:12px">Contacto: <a href="mailto:karendmarini@gmail.com" style="color:#e8c547">karendmarini@gmail.com</a></p>'
+                f'<a href="/api/auth/logout" style="color:#666;margin-top:20px;font-size:12px">Cerrar sesión</a>'
+                f'</body></html>', status_code=403,
+            )
         return await call_next(request)
 
 
