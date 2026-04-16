@@ -475,8 +475,6 @@ def list_barrios() -> list[dict[str, Any]]:
 @app.get("/api/envelope/{parcel_smp}")
 def get_envelope(parcel_smp: str) -> dict[str, Any]:
     """Return the stepped buildable envelope geometry for a parcel."""
-    from envelope import compute_envelope
-
     with db_connect() as conn:
         row = fetch_parcel_by_smp(conn, parcel_smp)
 
@@ -484,8 +482,6 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
         raise HTTPException(status_code=404, detail="Parcel not found")
 
     data = dict(row)
-
-    # Get polygon from DB or CSV fallback
     polygon = get_polygon(data)
 
     if not polygon:
@@ -498,15 +494,37 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
     sup_edif = data.get("edif_sup_edificable_planta")
     sup_parc = data.get("edif_superficie_parcela") or data.get("area")
 
-    sections = compute_envelope(
-        polygon=polygon,
-        altura_max=altura_max,
-        plano_limite=plano_limite,
-        frente_m=frente,
-        fondo_m=fondo,
-        sup_edificable=sup_edif,
-        sup_parcela=sup_parc,
-    )
+    # Try GCBA precomputed envelope sections first
+    with db_connect() as conn:
+        vt_sections = conn.execute(
+            "SELECT tipo, altura_inicial, altura_fin, polygon_geojson FROM envelope_sections WHERE UPPER(smp) = UPPER(?)",
+            (data["smp"],),
+        ).fetchall()
+
+    if vt_sections:
+        sections = []
+        for s in vt_sections:
+            coords = json.loads(s["polygon_geojson"])
+            # Vector tile coords are already [[[lng,lat],...]]
+            poly = coords[0] if coords else []
+            sections.append({
+                "polygon": poly,
+                "base": s["altura_inicial"],
+                "top": s["altura_fin"],
+                "label": s["tipo"],
+            })
+    else:
+        # Fallback to computed envelope
+        from envelope import compute_envelope
+        sections = compute_envelope(
+            polygon=polygon,
+            altura_max=altura_max,
+            plano_limite=plano_limite,
+            frente_m=frente,
+            fondo_m=fondo,
+            sup_edificable=sup_edif,
+            sup_parcela=sup_parc,
+        )
 
     return {
         "smp": data["smp"],
