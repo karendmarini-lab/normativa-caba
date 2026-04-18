@@ -50,7 +50,6 @@ MAX_SQL_ROWS = 1000
 SQL_TIMEOUT_S = 10
 HTTP_TIMEOUT_S = 15
 SESSION_TTL_S = 30 * 60  # 30 minutes
-DOWNLOAD_DAILY_LIMIT_BYTES = 5 * 1024 * 1024  # 5 MB per user per day
 
 # ---------------------------------------------------------------------------
 # System prompt
@@ -197,71 +196,24 @@ _active_session_id: str | None = None
 
 @tool(
     "render_html",
-    "Mostrar una vista HTML al usuario (tabla, grafico, mapa, etc). "
-    "El HTML se renderiza en un iframe con tema oscuro y auto-resize.",
-    {"title": str, "html": str},
+    "Crear un reporte HTML para el usuario (tabla, grafico, mapa, etc). "
+    "Se renderiza en un iframe con tema oscuro y auto-resize. "
+    "Usar collapsed=true para archivos de descarga que no necesitan vista previa.",
+    {"title": str, "html": str, "collapsed": bool},
 )
 async def tool_render_html(args: dict[str, Any]) -> dict[str, Any]:
     """Wrap HTML in dark-theme template and queue for SSE stream."""
     title: str = args.get("title", "Vista")
     html: str = args.get("html", "")
-    logger.info("tool_render_html title=%s html_len=%d", title, len(html))
+    collapsed: bool = args.get("collapsed", False)
+    logger.info("tool_render_html title=%s html_len=%d collapsed=%s", title, len(html), collapsed)
     wrapped = _wrap_html_for_iframe(html)
     if _active_session_id:
-        _pending_renders[_active_session_id].append({"title": title, "html": wrapped})
+        _pending_renders[_active_session_id].append({
+            "title": title, "html": wrapped, "collapsed": collapsed,
+        })
     return _tool_text(
-        "Vista HTML renderizada correctamente. El usuario puede verla en el chat."
-    )
-
-
-# In-memory download byte counters: {user_id: {date_str: bytes_used}}
-_download_usage: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
-
-
-@tool(
-    "create_download",
-    "Crear un archivo descargable para el usuario. Limite: 5 MB/dia por usuario. "
-    "Tipos comunes: text/csv, application/json, text/plain.",
-    {"filename": str, "content": str, "mime_type": str},
-)
-async def tool_create_download(args: dict[str, Any]) -> dict[str, Any]:
-    """Write content to a temp file and return a download URL."""
-    filename: str = args.get("filename", "archivo.txt")
-    content: str = args.get("content", "")
-    mime_type: str = args.get("mime_type", "text/plain")
-
-    # Sanitize filename
-    safe_name = Path(filename).name
-    if not safe_name:
-        safe_name = "archivo.txt"
-
-    content_bytes = content.encode("utf-8")
-
-    # Check daily limit (use a placeholder user_id — real tracking via session)
-    today = time.strftime("%Y-%m-%d")
-    user_key = "global"  # Simplified; could be per-session
-    used = _download_usage[user_key][today]
-    if used + len(content_bytes) > DOWNLOAD_DAILY_LIMIT_BYTES:
-        remaining = max(0, DOWNLOAD_DAILY_LIMIT_BYTES - used)
-        return _tool_error(
-            f"Limite diario de descargas excedido. "
-            f"Quedan {remaining} bytes de {DOWNLOAD_DAILY_LIMIT_BYTES}."
-        )
-
-    # Write to temp dir with UUID prefix
-    DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    unique_name = f"{uuid.uuid4().hex[:12]}_{safe_name}"
-    file_path = DOWNLOADS_DIR / unique_name
-    file_path.write_bytes(content_bytes)
-
-    _download_usage[user_key][today] += len(content_bytes)
-
-    download_url = f"/api/downloads/{unique_name}"
-    return _tool_text(
-        json.dumps(
-            {"url": download_url, "filename": safe_name, "mime_type": mime_type},
-            ensure_ascii=False,
-        )
+        "Reporte creado correctamente. El usuario puede verlo y descargarlo."
     )
 
 
@@ -329,7 +281,7 @@ def _tool_error(message: str) -> dict[str, Any]:
 
 edificia_mcp = create_sdk_mcp_server(
     "edificia",
-    tools=[tool_sql, tool_schema, tool_http, tool_render_html, tool_create_download],
+    tools=[tool_sql, tool_schema, tool_http, tool_render_html],
 )
 
 
@@ -647,12 +599,6 @@ def _persist_entry(
 
 def cleanup_old_downloads(max_age_seconds: int = 3600) -> int:
     """Remove download files older than max_age_seconds. Returns count."""
-    # Prune stale date keys from download usage tracking
-    today = time.strftime("%Y-%m-%d")
-    stale_keys = [k for k in _download_usage if k != today]
-    for k in stale_keys:
-        del _download_usage[k]
-
     if not DOWNLOADS_DIR.exists():
         return 0
     now = time.time()

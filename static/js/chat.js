@@ -76,8 +76,7 @@ function _buildDOM() {
     <div id="chat-body">
       <div id="chat-history" style="display:none">
         <div id="history-tabs">
-          <button class="htab active" data-tab="sessions">Conversaciones</button>
-          <button class="htab" data-tab="files">Archivos</button>
+          <button class="htab active" data-tab="sessions">Historial</button>
         </div>
         <div id="history-list"></div>
       </div>
@@ -236,7 +235,11 @@ function _handleSSEEvent(event, updater) {
       updater.append(event.data);
       break;
     case 'artifact':
-      _renderReport(event.data.title, event.data.html);
+      if (event.data.collapsed) {
+        _renderCollapsedReport(event.data.title, event.data.html);
+      } else {
+        _renderReport(event.data.title, event.data.html);
+      }
       break;
     case 'error':
       _renderError(event.data);
@@ -424,6 +427,72 @@ function _renderReport(title, html) {
   _scrollToBottom();
 }
 
+function _renderCollapsedReport(title, html) {
+  const fmtSize = b => b > 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'chat-collapsed-report';
+  wrapper.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="ccr-expand" style="cursor:pointer">▸</span>
+      <span style="font-size:12px;color:rgba(255,255,255,.7)">${_escapeHtml(title)}</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.3)">${fmtSize(new Blob([html]).size)}</span>
+    </div>
+    <div style="display:flex;gap:4px;margin-left:auto">
+      <button class="art-dl-btn" data-fmt="html">↓ HTML</button>
+      <button class="art-dl-btn" data-fmt="pdf">↓ PDF</button>
+    </div>
+  `;
+  const expandBtn = wrapper.querySelector('.ccr-expand');
+  expandBtn.addEventListener('click', () => {
+    // Replace collapsed with full report
+    const parent = wrapper.parentNode;
+    const report = document.createElement('div');
+    report.className = 'chat-view';
+    const artId = 'art-' + Date.now();
+    report.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3)">${_escapeHtml(title)}</div>
+        <div style="display:flex;gap:4px">
+          <button class="art-dl-btn" data-fmt="html">↓ HTML</button>
+          <button class="art-dl-btn" data-fmt="pdf">↓ PDF</button>
+        </div>
+      </div>
+      <iframe id="${artId}" sandbox="allow-scripts allow-modals" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
+    `;
+    report.querySelector('[data-fmt="html"]').addEventListener('click', () => {
+      const blob = new Blob([html], { type: 'text/html' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    report.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
+      const iframe = document.getElementById(artId);
+      if (iframe?.contentWindow) iframe.contentWindow.print();
+    });
+    parent.replaceChild(report, wrapper);
+  });
+  // Download handlers on collapsed view
+  wrapper.querySelector('[data-fmt="html"]').addEventListener('click', () => {
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  wrapper.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
+    expandBtn.click(); // expand first, then print
+    setTimeout(() => {
+      const iframe = wrapper.parentNode?.querySelector('iframe');
+      if (iframe?.contentWindow) iframe.contentWindow.print();
+    }, 1000);
+  });
+  _messagesEl.appendChild(wrapper);
+  _scrollToBottom();
+}
+
 function _renderError(message) {
   const el = document.createElement('div');
   el.className = 'chat-msg chat-msg-error';
@@ -453,11 +522,7 @@ async function _loadHistoryTab(tab) {
     if (!resp.ok) throw new Error(resp.statusText);
     const sessions = await resp.json();
 
-    if (tab === 'sessions') {
-      _renderSessionsList(list, sessions);
-    } else {
-      _renderFilesList(list, sessions);
-    }
+    _renderSessionsList(list, sessions);
   } catch {
     list.innerHTML = '<div style="color:#f87171;padding:16px;font-size:12px">Error cargando historial</div>';
   }
@@ -483,57 +548,13 @@ function _renderSessionsList(container, sessions) {
   });
 }
 
-function _renderFilesList(container, sessions) {
-  // Fetch all sessions to get artifacts
-  const filePromises = sessions.slice(0, 20).map(s =>
-    fetch(`/api/chat/sessions/${s.id}`).then(r => r.ok ? r.json() : null)
-  );
-  Promise.all(filePromises).then(results => {
-    const files = [];
-    for (const r of results) {
-      if (!r) continue;
-      for (const e of r.entries) {
-        if (e.kind === 'report') {
-          try {
-            const data = JSON.parse(e.content);
-            files.push({ title: data.title || 'Report', size: data.size || data.html?.length || 0, created_at: e.created_at, html: data.html });
-          } catch { /* skip */ }
-        }
-      }
-    }
-    if (!files.length) {
-      container.innerHTML = '<div style="color:rgba(255,255,255,.3);padding:16px;font-size:12px">Sin archivos</div>';
-      return;
-    }
-    const fmtSize = b => b > 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
-    container.innerHTML = files.map((f, i) => `
-      <div class="hist-file" data-idx="${i}">
-        <div class="hist-preview">${_escapeHtml(f.title)}</div>
-        <div class="hist-meta">${fmtSize(f.size)}</div>
-      </div>
-    `).join('');
-    container.querySelectorAll('.hist-file').forEach(el => {
-      const f = files[parseInt(el.dataset.idx)];
-      if (f.html) {
-        el.addEventListener('click', () => {
-          _historyOpen = false;
-          _historyPanel.style.display = 'none';
-          _renderReport(f.title, f.html);
-        });
-      }
-    });
-  });
-}
-
 async function _loadSession(sessionId) {
   try {
     const resp = await fetch(`/api/chat/sessions/${sessionId}`);
     if (!resp.ok) return;
     const data = await resp.json();
 
-    // Close history, show entries read-only
-    _historyOpen = false;
-    _historyPanel.style.display = 'none';
+    // Show entries read-only (keep history open)
     _messagesEl.innerHTML = '';
 
     for (const entry of data.entries) {
@@ -783,6 +804,16 @@ function _applyStyles() {
     }
 
     .chat-view { margin: 4px 0; }
+    .chat-collapsed-report {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px;
+      margin: 4px 0;
+    }
 
     .chat-parcel-card {
       background: rgba(255,255,255,.04);

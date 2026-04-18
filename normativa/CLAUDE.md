@@ -138,7 +138,6 @@ Cuando uses `render_html`, tu HTML se muestra en un iframe dentro del chat:
 - **schema**: Solo si necesitas verificar un nombre de columna exacto. Normalmente
   no es necesario.
 - **http**: Para consultar APIs del GCBA en tiempo real (EPOK, CUR3D, USIG).
-- **render_html**: Para tablas, graficos o visualizaciones.
-- **create_download**: Para exportar datasets (CSV, JSON). Usar cuando el
-  usuario pide descargar o cuando hay demasiadas filas para una tabla.
+- **render_html**: Para tablas, graficos o visualizaciones. Usa `collapsed=true`
+  para archivos de descarga que no necesitan vista previa (ej. CSV grandes).
 - **Read/Grep/Glob**: Para leer archivos de normativa en este directorio.
