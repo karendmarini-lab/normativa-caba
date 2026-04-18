@@ -17,10 +17,11 @@
 // ── State ────────────────────────────────────────────────────────
 
 let _mode = 'hidden';
-let _model = 'sonnet';
+let _model = 'haiku';
 let _sessionId = crypto.randomUUID();
 let _streaming = false;
 let _abortController = null;
+let _userPlan = null;
 
 // ── DOM refs ─────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ export function initChat() {
   _buildDOM();
   _bindKeys();
   _listenIframeResize();
+  _loadUserPlan();
 
   // Bind the static header toggle button
   const toggle = document.getElementById('chat-toggle');
@@ -62,8 +64,8 @@ function _buildDOM() {
         <span style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4)">EdificIA Chat</span>
         <select id="chat-model" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
           border-radius:6px;color:#fff;font:inherit;font-size:11px;padding:4px 8px;cursor:pointer;outline:none">
-          <option value="haiku">Haiku</option>
-          <option value="sonnet" selected>Sonnet</option>
+          <option value="haiku" selected>Haiku</option>
+          <option value="sonnet">Sonnet</option>
           <option value="opus">Opus</option>
         </select>
       </div>
@@ -118,6 +120,33 @@ function _buildDOM() {
   });
 
   _applyStyles();
+}
+
+async function _loadUserPlan() {
+  try {
+    const r = await fetch('/api/auth/plan');
+    if (!r.ok) return;
+    _userPlan = await r.json();
+    _updateModelSelector();
+  } catch { /* not logged in or no auth */ }
+}
+
+function _updateModelSelector() {
+  const allowed = _userPlan?.modelos_habilitados || ['haiku'];
+  const models = [
+    { id: 'haiku', label: 'Haiku' },
+    { id: 'sonnet', label: 'Sonnet' },
+    { id: 'opus', label: 'Opus' },
+  ];
+  _modelSelect.innerHTML = models.map(m => {
+    const locked = !allowed.includes(m.id);
+    const title = locked ? `Comunicate con el equipo de EdificIA para tener acceso a ${m.label}` : '';
+    return `<option value="${m.id}" ${locked ? 'disabled' : ''} ${title ? `title="${title}"` : ''}>${locked ? '\u{1F512} ' : ''}${m.label}</option>`;
+  }).join('');
+  if (!allowed.includes(_model)) {
+    _model = allowed[0] || 'haiku';
+  }
+  _modelSelect.value = _model;
 }
 
 function _bindKeys() {
