@@ -140,6 +140,7 @@ async def _session_cleanup_loop() -> None:
 async def startup_background_tasks():
     global _cleanup_task
     _cleanup_task = asyncio.create_task(_session_cleanup_loop())
+    asyncio.create_task(sessions.warmup())
 
 
 _cleanup_task: asyncio.Task[None] | None = None

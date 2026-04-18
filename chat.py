@@ -418,6 +418,16 @@ class SessionManager:
         except Exception:
             pass  # Best-effort cleanup
 
+    async def warmup(self) -> None:
+        """Pre-initialize the SDK CLI subprocess so first query is fast."""
+        logger.info("warmup: pre-initializing agent SDK")
+        warmup_id = "__warmup__"
+        try:
+            await self.get_or_create(warmup_id, "haiku")
+            logger.info("warmup: SDK ready")
+        except Exception as exc:
+            logger.warning("warmup failed: %s", exc)
+
     @property
     def active_count(self) -> int:
         return len(self._sessions)
