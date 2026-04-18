@@ -357,14 +357,24 @@ export function addParcelCard(props) {
 /**
  * Append doc links to an existing parcel card element.
  */
-export function addParcelDocs(cardEl, links) {
-  if (!cardEl || !links.length) return;
-  const docsDiv = document.createElement('div');
-  docsDiv.className = 'cpc-docs';
-  docsDiv.innerHTML = links.map(([label, url]) =>
-    `<a href="${_escapeHtml(url)}" target="_blank">${_escapeHtml(label)} ↗</a>`
-  ).join('');
-  cardEl.appendChild(docsDiv);
+export function addParcelDocs(cardEl, links, croquisUrl) {
+  if (!cardEl) return;
+  // Embed croquis PDF directly
+  if (croquisUrl) {
+    const croquisDiv = document.createElement('div');
+    croquisDiv.className = 'cpc-croquis';
+    croquisDiv.innerHTML = `<iframe src="${_escapeHtml(croquisUrl)}" style="width:100%;height:280px;border:1px solid rgba(255,255,255,.08);border-radius:6px;background:#fff"></iframe>`;
+    cardEl.appendChild(croquisDiv);
+  }
+  // Doc links
+  if (links?.length) {
+    const docsDiv = document.createElement('div');
+    docsDiv.className = 'cpc-docs';
+    docsDiv.innerHTML = links.map(([label, url]) =>
+      `<a href="${_escapeHtml(url)}" target="_blank">${_escapeHtml(label)} ↗</a>`
+    ).join('');
+    cardEl.appendChild(docsDiv);
+  }
 }
 
 /**
@@ -843,6 +853,7 @@ function _applyStyles() {
     .cpc-badge { font-size: 9px; padding: 1px 5px; border: 1px solid; border-radius: 3px; margin-left: 4px; }
     .cpc-grid { display: flex; flex-wrap: wrap; gap: 4px 12px; color: rgba(255,255,255,.5); font-size: 11px; }
     .cpc-grid b { color: rgba(255,255,255,.8); font-weight: 500; }
+    .cpc-croquis { margin-top: 8px; }
     .cpc-docs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.06); }
     .cpc-docs a { color: rgba(255,255,255,.5); text-decoration: none; font-size: 10px; padding: 3px 8px; border: 1px solid rgba(255,255,255,.1); border-radius: 4px; transition: all .15s; }
     .cpc-docs a:hover { color: #E8C547; border-color: rgba(232,197,71,.3); }

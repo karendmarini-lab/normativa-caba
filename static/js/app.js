@@ -380,8 +380,8 @@ function showParcelFromMap(props) {
         ).join('');
         $('parcelDocs').style.display = 'block';
       }
-      // Add to chat card
-      addParcelDocs(chatCard, links);
+      // Add to chat card (croquis embedded + doc links)
+      addParcelDocs(chatCard, links, data.edif_croquis_url);
     }).catch(() => {});
 }
 
