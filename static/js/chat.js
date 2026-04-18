@@ -339,13 +339,33 @@ export function addParcelCard(props) {
     props.plusvalia_alic && `Alícuota <b>${props.plusvalia_alic}%</b>`,
   ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
 
-  // Track for agent context
-  const summary = [props.smp, props.dir, props.barrio,
-    props.pl && `PL ${props.pl}m`, props.pisos && `${props.pisos} pisos`,
-    delta && `delta ${delta}m`, props.fot && `FOT ${props.fot}`,
-    props.area && `${Math.round(props.area)}m²`,
-  ].filter(Boolean).join(' · ');
-  _pendingContext.push(`[Parcela: ${summary}]`);
+  // Track full data for agent context
+  const fields = [
+    `SMP: ${props.smp}`,
+    props.dir && `Dirección: ${props.dir}`,
+    props.barrio && `Barrio: ${props.barrio}`,
+    props.cpu && `CPU: ${props.cpu}`,
+    props.pl && `Plano Límite: ${props.pl}m`,
+    props.pisos && `Pisos permitidos: ${props.pisos}`,
+    props.pisos_actual && `Pisos construidos: ${props.pisos_actual}`,
+    delta && `Delta: ${delta}m`,
+    props.fot && `FOT: ${props.fot}`,
+    props.vol && `Volumen edificable: ${Math.round(props.vol)} m³`,
+    props.vendible && `Sup vendible: ${Math.round(props.vendible)} m²`,
+    props.area && `Área lote: ${Math.round(props.area)} m²`,
+    props.fr && `Frente: ${props.fr}m`,
+    props.fo && `Fondo: ${props.fo}m`,
+    props.tj && `Tejido (altura real): ${props.tj}m`,
+    props.uso && `Uso: ${props.uso}`,
+    props.uso2 && `Uso 2: ${props.uso2}`,
+    props.plusvalia_uva && `Plusvalía incidencia: ${props.plusvalia_uva} UVA`,
+    props.plusvalia_alic && `Plusvalía alícuota: ${props.plusvalia_alic}%`,
+    props.aph && `APH: sí`,
+    props.catalogacion && `Catalogación: ${props.catalogacion}`,
+    props.riesgo && `Riesgo hídrico: sí`,
+    props.enrase && `Enrase: sí`,
+  ].filter(Boolean).join('\n');
+  _pendingContext.push(`[Parcela seleccionada]\n${fields}`);
 
   const el = document.createElement('div');
   el.className = 'chat-parcel-card';
