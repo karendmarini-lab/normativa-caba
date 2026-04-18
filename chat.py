@@ -9,6 +9,7 @@ downloadable files. Streams responses as SSE events.
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import time
 import uuid
@@ -16,6 +17,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, AsyncIterator, Literal
+
+logger = logging.getLogger("edificia.chat")
 
 import httpx
 from claude_agent_sdk import (
@@ -81,6 +84,7 @@ desarrollo inmobiliario.
 async def tool_sql(args: dict[str, Any]) -> dict[str, Any]:
     """Run read-only SQL against caba_normativa.db."""
     query: str = args.get("query", "").strip()
+    logger.info("tool_sql query=%.100s", query)
     if not query:
         return _tool_error("La consulta SQL esta vacia.")
 
@@ -203,6 +207,7 @@ async def tool_render_html(args: dict[str, Any]) -> dict[str, Any]:
     """Wrap HTML in dark-theme template and queue for SSE stream."""
     title: str = args.get("title", "Vista")
     html: str = args.get("html", "")
+    logger.info("tool_render_html title=%s html_len=%d", title, len(html))
     wrapped = _wrap_html_for_iframe(html)
     if _active_session_id:
         _pending_renders[_active_session_id].append({"title": title, "html": wrapped})
@@ -495,6 +500,10 @@ async def create_sse_stream(
     global _active_session_id
     total_input_tokens = 0
     total_output_tokens = 0
+    artifact_count = 0
+    start = time.monotonic()
+
+    logger.info("chat_start session=%s msg_len=%d", session_id[:8], len(message))
 
     # Initialize per-request render state
     _active_session_id = session_id
@@ -505,7 +514,6 @@ async def create_sse_stream(
 
         async for msg in client.receive_response():
             if isinstance(msg, AssistantMessage):
-                # Track usage
                 if msg.usage:
                     total_input_tokens += msg.usage.get("input_tokens", 0)
                     total_output_tokens += msg.usage.get("output_tokens", 0)
@@ -515,19 +523,26 @@ async def create_sse_stream(
                         yield SSEEvent("text", block.text).serialize()
 
             elif isinstance(msg, ResultMessage):
-                # Emit any pending render_html artifacts from this turn
                 for render_data in _pending_renders.pop(session_id, []):
                     yield SSEEvent("artifact", render_data).serialize()
+                    artifact_count += 1
 
             elif isinstance(msg, SystemMessage):
-                # System messages (init, etc.) — skip
                 pass
 
     except Exception as exc:
+        logger.error("chat_error session=%s: %s", session_id[:8], exc)
         yield SSEEvent("error", str(exc)).serialize()
     finally:
         _active_session_id = None
         _pending_renders.pop(session_id, None)
+
+    elapsed = time.monotonic() - start
+    logger.info(
+        "chat_end session=%s in=%d out=%d artifacts=%d elapsed=%.1fs",
+        session_id[:8], total_input_tokens, total_output_tokens,
+        artifact_count, elapsed,
+    )
 
     yield SSEEvent(
         "done",
