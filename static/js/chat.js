@@ -24,7 +24,8 @@ let _abortController = null;
 
 // ── DOM refs ─────────────────────────────────────────────────────
 
-let _chatContainer, _messagesEl, _inputEl, _modelSelect;
+let _chatContainer, _messagesEl, _inputEl, _modelSelect, _historyPanel;
+let _historyOpen = false;
 
 // ── Init ─────────────────────────────────────────────────────────
 
@@ -57,6 +58,7 @@ function _buildDOM() {
   _chatContainer.innerHTML = `
     <div id="chat-header">
       <div style="display:flex;align-items:center;gap:10px">
+        <button id="chat-history-btn" title="Historial" style="display:none;background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px">☰</button>
         <span style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4)">EdificIA Chat</span>
         <select id="chat-model" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
           border-radius:6px;color:#fff;font:inherit;font-size:11px;padding:4px 8px;cursor:pointer;outline:none">
@@ -71,11 +73,22 @@ function _buildDOM() {
         <button id="chat-close" title="Cerrar" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px">×</button>
       </div>
     </div>
-    <div id="chat-messages"></div>
-    <div id="chat-input-wrap">
-      <div id="chat-input-bar">
-        <input type="text" id="chat-input" placeholder="Preguntá sobre normativa, parcelas, zonificación…" autocomplete="off">
-        <button id="chat-send">↑</button>
+    <div id="chat-body">
+      <div id="chat-history" style="display:none">
+        <div id="history-tabs">
+          <button class="htab active" data-tab="sessions">Conversaciones</button>
+          <button class="htab" data-tab="files">Archivos</button>
+        </div>
+        <div id="history-list"></div>
+      </div>
+      <div id="chat-main">
+        <div id="chat-messages"></div>
+        <div id="chat-input-wrap">
+          <div id="chat-input-bar">
+            <input type="text" id="chat-input" placeholder="Preguntá sobre normativa, parcelas, zonificación…" autocomplete="off">
+            <button id="chat-send">↑</button>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -84,6 +97,7 @@ function _buildDOM() {
   _messagesEl = document.getElementById('chat-messages');
   _inputEl = document.getElementById('chat-input');
   _modelSelect = document.getElementById('chat-model');
+  _historyPanel = document.getElementById('chat-history');
 
   _modelSelect.addEventListener('change', () => { _model = _modelSelect.value; });
   document.getElementById('chat-close').addEventListener('click', () => setChatMode('hidden'));
@@ -93,6 +107,16 @@ function _buildDOM() {
   document.getElementById('chat-new').addEventListener('click', newSession);
   document.getElementById('chat-send').addEventListener('click', _onSend);
   _inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _onSend(); } });
+
+  // History toggle (only in fullscreen)
+  document.getElementById('chat-history-btn').addEventListener('click', _toggleHistory);
+  document.querySelectorAll('.htab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.htab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _loadHistoryTab(btn.dataset.tab);
+    });
+  });
 
   _applyStyles();
 }
@@ -119,20 +143,28 @@ export function setChatMode(mode) {
   _mode = mode;
   const c = _chatContainer;
   const leftPanel = document.getElementById('leftPanel');
+  const histBtn = document.getElementById('chat-history-btn');
 
   c.className = '';
   if (mode === 'hidden') {
     c.style.display = 'none';
     if (leftPanel) leftPanel.style.display = '';
+    histBtn.style.display = 'none';
+    _historyPanel.style.display = 'none';
+    _historyOpen = false;
   } else if (mode === 'sidebar') {
     c.style.display = 'flex';
     c.classList.add('chat-sidebar');
     if (leftPanel) leftPanel.style.display = 'none';
+    histBtn.style.display = 'none';
+    _historyPanel.style.display = 'none';
+    _historyOpen = false;
     _inputEl.focus();
   } else if (mode === 'fullscreen') {
     c.style.display = 'flex';
     c.classList.add('chat-fullscreen');
     if (leftPanel) leftPanel.style.display = 'none';
+    histBtn.style.display = '';
     _inputEl.focus();
   }
 }
@@ -404,6 +436,134 @@ function _scrollToBottom() {
   _messagesEl.scrollTop = _messagesEl.scrollHeight;
 }
 
+// ── History panel (fullscreen only) ──────────────────────────────
+
+function _toggleHistory() {
+  _historyOpen = !_historyOpen;
+  _historyPanel.style.display = _historyOpen ? 'flex' : 'none';
+  if (_historyOpen) _loadHistoryTab('sessions');
+}
+
+async function _loadHistoryTab(tab) {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '<div style="color:rgba(255,255,255,.3);padding:16px;font-size:12px">Cargando...</div>';
+
+  try {
+    const resp = await fetch('/api/chat/sessions');
+    if (!resp.ok) throw new Error(resp.statusText);
+    const sessions = await resp.json();
+
+    if (tab === 'sessions') {
+      _renderSessionsList(list, sessions);
+    } else {
+      _renderFilesList(list, sessions);
+    }
+  } catch {
+    list.innerHTML = '<div style="color:#f87171;padding:16px;font-size:12px">Error cargando historial</div>';
+  }
+}
+
+function _renderSessionsList(container, sessions) {
+  if (!sessions.length) {
+    container.innerHTML = '<div style="color:rgba(255,255,255,.3);padding:16px;font-size:12px">Sin conversaciones</div>';
+    return;
+  }
+  const fmtTime = ts => new Date(ts * 1000).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+  const fmtDate = ts => new Date(ts * 1000).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
+
+  container.innerHTML = sessions.map(s => `
+    <div class="hist-session" data-id="${s.id}">
+      <div class="hist-preview">${_escapeHtml(s.preview || '...')}</div>
+      <div class="hist-meta">${fmtDate(s.created_at)} · ${fmtTime(s.created_at)}</div>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.hist-session').forEach(el => {
+    el.addEventListener('click', () => _loadSession(el.dataset.id));
+  });
+}
+
+function _renderFilesList(container, sessions) {
+  // Fetch all sessions to get artifacts
+  const filePromises = sessions.slice(0, 20).map(s =>
+    fetch(`/api/chat/sessions/${s.id}`).then(r => r.ok ? r.json() : null)
+  );
+  Promise.all(filePromises).then(results => {
+    const files = [];
+    for (const r of results) {
+      if (!r) continue;
+      for (const e of r.entries) {
+        if (e.kind === 'report') {
+          try {
+            const data = JSON.parse(e.content);
+            files.push({ title: data.title || 'Report', size: data.size || data.html?.length || 0, created_at: e.created_at, html: data.html });
+          } catch { /* skip */ }
+        }
+      }
+    }
+    if (!files.length) {
+      container.innerHTML = '<div style="color:rgba(255,255,255,.3);padding:16px;font-size:12px">Sin archivos</div>';
+      return;
+    }
+    const fmtSize = b => b > 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
+    container.innerHTML = files.map((f, i) => `
+      <div class="hist-file" data-idx="${i}">
+        <div class="hist-preview">${_escapeHtml(f.title)}</div>
+        <div class="hist-meta">${fmtSize(f.size)}</div>
+      </div>
+    `).join('');
+    container.querySelectorAll('.hist-file').forEach(el => {
+      const f = files[parseInt(el.dataset.idx)];
+      if (f.html) {
+        el.addEventListener('click', () => {
+          _historyOpen = false;
+          _historyPanel.style.display = 'none';
+          _renderReport(f.title, f.html);
+        });
+      }
+    });
+  });
+}
+
+async function _loadSession(sessionId) {
+  try {
+    const resp = await fetch(`/api/chat/sessions/${sessionId}`);
+    if (!resp.ok) return;
+    const data = await resp.json();
+
+    // Close history, show entries read-only
+    _historyOpen = false;
+    _historyPanel.style.display = 'none';
+    _messagesEl.innerHTML = '';
+
+    for (const entry of data.entries) {
+      if (entry.kind === 'user') {
+        _renderUserMessage(entry.content);
+      } else if (entry.kind === 'assistant') {
+        const el = document.createElement('div');
+        el.className = 'chat-msg chat-msg-assistant done';
+        if (window.marked) {
+          const parsed = window.marked.parse(entry.content);
+          el.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(parsed) : parsed;
+        } else {
+          el.textContent = entry.content;
+        }
+        _messagesEl.appendChild(el);
+      } else if (entry.kind === 'report') {
+        try {
+          const data = JSON.parse(entry.content);
+          if (data.html) _renderReport(data.title || 'Report', data.html);
+        } catch { /* skip */ }
+      } else if (entry.kind === 'info') {
+        const el = document.createElement('div');
+        el.className = 'chat-msg chat-msg-info';
+        el.textContent = entry.content;
+        _messagesEl.appendChild(el);
+      }
+    }
+  } catch { /* silent */ }
+}
+
 // ── Session ──────────────────────────────────────────────────────
 
 export function newSession() {
@@ -436,6 +596,54 @@ function _applyStyles() {
       border-radius: 16px;
       backdrop-filter: blur(20px);
     }
+
+    /* Body: flex row for history + main */
+    #chat-body { display: flex; flex: 1; overflow: hidden; }
+    #chat-main { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* History sidebar */
+    #chat-history {
+      width: 240px;
+      flex-shrink: 0;
+      flex-direction: column;
+      border-right: 1px solid rgba(255,255,255,.06);
+      overflow-y: auto;
+    }
+    #history-tabs {
+      display: flex;
+      padding: 8px;
+      gap: 4px;
+    }
+    .htab {
+      flex: 1;
+      background: none;
+      border: 1px solid rgba(255,255,255,.08);
+      color: rgba(255,255,255,.4);
+      font: inherit;
+      font-size: 10px;
+      padding: 6px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .htab.active { background: rgba(255,255,255,.06); color: rgba(255,255,255,.7); }
+    #history-list { flex: 1; overflow-y: auto; }
+    .hist-session, .hist-file {
+      padding: 10px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,.04);
+      transition: background .15s;
+    }
+    .hist-session:hover, .hist-file:hover { background: rgba(255,255,255,.04); }
+    .hist-preview {
+      font-size: 12px;
+      color: rgba(255,255,255,.7);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .hist-meta { font-size: 10px; color: rgba(255,255,255,.3); margin-top: 2px; }
 
     /* Fullscreen */
     #chat-container.chat-fullscreen {
