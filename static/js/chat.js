@@ -234,6 +234,9 @@ function _handleSSEEvent(event, updater) {
     case 'text':
       updater.append(event.data);
       break;
+    case 'working':
+      updater.setWorking(event.data);
+      break;
     case 'artifact':
       _renderReport(event.data.title, event.data.html, !!event.data.collapsed);
       break;
@@ -367,6 +370,13 @@ function _renderAssistantMessage(id) {
   el.className = 'chat-msg chat-msg-assistant';
   el.id = id;
   _messagesEl.appendChild(el);
+
+  const workingEl = document.createElement('div');
+  workingEl.className = 'chat-msg chat-msg-working';
+  workingEl.textContent = 'Pensando...';
+  workingEl.style.display = 'none';
+  _messagesEl.appendChild(workingEl);
+
   let accumulated = '';
 
   return {
@@ -384,8 +394,13 @@ function _renderAssistantMessage(id) {
       }
       _scrollToBottom();
     },
+    setWorking(isWorking) {
+      workingEl.style.display = isWorking ? 'block' : 'none';
+      _scrollToBottom();
+    },
     finish() {
       el.classList.add('done');
+      workingEl.remove();
     },
   };
 }
@@ -636,19 +651,17 @@ function _applyStyles() {
     }
     #chat-container.chat-fullscreen #chat-input-wrap {
       background: transparent;
-      border-top: 1px solid rgba(255,255,255,.15);
-      padding: 0;
+      border-top: none;
+      padding: 0 16px 16px;
     }
     #chat-container.chat-fullscreen #chat-input-bar {
-      border: none;
-      border-radius: 0;
-      background: transparent;
-      border-bottom: 1px solid rgba(255,255,255,.15);
-      margin: 0 16px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 12px;
+      background: rgba(255,255,255,.03);
     }
     #chat-container.chat-fullscreen #chat-input {
-      padding: 20px 16px;
-      font-size: 15px;
+      padding: 14px 16px;
+      font-size: 14px;
     }
 
     #chat-header {
@@ -750,6 +763,14 @@ function _applyStyles() {
       border-radius: 8px;
       border: 1px solid rgba(220,38,38,.15);
     }
+    .chat-msg-working {
+      color: rgba(255,255,255,.25);
+      font-size: 12px;
+      font-style: italic;
+      padding: 4px 0;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
     .chat-msg-info {
       align-self: center;
       color: rgba(255,255,255,.3);
