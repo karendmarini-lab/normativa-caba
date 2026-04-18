@@ -52,7 +52,7 @@ PLAN_DEFAULTS: dict[str, dict[str, Any]] = {
     },
     "pro": {
         "usd_mes_max": 5.0,
-        "modelos_habilitados": '["haiku","sonnet","opus"]',
+        "modelos_habilitados": '["haiku"]',
         "mb_mes_max": 5,
     },
     "enterprise": {
