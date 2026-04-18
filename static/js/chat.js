@@ -317,14 +317,18 @@ export function addParcelCard(props) {
   const items = [
     props.pl && `PL <b>${props.pl}m</b>`,
     props.pisos && `Pisos <b>${props.pisos}</b>`,
+    props.pisos_actual && `Actual <b>${props.pisos_actual}p</b>`,
     delta && `Delta <b>${delta}m</b>`,
     props.fot && `FOT <b>${props.fot}</b>`,
+    fmt(props.vol) && `Vol <b>${fmt(props.vol)} m³</b>`,
     fmt(props.vendible) && `Vendible <b>${fmt(props.vendible)} m²</b>`,
     fmt(props.area) && `Lote <b>${fmt(props.area)} m²</b>`,
     props.fr && `Frente <b>${props.fr}m</b>`,
     props.fo && `Fondo <b>${props.fo}m</b>`,
     props.tj && `Tejido <b>${props.tj}m</b>`,
     props.uso && `Uso <b>${_escapeHtml(props.uso)}</b>`,
+    props.plusvalia_uva && `Plusvalía <b>${props.plusvalia_uva} UVA</b>`,
+    props.plusvalia_alic && `Alícuota <b>${props.plusvalia_alic}%</b>`,
   ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
 
   const el = document.createElement('div');
@@ -839,9 +843,9 @@ function _applyStyles() {
     .cpc-badge { font-size: 9px; padding: 1px 5px; border: 1px solid; border-radius: 3px; margin-left: 4px; }
     .cpc-grid { display: flex; flex-wrap: wrap; gap: 4px 12px; color: rgba(255,255,255,.5); font-size: 11px; }
     .cpc-grid b { color: rgba(255,255,255,.8); font-weight: 500; }
-    .cpc-docs { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.06); }
-    .cpc-docs a { color: #E8C547; text-decoration: none; font-size: 11px; }
-    .cpc-docs a:hover { text-decoration: underline; }
+    .cpc-docs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.06); }
+    .cpc-docs a { color: rgba(255,255,255,.5); text-decoration: none; font-size: 10px; padding: 3px 8px; border: 1px solid rgba(255,255,255,.1); border-radius: 4px; transition: all .15s; }
+    .cpc-docs a:hover { color: #E8C547; border-color: rgba(232,197,71,.3); }
     .art-dl-btn {
       background: none; border: none; color: rgba(255,255,255,.25);
       font: inherit; font-size: 10px; padding: 3px 6px; cursor: pointer;
