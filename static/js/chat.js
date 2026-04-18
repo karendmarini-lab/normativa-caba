@@ -404,8 +404,8 @@ function _renderReport(title, html, startCollapsed = false) {
       <span style="font-size:10px;color:rgba(255,255,255,.25)">${fmtSize(new Blob([html]).size)}</span>
     </div>
     <div style="display:flex;gap:4px">
-      <button class="art-dl-btn" data-fmt="html">↓ HTML</button>
-      <button class="art-dl-btn" data-fmt="pdf">↓ PDF</button>
+      <button class="art-dl-btn" data-fmt="html">HTML</button>
+      <button class="art-dl-btn" data-fmt="pdf">PDF</button>
     </div>
   `;
   wrapper.appendChild(headerEl);
@@ -417,13 +417,15 @@ function _renderReport(title, html, startCollapsed = false) {
   bodyEl.innerHTML = `<iframe id="${artId}" sandbox="allow-scripts allow-modals" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>`;
   wrapper.appendChild(bodyEl);
 
-  // Toggle expand/collapse
-  headerEl.querySelector('.cr-toggle').addEventListener('click', () => {
+  // Toggle expand/collapse — entire header is clickable
+  const toggleFn = (e) => {
+    if (e.target.closest('.art-dl-btn')) return; // don't toggle on download click
     const toggle = headerEl.querySelector('.cr-toggle');
     const visible = bodyEl.style.display !== 'none';
     bodyEl.style.display = visible ? 'none' : 'block';
     toggle.textContent = visible ? '▸' : '▾';
-  });
+  };
+  headerEl.addEventListener('click', toggleFn);
 
   // Download
   const dlName = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
@@ -759,17 +761,22 @@ function _applyStyles() {
     }
 
     .chat-view { margin: 4px 0; }
-    .chat-report { margin: 4px 0; }
+    .chat-report { margin: 8px 0; }
     .cr-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 6px 0;
+      padding: 8px 12px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px;
       gap: 8px;
+      cursor: pointer;
     }
-    .cr-toggle { color: rgba(255,255,255,.4); font-size: 10px; flex-shrink: 0; }
-    .cr-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .cr-body { margin-top: 4px; }
+    .cr-header:hover { background: rgba(255,255,255,.05); }
+    .cr-toggle { color: rgba(255,255,255,.25); font-size: 8px; flex-shrink: 0; transition: transform .15s; }
+    .cr-title { font-size: 11px; color: rgba(255,255,255,.5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cr-body { margin-top: 6px; }
 
     .chat-parcel-card {
       background: rgba(255,255,255,.04);
@@ -788,7 +795,12 @@ function _applyStyles() {
     .cpc-docs { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.06); }
     .cpc-docs a { color: #E8C547; text-decoration: none; font-size: 11px; }
     .cpc-docs a:hover { text-decoration: underline; }
-    .art-dl-btn:hover { color: rgba(255,255,255,.7) !important; border-color: rgba(255,255,255,.25) !important; }
+    .art-dl-btn {
+      background: none; border: none; color: rgba(255,255,255,.25);
+      font: inherit; font-size: 10px; padding: 3px 6px; cursor: pointer;
+      border-radius: 4px; transition: all .15s;
+    }
+    .art-dl-btn:hover { color: rgba(255,255,255,.6); background: rgba(255,255,255,.06); }
 
     @media (max-width: 640px) {
       #chat-container.chat-sidebar { left: 0; right: 0; width: auto; border-radius: 0; top: 52px; bottom: 0; }
