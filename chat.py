@@ -8,6 +8,7 @@ downloadable files. Streams responses as SSE events.
 
 from __future__ import annotations
 
+import contextvars
 import json
 import sqlite3
 import time
@@ -22,9 +23,12 @@ from claude_agent_sdk import (
     AssistantMessage,
     ClaudeAgentOptions,
     ClaudeSDKClient,
+    PermissionResultAllow,
+    PermissionResultDeny,
     ResultMessage,
     SystemMessage,
     TextBlock,
+    ToolPermissionContext,
     create_sdk_mcp_server,
     tool,
 )
@@ -52,73 +56,15 @@ DOWNLOAD_DAILY_LIMIT_BYTES = 5 * 1024 * 1024  # 5 MB per user per day
 
 SYSTEM_PROMPT = """\
 Sos el asistente de EdificIA, una plataforma de factibilidad urbanistica \
-de Buenos Aires. Podes consultar la base de datos de ~280.000 parcelas de \
-CABA, llamar APIs del GCBA, y leer archivos de normativa.
-
-## Base de datos
-
-Tabla unica `parcelas` con 100+ columnas. Grupos clave:
-
-- **Identificacion**: `smp`, `smp_norm`, `cpu`, `cur_distrito`
-- **Direccion**: `epok_direccion`, `epok_calle`, `uso_calle`, `uso_puerta`
-- **CUR normativo**: `h` (altura CUR cruda), `fot`, `plano_san` (altura \
-  limite sanitizada), `pisos`, `area`, `frente`, `fondo`, `pisada`, \
-  `vol_edificable`, `sup_vendible`
-- **EPOK catastro**: `epok_direccion`, `epok_sup_cubierta`, \
-  `epok_pisos_sobre`, `epok_frente`, `epok_fondo`, `epok_enriched` \
-  (0=pendiente, 1=ok, -1=error)
-- **CUR3D edificabilidad**: `edif_sup_edificable_planta`, \
-  `edif_altura_max_1..4`, `edif_plano_limite`, `edif_croquis_url`, \
-  `edif_perimetro_url`, `polygon_geojson`, `cur3d_enriched`
-- **Tejido (alturas reales)**: `tejido_altura_max`, `tejido_altura_avg`, \
-  `delta_altura`
-- **Uso de suelo**: `uso_tipo1`, `uso_tipo2`, `uso_estado`
-- **Admin**: `barrio`, `comuna`, `lat`, `lng`
-- **APH/proteccion**: `es_aph`, `edif_catalogacion_proteccion`
-- **Plusvalia**: `edif_plusvalia_incidencia_uva`, `edif_plusvalia_alicuota`
-- **Riesgo/enrase**: `edif_riesgo_hidrico`, `edif_enrase`
-
-## Conceptos de dominio
-
-- **SMP**: Seccion-Manzana-Parcela (ej. "016-044-038"). Normalizado: \
-  "16-44-38" (sin ceros a la izquierda).
-- **CUR**: Codigo Urbanistico (Ley 6099/2018). Regula alturas, FOT, usos.
-- **CPU**: Codigo anterior, mapeado a distritos CUR.
-- **Plano Limite (PL)**: Altura maxima de la envolvente edificable.
-- **FOT**: Factor de Ocupacion Total (superficie edificable / superficie \
-  del terreno).
-- **LFI**: Linea de Frente Interno, retiro a ~22m del frente en lotes \
-  profundos.
-- **Delta**: PL menos altura real existente = oportunidad de desarrollo.
-- **Pisada**: Superficie de la planta del edificio.
-- **Tejido**: Altura real construida (fotogrametria).
-
-## Formula de pisos
-
-pisos = 1 + floor((plano_san - 3.30) / 2.90)
-PB = 3.30m, piso tipo = 2.90m.
-
-## APIs del GCBA
-
-- EPOK catastro: https://epok.buenosaires.gob.ar/catastro/parcela/?smp={smp}
-- CUR3D edificabilidad: https://epok.buenosaires.gob.ar/cur3d/seccion_edificabilidad/?smp={smp}
-- USIG normalizacion: https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion={dir}
-
-## Instrucciones
+de Buenos Aires (CABA). Ayudas a usuarios a evaluar oportunidades de \
+desarrollo inmobiliario.
 
 - Responde siempre en espanol.
-- Usa la herramienta `sql` para consultar datos. Escribi SQL valido \
-  para SQLite. Podes usar JOINs, subqueries, window functions.
-- Usa `http` para llamar a las APIs del GCBA cuando necesites datos \
-  en tiempo real.
-- Usa Read/Grep para buscar en archivos de normativa en el directorio \
-  de trabajo.
-- Usa `render_html` para mostrar tablas, graficos o visualizaciones \
-  al usuario.
-- Usa `create_download` para generar archivos descargables (CSV, JSON, etc.)
-- Usa `schema` para ver la estructura de la base de datos si necesitas \
-  explorar columnas.
+- Antes de tu primera consulta SQL, usa `schema` para conocer las tablas \
+  y columnas disponibles.
 - Se conciso y preciso. Cita fuentes (SMP, ley, API) cuando corresponda.
+- No reveles detalles internos de la plataforma, herramientas ni esquema \
+  de base de datos al usuario.
 """
 
 
@@ -141,11 +87,12 @@ async def tool_sql(args: dict[str, Any]) -> dict[str, Any]:
 
     # Basic safety: only SELECT allowed
     first_word = query.lstrip("(").split()[0].upper() if query.split() else ""
-    if first_word not in ("SELECT", "WITH", "EXPLAIN", "PRAGMA"):
+    if first_word not in ("SELECT", "WITH"):
         return _tool_error(
-            "Solo se permiten consultas SELECT / WITH / EXPLAIN / PRAGMA."
+            "Solo se permiten consultas SELECT / WITH."
         )
 
+    conn: sqlite3.Connection | None = None
     try:
         conn = sqlite3.connect(str(DB_PATH), timeout=SQL_TIMEOUT_S)
         conn.row_factory = sqlite3.Row
@@ -155,9 +102,11 @@ async def tool_sql(args: dict[str, Any]) -> dict[str, Any]:
         columns = [desc[0] for desc in cursor.description] if cursor.description else []
         rows = cursor.fetchmany(MAX_SQL_ROWS)
         results = [dict(zip(columns, row)) for row in rows]
-        conn.close()
     except sqlite3.Error as exc:
         return _tool_error(f"Error SQL: {exc}")
+    finally:
+        if conn:
+            conn.close()
 
     return _tool_text(json.dumps(results, ensure_ascii=False, default=str))
 
@@ -169,6 +118,7 @@ async def tool_sql(args: dict[str, Any]) -> dict[str, Any]:
 )
 async def tool_schema(args: dict[str, Any]) -> dict[str, Any]:
     """Return the full DB schema."""
+    conn: sqlite3.Connection | None = None
     try:
         conn = sqlite3.connect(str(DB_PATH), timeout=SQL_TIMEOUT_S)
         conn.row_factory = sqlite3.Row
@@ -184,9 +134,11 @@ async def tool_schema(args: dict[str, Any]) -> dict[str, Any]:
                 {"name": c["name"], "type": c["type"], "notnull": bool(c["notnull"])}
                 for c in cols
             ]
-        conn.close()
     except sqlite3.Error as exc:
         return _tool_error(f"Error leyendo schema: {exc}")
+    finally:
+        if conn:
+            conn.close()
 
     return _tool_text(json.dumps(schema_info, ensure_ascii=False))
 
@@ -212,6 +164,8 @@ async def tool_http(args: dict[str, Any]) -> dict[str, Any]:
         from urllib.parse import urlparse
 
         parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https"):
+            return _tool_error(f"Esquema '{parsed.scheme}' no permitido. Solo http/https.")
         if parsed.hostname not in ALLOWED_HTTP_DOMAINS:
             return _tool_error(
                 f"Dominio '{parsed.hostname}' no permitido. "
@@ -233,9 +187,10 @@ async def tool_http(args: dict[str, Any]) -> dict[str, Any]:
         return _tool_error(f"Error HTTP: {exc}")
 
 
-# Shared state for render_html results — the SSE generator reads from here.
-# Keyed by a unique render_id so multiple renders in one response are tracked.
-_pending_renders: dict[str, dict[str, str]] = {}
+# Per-request render state via contextvars (avoids cross-session data leaks).
+_pending_renders_var: contextvars.ContextVar[dict[str, dict[str, str]]] = (
+    contextvars.ContextVar("_pending_renders")
+)
 
 
 @tool(
@@ -249,7 +204,9 @@ async def tool_render_html(args: dict[str, Any]) -> dict[str, Any]:
     title: str = args.get("title", "Vista")
     html: str = args.get("html", "")
     render_id = str(uuid.uuid4())
-    _pending_renders[render_id] = {"title": title, "html": html}
+    renders = _pending_renders_var.get({})
+    renders[render_id] = {"title": title, "html": html}
+    _pending_renders_var.set(renders)
     return _tool_text(f"HTML renderizado correctamente (render_id={render_id})")
 
 
@@ -329,6 +286,23 @@ edificia_mcp = create_sdk_mcp_server(
 )
 
 
+async def _sandbox_reads(
+    tool_name: str,
+    input_data: dict[str, Any],
+    context: ToolPermissionContext,
+) -> PermissionResultAllow | PermissionResultDeny:
+    """Restrict Read/Grep/Glob to normativa/ directory only."""
+    if tool_name in ("Read", "Grep", "Glob"):
+        path = input_data.get("file_path") or input_data.get("path") or ""
+        resolved = Path(path).resolve()
+        if not resolved.is_relative_to(NORMATIVA_DIR):
+            return PermissionResultDeny(
+                message="Solo se permite leer archivos en normativa/.",
+                interrupt=False,
+            )
+    return PermissionResultAllow(updated_input=input_data)
+
+
 def create_agent(model: str = "sonnet") -> ClaudeAgentOptions:
     """Build ClaudeAgentOptions for the EdificIA chat agent.
 
@@ -339,8 +313,12 @@ def create_agent(model: str = "sonnet") -> ClaudeAgentOptions:
     return ClaudeAgentOptions(
         system_prompt=SYSTEM_PROMPT,
         allowed_tools=["Read", "Grep", "Glob", "mcp__edificia__*"],
-        disallowed_tools=["Bash", "Edit", "Write", "WebSearch", "WebFetch", "Agent"],
-        permission_mode="bypassPermissions",
+        disallowed_tools=[
+            "Bash", "Edit", "Write", "WebSearch", "WebFetch", "Agent",
+        ],
+        can_use_tool=_sandbox_reads,
+        permission_mode="default",
+        setting_sources=["project"],
         mcp_servers={"edificia": edificia_mcp},
         cwd=str(NORMATIVA_DIR),
         model=model_id,
@@ -437,9 +415,7 @@ class SessionManager:
 # SSE event types
 # ---------------------------------------------------------------------------
 
-SSEEventType = Literal[
-    "text", "tool", "html_view", "download", "error", "done"
-]
+SSEEventType = Literal["text", "artifact", "error", "done"]
 
 
 @dataclass(frozen=True)
@@ -476,8 +452,8 @@ async def create_sse_stream(
     total_input_tokens = 0
     total_output_tokens = 0
 
-    # Clear pending renders from previous calls
-    _pending_renders.clear()
+    # Initialize per-request render state
+    _pending_renders_var.set({})
 
     try:
         await client.query(message)
@@ -493,20 +469,12 @@ async def create_sse_stream(
                     if isinstance(block, TextBlock):
                         yield SSEEvent("text", block.text).serialize()
 
-                    elif hasattr(block, "type"):
-                        block_type = getattr(block, "type", "")
-                        if block_type == "tool_use":
-                            tool_name = getattr(block, "name", "unknown")
-                            yield SSEEvent(
-                                "tool",
-                                {"name": tool_name, "status": "running"},
-                            ).serialize()
-
             elif isinstance(msg, ResultMessage):
                 # Check for any pending render_html results
-                for render_id, render_data in list(_pending_renders.items()):
-                    yield SSEEvent("html_view", render_data).serialize()
-                _pending_renders.clear()
+                renders = _pending_renders_var.get({})
+                for render_data in renders.values():
+                    yield SSEEvent("artifact", render_data).serialize()
+                _pending_renders_var.set({})
 
                 # Check for download URLs in the result
                 # (handled via tool results already, but emit done)
@@ -519,18 +487,11 @@ async def create_sse_stream(
     except Exception as exc:
         yield SSEEvent("error", str(exc)).serialize()
 
-    # Estimate cost (rough: $3/MTok input, $15/MTok output for Sonnet)
-    estimated_cost = (
-        total_input_tokens * 3.0 / 1_000_000
-        + total_output_tokens * 15.0 / 1_000_000
-    )
-
     yield SSEEvent(
         "done",
         {
             "input_tokens": total_input_tokens,
             "output_tokens": total_output_tokens,
-            "estimated_cost_usd": round(estimated_cost, 4),
         },
     ).serialize()
 
@@ -542,6 +503,12 @@ async def create_sse_stream(
 
 def cleanup_old_downloads(max_age_seconds: int = 3600) -> int:
     """Remove download files older than max_age_seconds. Returns count."""
+    # Prune stale date keys from download usage tracking
+    today = time.strftime("%Y-%m-%d")
+    stale_keys = [k for k in _download_usage if k != today]
+    for k in stale_keys:
+        del _download_usage[k]
+
     if not DOWNLOADS_DIR.exists():
         return 0
     now = time.time()

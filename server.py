@@ -82,14 +82,25 @@ class AuthMiddleware(BaseHTTPMiddleware):
         return await call_next(request)
 
 
-app = FastAPI(title="EdificIA API", version="0.1.0", root_path="")
+_enable_docs = os.environ.get("ENABLE_DOCS", "").lower() == "true"
+app = FastAPI(
+    title="EdificIA API",
+    version="0.1.0",
+    root_path="",
+    docs_url="/docs" if _enable_docs else None,
+    redoc_url="/redoc" if _enable_docs else None,
+    openapi_url="/openapi.json" if _enable_docs else None,
+)
 app.add_middleware(AuthMiddleware)
 # Trust X-Forwarded-Proto from nginx so request.url.scheme = "https"
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
-app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["127.0.0.1"])
+_allowed_origins = os.environ.get(
+    "ALLOWED_ORIGINS", "http://localhost:8765,http://127.0.0.1:8765"
+).split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -114,21 +125,14 @@ async def _session_cleanup_loop() -> None:
 
 @app.on_event("startup")
 async def startup_background_tasks():
-    asyncio.create_task(_session_cleanup_loop())
+    global _cleanup_task
+    _cleanup_task = asyncio.create_task(_session_cleanup_loop())
+
+
+_cleanup_task: asyncio.Task[None] | None = None
 
 
 # --- Auth routes ---
-
-@app.get("/api/auth/debug")
-def auth_debug(request: Request):
-    from auth import JWT_SECRET
-    return {
-        "cookies": dict(request.cookies),
-        "user": get_current_user(request),
-        "jwt_secret_prefix": JWT_SECRET[:10],
-        "env_jwt": os.environ.get("JWT_SECRET", "NOT_IN_ENV")[:10],
-    }
-
 
 @app.get("/api/auth/google")
 def auth_google(request: Request):
@@ -140,14 +144,25 @@ def auth_callback(request: Request, code: str = Query(...)):
     return handle_google_callback(request, code)
 
 
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    nombre: str = ""
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
 @app.post("/api/auth/register")
-def auth_register(email: str = Query(...), password: str = Query(...), nombre: str = Query("")):
-    return handle_register(email, password, nombre)
+def auth_register(body: RegisterRequest):
+    return handle_register(body.email, body.password, body.nombre)
 
 
 @app.post("/api/auth/login")
-def auth_login_password(email: str = Query(...), password: str = Query(...)):
-    return handle_login(email, password)
+def auth_login_password(body: LoginRequest):
+    return handle_login(body.email, body.password)
 
 
 @app.get("/api/auth/logout")
@@ -569,6 +584,12 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
 # ── Chat routes ──────────────────────────────────────────────────
 
 
+class ChatRequest(BaseModel):
+    session_id: str
+    message: str
+    model: str = "sonnet"
+
+
 @app.post("/api/chat")
 async def chat_endpoint(request: Request) -> StreamingResponse:
     if os.environ.get("GOOGLE_CLIENT_ID"):
@@ -578,18 +599,12 @@ async def chat_endpoint(request: Request) -> StreamingResponse:
         if not user.get("activo"):
             raise HTTPException(status_code=403, detail="Account not active")
 
-    body = await request.json()
-    session_id: str | None = body.get("session_id")
-    message: str | None = body.get("message")
-    model: str = body.get("model", "sonnet")
+    body = ChatRequest(**(await request.json()))
 
-    if not session_id or not message:
-        raise HTTPException(status_code=400, detail="session_id and message are required")
-
-    client = await sessions.get_or_create(session_id, model)
+    client = await sessions.get_or_create(body.session_id, body.model)
 
     return StreamingResponse(
-        create_sse_stream(client, message),
+        create_sse_stream(client, body.message),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )
@@ -610,4 +625,28 @@ async def download_file(filename: str) -> FileResponse:
     return FileResponse(path=str(file_path), filename=safe_name, media_type="application/octet-stream")
 
 
+_SAFE_STATIC_EXTS = frozenset({
+    ".html", ".js", ".css", ".json", ".png", ".jpg", ".jpeg",
+    ".svg", ".ico", ".woff", ".woff2", ".gif", ".webp",
+})
+
+
+class StaticFileFilterMiddleware(BaseHTTPMiddleware):
+    """Allowlist middleware: only serve files with safe extensions."""
+
+    async def dispatch(self, request: Request, call_next) -> StarletteResponse:
+        path = request.url.path
+        # Only filter paths that would hit the catch-all static mount
+        if path.startswith("/api/"):
+            return await call_next(request)
+        ext = Path(path).suffix.lower()
+        # Allow directory index (no extension) for html=True handling
+        if ext and ext not in _SAFE_STATIC_EXTS:
+            from starlette.responses import Response
+
+            return Response(status_code=404)
+        return await call_next(request)
+
+
+app.add_middleware(StaticFileFilterMiddleware)
 app.mount("/", StaticFiles(directory=BASE_DIR, html=True), name="static")
