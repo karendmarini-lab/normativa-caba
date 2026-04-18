@@ -241,20 +241,38 @@ export function addReport(title, html) {
 export function addParcelCard(props) {
   if (_mode === 'hidden') setChatMode('sidebar');
   const delta = props.tj ? (props.pl - props.tj).toFixed(1) : null;
-  const fmt = v => v ? Math.round(v).toLocaleString('es-AR') : '-';
+  const fmt = v => v ? Math.round(v).toLocaleString('es-AR') : null;
+
+  const badges = [];
+  if (props.aph || (props.catalogacion && props.catalogacion !== 'DESESTIMADO'))
+    badges.push(`<span class="cpc-badge" style="color:#ef4444;border-color:rgba(239,68,68,.3)">APH</span>`);
+  if (props.riesgo)
+    badges.push(`<span class="cpc-badge" style="color:#3b82f6;border-color:rgba(59,130,246,.3)">Riesgo hídrico</span>`);
+  if (props.enrase)
+    badges.push(`<span class="cpc-badge" style="color:#a855f7;border-color:rgba(168,85,247,.3)">Enrase</span>`);
+
+  const items = [
+    props.pl && `PL <b>${props.pl}m</b>`,
+    props.pisos && `Pisos <b>${props.pisos}</b>`,
+    delta && `Delta <b>${delta}m</b>`,
+    props.fot && `FOT <b>${props.fot}</b>`,
+    fmt(props.vendible) && `Vendible <b>${fmt(props.vendible)} m²</b>`,
+    fmt(props.area) && `Lote <b>${fmt(props.area)} m²</b>`,
+    props.fr && `Frente <b>${props.fr}m</b>`,
+    props.fo && `Fondo <b>${props.fo}m</b>`,
+    props.tj && `Tejido <b>${props.tj}m</b>`,
+    props.uso && `Uso <b>${_escapeHtml(props.uso)}</b>`,
+  ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
+
   const el = document.createElement('div');
   el.className = 'chat-parcel-card';
   el.innerHTML = `
-    <div class="cpc-title">${_escapeHtml(props.smp)}${props.dir ? ' · ' + _escapeHtml(props.dir) : ''}</div>
-    <div class="cpc-sub">${[props.barrio, props.cpu].filter(Boolean).join(' · ')}</div>
-    <div class="cpc-grid">
-      ${props.pl ? `<span>PL <b>${props.pl}m</b></span>` : ''}
-      ${props.pisos ? `<span>Pisos <b>${props.pisos}</b></span>` : ''}
-      ${delta ? `<span>Delta <b>${delta}m</b></span>` : ''}
-      ${props.fot ? `<span>FOT <b>${props.fot}</b></span>` : ''}
-      ${props.area ? `<span>Lote <b>${fmt(props.area)} m²</b></span>` : ''}
-      ${props.fr ? `<span>Frente <b>${props.fr}m</b></span>` : ''}
+    <div class="cpc-header">
+      <div class="cpc-title">${_escapeHtml(props.smp)}${props.dir ? ' · ' + _escapeHtml(props.dir) : ''}</div>
+      <a href="https://ciudad3d.buenosaires.gob.ar/?smp=${encodeURIComponent(props.smp)}" target="_blank" class="cpc-link">3D ↗</a>
     </div>
+    <div class="cpc-sub">${[props.barrio, props.cpu].filter(Boolean).join(' · ')}${badges.length ? ' ' + badges.join('') : ''}</div>
+    <div class="cpc-grid">${items}</div>
   `;
   _messagesEl.appendChild(el);
   _scrollToBottom();
@@ -266,6 +284,20 @@ export function addParcelCard(props) {
       content: JSON.stringify({ title: `Parcela ${props.smp}`, source: 'map', props }),
     }),
   }).catch(() => {});
+  return el;
+}
+
+/**
+ * Append doc links to an existing parcel card element.
+ */
+export function addParcelDocs(cardEl, links) {
+  if (!cardEl || !links.length) return;
+  const docsDiv = document.createElement('div');
+  docsDiv.className = 'cpc-docs';
+  docsDiv.innerHTML = links.map(([label, url]) =>
+    `<a href="${_escapeHtml(url)}" target="_blank">${_escapeHtml(label)} ↗</a>`
+  ).join('');
+  cardEl.appendChild(docsDiv);
 }
 
 /**
@@ -551,10 +583,16 @@ function _applyStyles() {
       padding: 10px 14px;
       font-size: 12px;
     }
+    .cpc-header { display: flex; justify-content: space-between; align-items: flex-start; }
     .cpc-title { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.85); }
+    .cpc-link { font-size: 10px; color: #E8C547; text-decoration: none; white-space: nowrap; padding-top: 2px; }
     .cpc-sub { font-size: 11px; color: rgba(255,255,255,.35); margin: 2px 0 8px; }
+    .cpc-badge { font-size: 9px; padding: 1px 5px; border: 1px solid; border-radius: 3px; margin-left: 4px; }
     .cpc-grid { display: flex; flex-wrap: wrap; gap: 4px 12px; color: rgba(255,255,255,.5); font-size: 11px; }
     .cpc-grid b { color: rgba(255,255,255,.8); font-weight: 500; }
+    .cpc-docs { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,.06); }
+    .cpc-docs a { color: #E8C547; text-decoration: none; font-size: 11px; }
+    .cpc-docs a:hover { text-decoration: underline; }
     .art-dl-btn:hover { color: rgba(255,255,255,.7) !important; border-color: rgba(255,255,255,.25) !important; }
 
     @media (max-width: 640px) {
