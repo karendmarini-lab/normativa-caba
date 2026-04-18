@@ -32,6 +32,7 @@ from claude_agent_sdk import (
     SystemMessage,
     TextBlock,
     ToolPermissionContext,
+    ToolUseBlock,
     create_sdk_mcp_server,
     tool,
 )
@@ -72,6 +73,9 @@ desarrollo inmobiliario.
 - Se conciso y preciso. Cita fuentes (SMP, ley, API) cuando corresponda.
 - No reveles detalles internos de la plataforma, herramientas ni esquema \
   de base de datos al usuario.
+- NUNCA describas tus pasos internos ("voy a hacer una query", "primero \
+  verifico"). Mostra solo el resultado final al usuario. Tu razonamiento \
+  y tus llamadas a herramientas son invisibles para el usuario.
 """
 
 
@@ -497,7 +501,7 @@ async def create_sse_stream(
                             yield SSEEvent("working", False).serialize()
                             working = False
                         yield SSEEvent("text", block.text).serialize()
-                    elif hasattr(block, "type") and block.type == "tool_use":
+                    elif isinstance(block, ToolUseBlock):
                         has_tool = True
 
                 if has_tool and not has_text and not working:
