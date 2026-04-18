@@ -13,7 +13,7 @@
  */
 
 import * as Map from './map.js';
-import { addReport, addInfoMessage, getChatMode } from './chat.js';
+import { addParcelCard, addInfoMessage, getChatMode } from './chat.js';
 
 // ── DOM helpers ──────────────────────────────────────────────────
 
@@ -359,26 +359,8 @@ function showParcelFromMap(props) {
   // Links
   $('parcelLink').href = `https://ciudad3d.buenosaires.gob.ar/?smp=${encodeURIComponent(props.smp)}`;
 
-  // Send parcel report to chat (0 LLM tokens)
-  if (getChatMode() !== 'hidden') {
-    const delta = props.tj ? (props.pl - props.tj).toFixed(1) : null;
-    const rows = [
-      ['SMP', props.smp], ['Dirección', props.dir || '-'],
-      ['Barrio', props.barrio || '-'], ['Distrito CUR', props.cpu || '-'],
-      ['Plano Límite', props.pl ? props.pl + 'm' : '-'],
-      ['Pisos permitidos', props.pisos || '-'],
-      ['FOT', props.fot || '-'],
-      ['Lote', props.area ? Math.round(props.area).toLocaleString('es-AR') + ' m²' : '-'],
-      ['Frente', props.fr ? props.fr + 'm' : '-'],
-      ['Fondo', props.fo ? props.fo + 'm' : '-'],
-      ['Tejido (real)', props.tj ? props.tj + 'm' : '-'],
-      ['Delta', delta ? delta + 'm' : '-'],
-    ].map(([l, v]) => `<tr><td style="color:rgba(255,255,255,.4)">${l}</td><td><strong>${v}</strong></td></tr>`).join('');
-    addReport(
-      `Parcela ${props.smp}`,
-      `<table>${rows}</table>`,
-    );
-  }
+  // Send parcel card to chat (0 LLM tokens)
+  addParcelCard(props);
 
   // Fetch extra doc links
   fetch(`/api/parcela/${encodeURIComponent(props.smp)}`)

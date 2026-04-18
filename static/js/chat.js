@@ -236,6 +236,39 @@ export function addReport(title, html) {
 }
 
 /**
+ * Add a compact parcel card to the chat (no iframe, just a styled div).
+ */
+export function addParcelCard(props) {
+  if (_mode === 'hidden') setChatMode('sidebar');
+  const delta = props.tj ? (props.pl - props.tj).toFixed(1) : null;
+  const fmt = v => v ? Math.round(v).toLocaleString('es-AR') : '-';
+  const el = document.createElement('div');
+  el.className = 'chat-parcel-card';
+  el.innerHTML = `
+    <div class="cpc-title">${_escapeHtml(props.smp)}${props.dir ? ' · ' + _escapeHtml(props.dir) : ''}</div>
+    <div class="cpc-sub">${[props.barrio, props.cpu].filter(Boolean).join(' · ')}</div>
+    <div class="cpc-grid">
+      ${props.pl ? `<span>PL <b>${props.pl}m</b></span>` : ''}
+      ${props.pisos ? `<span>Pisos <b>${props.pisos}</b></span>` : ''}
+      ${delta ? `<span>Delta <b>${delta}m</b></span>` : ''}
+      ${props.fot ? `<span>FOT <b>${props.fot}</b></span>` : ''}
+      ${props.area ? `<span>Lote <b>${fmt(props.area)} m²</b></span>` : ''}
+      ${props.fr ? `<span>Frente <b>${props.fr}m</b></span>` : ''}
+    </div>
+  `;
+  _messagesEl.appendChild(el);
+  _scrollToBottom();
+  fetch('/api/chat/entries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: _sessionId, kind: 'report',
+      content: JSON.stringify({ title: `Parcela ${props.smp}`, source: 'map', props }),
+    }),
+  }).catch(() => {});
+}
+
+/**
  * Add a short info message to the chat (e.g., barrio change).
  */
 export function addInfoMessage(text) {
@@ -510,6 +543,18 @@ function _applyStyles() {
     }
 
     .chat-view { margin: 4px 0; }
+
+    .chat-parcel-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+    .cpc-title { font-size: 13px; font-weight: 500; color: rgba(255,255,255,.85); }
+    .cpc-sub { font-size: 11px; color: rgba(255,255,255,.35); margin: 2px 0 8px; }
+    .cpc-grid { display: flex; flex-wrap: wrap; gap: 4px 12px; color: rgba(255,255,255,.5); font-size: 11px; }
+    .cpc-grid b { color: rgba(255,255,255,.8); font-weight: 500; }
     .art-dl-btn:hover { color: rgba(255,255,255,.7) !important; border-color: rgba(255,255,255,.25) !important; }
 
     @media (max-width: 640px) {
