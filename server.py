@@ -584,10 +584,33 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
 # ── Chat routes ──────────────────────────────────────────────────
 
 
+class ChatContext(BaseModel):
+    barrio: str | None = None
+    metric: str | None = None
+    selected_parcel: str | None = None
+
+
 class ChatRequest(BaseModel):
     session_id: str
     message: str
     model: str = "sonnet"
+    context: ChatContext | None = None
+
+
+def _build_agent_message(message: str, context: ChatContext | None) -> str:
+    """Prepend UI context to user message so the agent is aware of state."""
+    if not context:
+        return message
+    parts: list[str] = []
+    if context.barrio:
+        parts.append(f"barrio seleccionado: {context.barrio}")
+    if context.metric:
+        parts.append(f"metrica activa: {context.metric}")
+    if context.selected_parcel:
+        parts.append(f"parcela seleccionada: {context.selected_parcel}")
+    if not parts:
+        return message
+    return f"[Contexto UI: {', '.join(parts)}]\n\n{message}"
 
 
 @app.post("/api/chat")
@@ -600,11 +623,11 @@ async def chat_endpoint(request: Request) -> StreamingResponse:
             raise HTTPException(status_code=403, detail="Account not active")
 
     body = ChatRequest(**(await request.json()))
-
+    agent_message = _build_agent_message(body.message, body.context)
     client = await sessions.get_or_create(body.session_id, body.model)
 
     return StreamingResponse(
-        create_sse_stream(client, body.message, session_id=body.session_id),
+        create_sse_stream(client, agent_message, session_id=body.session_id),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )
