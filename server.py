@@ -604,7 +604,7 @@ async def chat_endpoint(request: Request) -> StreamingResponse:
     client = await sessions.get_or_create(body.session_id, body.model)
 
     return StreamingResponse(
-        create_sse_stream(client, body.message),
+        create_sse_stream(client, body.message, session_id=body.session_id),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )

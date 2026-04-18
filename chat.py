@@ -8,7 +8,6 @@ downloadable files. Streams responses as SSE events.
 
 from __future__ import annotations
 
-import contextvars
 import json
 import sqlite3
 import time
@@ -187,10 +186,11 @@ async def tool_http(args: dict[str, Any]) -> dict[str, Any]:
         return _tool_error(f"Error HTTP: {exc}")
 
 
-# Per-request render state via contextvars (avoids cross-session data leaks).
-_pending_renders_var: contextvars.ContextVar[dict[str, dict[str, str]]] = (
-    contextvars.ContextVar("_pending_renders")
-)
+# Pending renders keyed by session_id to avoid cross-session leaks.
+_pending_renders: dict[str, list[dict[str, str]]] = defaultdict(list)
+
+# Active session_id for the current render_html call.
+_active_session_id: str | None = None
 
 
 @tool(
@@ -203,10 +203,8 @@ async def tool_render_html(args: dict[str, Any]) -> dict[str, Any]:
     """Store HTML for the SSE stream to pick up."""
     title: str = args.get("title", "Vista")
     html: str = args.get("html", "")
-    render_id = str(uuid.uuid4())
-    renders = _pending_renders_var.get({})
-    renders[render_id] = {"title": title, "html": html}
-    _pending_renders_var.set(renders)
+    if _active_session_id:
+        _pending_renders[_active_session_id].append({"title": title, "html": html})
     return _tool_text(f"HTML renderizado correctamente (render_id={render_id})")
 
 
@@ -441,19 +439,20 @@ class SSEEvent:
 
 
 async def create_sse_stream(
-    client: ClaudeSDKClient, message: str
+    client: ClaudeSDKClient, message: str, session_id: str = ""
 ) -> AsyncIterator[str]:
     """Send a message to the agent and yield SSE event strings.
 
     Yields serialized SSE events for each piece of the agent response:
-    text chunks, tool call notifications, rendered HTML, downloads, errors,
-    and a final "done" event.
+    text chunks, rendered HTML artifacts, errors, and a final "done" event.
     """
+    global _active_session_id
     total_input_tokens = 0
     total_output_tokens = 0
 
     # Initialize per-request render state
-    _pending_renders_var.set({})
+    _active_session_id = session_id
+    _pending_renders.pop(session_id, None)
 
     try:
         await client.query(message)
@@ -471,10 +470,8 @@ async def create_sse_stream(
 
             elif isinstance(msg, ResultMessage):
                 # Emit any pending render_html artifacts from this turn
-                renders = _pending_renders_var.get({})
-                for render_data in renders.values():
+                for render_data in _pending_renders.pop(session_id, []):
                     yield SSEEvent("artifact", render_data).serialize()
-                _pending_renders_var.set({})
 
             elif isinstance(msg, SystemMessage):
                 # System messages (init, etc.) — skip
@@ -482,6 +479,9 @@ async def create_sse_stream(
 
     except Exception as exc:
         yield SSEEvent("error", str(exc)).serialize()
+    finally:
+        _active_session_id = None
+        _pending_renders.pop(session_id, None)
 
     yield SSEEvent(
         "done",
