@@ -102,3 +102,10 @@ Single table `parcelas` with 100+ columns. Key groups:
 - **Pisada** — Building footprint area
 - **Tejido** — Real built height from photogrammetry
 - **EPOK/USIG** — GCBA geospatial services
+
+## Chat Agent (Agent SDK)
+
+- Use SDK built-in tools (`Read`/`Grep`/`Glob`) with `can_use_tool` sandboxing — don't create custom MCP tools for things the SDK already does.
+- Domain knowledge goes in `normativa/CLAUDE.md`, loaded via `setting_sources=["project"]`. Not in the system prompt.
+- System prompt = role card only. No schema dumps, no API URLs, no implementation details.
+- SSE protocol exposes content types (`text`/`artifact`/`error`/`done`), never tool names or agent internals.
