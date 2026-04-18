@@ -1,19 +1,17 @@
 /**
- * chat.js — Terminal-style chat interface for EdificIA.
+ * chat.js — Chat interface for EdificIA.
  *
- * Three display modes:
- *   - hidden:     completely invisible
- *   - sidebar:    right panel (~420px), map shrinks
- *   - fullscreen: black screen, input bar at bottom (2 white lines)
+ * Display modes:
+ *   - hidden:     chat closed, left panel (filters) visible
+ *   - sidebar:    chat replaces left panel (~340px)
+ *   - fullscreen: chat takes full screen
  *
  * Features:
  *   - Model selector (haiku / sonnet / opus)
  *   - SSE streaming from POST /api/chat
- *   - Markdown rendering (marked.js)
- *   - Tool call status lines (collapsible)
- *   - HTML views (sandboxed iframes)
- *   - Download links
- *   - Custom views sidebar (localStorage persistence)
+ *   - Markdown rendering (marked.js + DOMPurify)
+ *   - HTML report artifacts with download (HTML/PDF)
+ *   - Programmatic report messages (map clicks, barrio changes)
  */
 
 // ── State ────────────────────────────────────────────────────────
@@ -21,23 +19,23 @@
 let _mode = 'hidden';
 let _model = 'sonnet';
 let _sessionId = crypto.randomUUID();
-let _messages = [];       // {role, content, id}
-let _views = [];           // {id, title, html, created_at}
 let _streaming = false;
 let _abortController = null;
 
-// ── DOM refs (set in initChat) ───────────────────────────────────
+// ── DOM refs ─────────────────────────────────────────────────────
 
 let _chatContainer, _messagesEl, _inputEl, _modelSelect;
-let _viewsSidebar, _viewsList;
 
 // ── Init ─────────────────────────────────────────────────────────
 
 export function initChat() {
-  _loadViews();
   _buildDOM();
   _bindKeys();
   _listenIframeResize();
+
+  // Bind the static header toggle button
+  const toggle = document.getElementById('chat-toggle');
+  if (toggle) toggle.addEventListener('click', () => setChatMode(_mode === 'hidden' ? 'sidebar' : 'hidden'));
 }
 
 function _listenIframeResize() {
@@ -54,23 +52,6 @@ function _listenIframeResize() {
 }
 
 function _buildDOM() {
-  // Chat toggle button
-  const toggle = document.createElement('button');
-  toggle.id = 'chat-toggle';
-  toggle.innerHTML = '⌘';
-  toggle.title = 'Chat (Ctrl+K)';
-  Object.assign(toggle.style, {
-    position: 'fixed', bottom: '20px', right: '20px', zIndex: '500',
-    width: '44px', height: '44px', borderRadius: '50%',
-    background: '#fff', color: '#000', border: 'none',
-    fontSize: '18px', cursor: 'pointer', fontFamily: 'Inter, system-ui',
-    boxShadow: '0 2px 12px rgba(0,0,0,.4)',
-    transition: 'transform .15s, opacity .15s',
-  });
-  toggle.addEventListener('click', () => setChatMode(_mode === 'hidden' ? 'sidebar' : 'hidden'));
-  document.body.appendChild(toggle);
-
-  // Chat container
   _chatContainer = document.createElement('div');
   _chatContainer.id = 'chat-container';
   _chatContainer.innerHTML = `
@@ -84,7 +65,8 @@ function _buildDOM() {
           <option value="opus">Opus</option>
         </select>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:6px">
+        <button id="chat-new" title="Nueva sesión" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px">+</button>
         <button id="chat-expand" title="Pantalla completa" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:14px;cursor:pointer;padding:4px">⛶</button>
         <button id="chat-close" title="Cerrar" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:16px;cursor:pointer;padding:4px">×</button>
       </div>
@@ -99,32 +81,20 @@ function _buildDOM() {
   `;
   document.body.appendChild(_chatContainer);
 
-  // Views sidebar
-  _viewsSidebar = document.createElement('div');
-  _viewsSidebar.id = 'views-sidebar';
-  _viewsSidebar.innerHTML = `
-    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);padding:16px 16px 8px">Vistas guardadas</div>
-    <div id="views-list"></div>
-  `;
-  document.body.appendChild(_viewsSidebar);
-
-  // Refs
   _messagesEl = document.getElementById('chat-messages');
   _inputEl = document.getElementById('chat-input');
   _modelSelect = document.getElementById('chat-model');
-  _viewsList = document.getElementById('views-list');
 
-  // Events
   _modelSelect.addEventListener('change', () => { _model = _modelSelect.value; });
   document.getElementById('chat-close').addEventListener('click', () => setChatMode('hidden'));
   document.getElementById('chat-expand').addEventListener('click', () => {
     setChatMode(_mode === 'fullscreen' ? 'sidebar' : 'fullscreen');
   });
+  document.getElementById('chat-new').addEventListener('click', newSession);
   document.getElementById('chat-send').addEventListener('click', _onSend);
   _inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _onSend(); } });
 
   _applyStyles();
-  _renderViewsList();
 }
 
 function _bindKeys() {
@@ -134,7 +104,6 @@ function _bindKeys() {
       setChatMode(_mode === 'hidden' ? 'sidebar' : 'hidden');
     }
     if (e.key === 'Escape' && _mode !== 'hidden') {
-      // Cancel streaming if active, otherwise close chat
       if (_streaming && _abortController) {
         _abortController.abort();
       } else {
@@ -149,29 +118,21 @@ function _bindKeys() {
 export function setChatMode(mode) {
   _mode = mode;
   const c = _chatContainer;
-  const t = document.getElementById('chat-toggle');
-  const v = _viewsSidebar;
+  const leftPanel = document.getElementById('leftPanel');
 
   c.className = '';
   if (mode === 'hidden') {
     c.style.display = 'none';
-    t.style.display = 'block';
-    v.style.display = 'none';
-    document.body.style.overflow = 'hidden';
+    if (leftPanel) leftPanel.style.display = '';
   } else if (mode === 'sidebar') {
     c.style.display = 'flex';
     c.classList.add('chat-sidebar');
-    t.style.display = 'none';
-    v.style.display = _views.length ? 'block' : 'none';
-    v.classList.add('views-sidebar-active');
-    document.body.style.overflow = 'hidden';
+    if (leftPanel) leftPanel.style.display = 'none';
     _inputEl.focus();
   } else if (mode === 'fullscreen') {
     c.style.display = 'flex';
     c.classList.add('chat-fullscreen');
-    t.style.display = 'none';
-    v.style.display = 'none';
-    document.body.style.overflow = 'hidden';
+    if (leftPanel) leftPanel.style.display = 'none';
     _inputEl.focus();
   }
 }
@@ -223,7 +184,7 @@ async function _onSend() {
         try {
           const event = JSON.parse(line.slice(6));
           _handleSSEEvent(event, updater);
-        } catch { /* skip malformed events */ }
+        } catch { /* skip malformed */ }
       }
     }
 
@@ -243,8 +204,7 @@ function _handleSSEEvent(event, updater) {
       updater.append(event.data);
       break;
     case 'artifact':
-      _renderHtmlView(event.data.title, event.data.html);
-      _saveView(event.data.title, event.data.html);
+      _renderReport(event.data.title, event.data.html);
       break;
     case 'error':
       _renderError(event.data);
@@ -254,11 +214,49 @@ function _handleSSEEvent(event, updater) {
   }
 }
 
-function _escapeHtml(s) {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+// ── Programmatic messages (map interactions) ─────────────────────
+
+/**
+ * Add a report to the chat timeline without calling the LLM.
+ * Used for parcel clicks, barrio selections, etc.
+ * Also persists to backend via POST /api/chat/entries.
+ */
+export function addReport(title, html) {
+  if (_mode === 'hidden') setChatMode('sidebar');
+  _renderReport(title, html);
+  fetch('/api/chat/entries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      session_id: _sessionId,
+      kind: 'report',
+      content: JSON.stringify({ title, html, source: 'map', size: html.length }),
+    }),
+  }).catch(() => {});
+}
+
+/**
+ * Add a short info message to the chat (e.g., barrio change).
+ */
+export function addInfoMessage(text) {
+  if (_mode === 'hidden') return;
+  const el = document.createElement('div');
+  el.className = 'chat-msg chat-msg-info';
+  el.textContent = text;
+  _messagesEl.appendChild(el);
+  _scrollToBottom();
+  fetch('/api/chat/entries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: _sessionId, kind: 'info', content: text }),
+  }).catch(() => {});
 }
 
 // ── Message rendering ────────────────────────────────────────────
+
+function _escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 
 function _renderUserMessage(text) {
   const el = document.createElement('div');
@@ -278,7 +276,6 @@ function _renderAssistantMessage(id) {
   return {
     append(text) {
       accumulated += text;
-      // Use marked.js if available, otherwise plain text with basic formatting
       if (window.marked) {
         const parsed = window.marked.parse(accumulated);
         el.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(parsed) : parsed;
@@ -297,13 +294,35 @@ function _renderAssistantMessage(id) {
   };
 }
 
-function _renderHtmlView(title, html) {
+function _renderReport(title, html) {
+  const artId = 'art-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
   const wrapper = document.createElement('div');
   wrapper.className = 'chat-view';
   wrapper.innerHTML = `
-    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">${_escapeHtml(title)}</div>
-    <iframe sandbox="allow-scripts" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3)">${_escapeHtml(title)}</div>
+      <div style="display:flex;gap:4px">
+        <button class="art-dl-btn" data-fmt="html" title="Descargar HTML" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer">↓ HTML</button>
+        <button class="art-dl-btn" data-fmt="pdf" title="Imprimir / PDF" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer">↓ PDF</button>
+      </div>
+    </div>
+    <iframe id="${artId}" sandbox="allow-scripts allow-modals" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
   `;
+
+  // Download handlers
+  wrapper.querySelector('[data-fmt="html"]').addEventListener('click', () => {
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  wrapper.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
+    const iframe = document.getElementById(artId);
+    if (iframe?.contentWindow) iframe.contentWindow.print();
+  });
+
   _messagesEl.appendChild(wrapper);
   _scrollToBottom();
 }
@@ -320,59 +339,10 @@ function _scrollToBottom() {
   _messagesEl.scrollTop = _messagesEl.scrollHeight;
 }
 
-// ── Custom views ─────────────────────────────────────────────────
-
-function _saveView(title, html) {
-  const view = { id: crypto.randomUUID(), title, html, created_at: Date.now() };
-  _views.unshift(view);
-  if (_views.length > 50) _views.pop();
-  localStorage.setItem('edificia_views', JSON.stringify(_views));
-  _renderViewsList();
-  if (_mode === 'sidebar') _viewsSidebar.style.display = 'block';
-}
-
-function _loadViews() {
-  try {
-    _views = JSON.parse(localStorage.getItem('edificia_views') || '[]');
-  } catch { _views = []; }
-}
-
-function _renderViewsList() {
-  if (!_viewsList) return;
-  _viewsList.innerHTML = _views.map(v => `
-    <div class="view-item" data-id="${v.id}">
-      <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escapeHtml(v.title)}</span>
-      <button class="view-delete" data-id="${v.id}" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;padding:2px 4px">×</button>
-    </div>
-  `).join('');
-
-  _viewsList.querySelectorAll('.view-item').forEach(el => {
-    el.addEventListener('click', () => loadView(el.dataset.id));
-  });
-  _viewsList.querySelectorAll('.view-delete').forEach(el => {
-    el.addEventListener('click', e => { e.stopPropagation(); deleteView(el.dataset.id); });
-  });
-}
-
-export function loadView(viewId) {
-  const view = _views.find(v => v.id === viewId);
-  if (!view) return;
-  _renderHtmlView(view.title, view.html);
-}
-
-export function deleteView(viewId) {
-  _views = _views.filter(v => v.id !== viewId);
-  localStorage.setItem('edificia_views', JSON.stringify(_views));
-  _renderViewsList();
-}
-
-export function getViews() { return _views; }
-
 // ── Session ──────────────────────────────────────────────────────
 
 export function newSession() {
   _sessionId = crypto.randomUUID();
-  _messages = [];
   if (_messagesEl) _messagesEl.innerHTML = '';
 }
 
@@ -385,7 +355,6 @@ export function getModel() { return _model; }
 function _applyStyles() {
   const style = document.createElement('style');
   style.textContent = `
-    /* Chat container */
     #chat-container {
       display: none;
       flex-direction: column;
@@ -394,22 +363,22 @@ function _applyStyles() {
       font-family: 'Inter', system-ui, sans-serif;
     }
 
-    /* Sidebar mode */
+    /* Sidebar: replaces left panel */
     #chat-container.chat-sidebar {
-      top: 52px; right: 0; bottom: 0; width: 420px;
+      top: 68px; left: 16px; bottom: 16px; width: 340px;
       background: rgba(6,6,6,.97);
-      border-left: 1px solid rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
       backdrop-filter: blur(20px);
     }
 
-    /* Fullscreen mode */
+    /* Fullscreen */
     #chat-container.chat-fullscreen {
       inset: 0;
       background: #000;
     }
     #chat-container.chat-fullscreen #chat-header {
       border-bottom: none;
-      background: transparent;
     }
     #chat-container.chat-fullscreen #chat-messages {
       max-width: 720px;
@@ -434,7 +403,6 @@ function _applyStyles() {
       font-size: 15px;
     }
 
-    /* Header */
     #chat-header {
       display: flex;
       align-items: center;
@@ -444,7 +412,6 @@ function _applyStyles() {
       flex-shrink: 0;
     }
 
-    /* Messages area */
     #chat-messages {
       flex: 1;
       overflow-y: auto;
@@ -456,7 +423,6 @@ function _applyStyles() {
     #chat-messages::-webkit-scrollbar { width: 4px; }
     #chat-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
 
-    /* Input area */
     #chat-input-wrap {
       flex-shrink: 0;
       padding: 12px 16px;
@@ -499,7 +465,6 @@ function _applyStyles() {
     }
     #chat-send:hover { opacity: .8; }
 
-    /* Messages */
     .chat-msg { font-size: 13px; line-height: 1.6; max-width: 90%; }
     .chat-msg-user {
       align-self: flex-end;
@@ -537,46 +502,18 @@ function _applyStyles() {
       border-radius: 8px;
       border: 1px solid rgba(220,38,38,.15);
     }
-
-    /* Tool calls */
-    .chat-tool {
-      font-size: 11px;
+    .chat-msg-info {
+      align-self: center;
       color: rgba(255,255,255,.3);
-      padding: 4px 0;
+      font-size: 11px;
+      padding: 4px 12px;
     }
-    .chat-tool-icon { margin-right: 4px; }
 
-    /* HTML views */
     .chat-view { margin: 4px 0; }
-
-    /* Downloads */
-    .chat-download { padding: 4px 0; }
-
-    /* Views sidebar */
-    #views-sidebar {
-      display: none;
-      position: fixed;
-      top: 52px; left: 0; bottom: 0;
-      width: 220px;
-      background: rgba(6,6,6,.95);
-      border-right: 1px solid rgba(255,255,255,.06);
-      z-index: 350;
-      overflow-y: auto;
-    }
-    .view-item {
-      display: flex;
-      align-items: center;
-      padding: 10px 16px;
-      cursor: pointer;
-      color: rgba(255,255,255,.6);
-      transition: background .15s;
-      gap: 8px;
-    }
-    .view-item:hover { background: rgba(255,255,255,.04); }
+    .art-dl-btn:hover { color: rgba(255,255,255,.7) !important; border-color: rgba(255,255,255,.25) !important; }
 
     @media (max-width: 640px) {
-      #chat-container.chat-sidebar { width: 100%; }
-      #views-sidebar { display: none !important; }
+      #chat-container.chat-sidebar { left: 0; right: 0; width: auto; border-radius: 0; top: 52px; bottom: 0; }
     }
   `;
   document.head.appendChild(style);
