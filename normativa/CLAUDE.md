@@ -43,7 +43,7 @@ Tabla principal: `parcelas` (~280.000 filas). Tabla secundaria: `envelope_sectio
 - `cur_distrito` (TEXT) — Distrito CUR actual
 
 **Ubicacion:**
-- `barrio` (TEXT) — Nombre del barrio (ej. "PALERMO"), en mayusculas
+- `barrio` (TEXT) — Nombre del barrio en Title Case (ej. "Palermo", "Villa Crespo", "Puerto Madero")
 - `comuna` (TEXT) — Numero de comuna
 - `lat`, `lng` (REAL) — Coordenadas
 - `epok_direccion` (TEXT) — Direccion postal (ej. "GORRITI 5100")
