@@ -102,7 +102,7 @@ ORDER BY delta_altura DESC LIMIT ?
 
 -- Buscar parcela por direccion
 SELECT * FROM parcelas
-WHERE epok_direccion LIKE '%GORRITI%' AND barrio = 'PALERMO'
+WHERE epok_direccion LIKE '%GORRITI%' AND barrio = 'Palermo'
 
 -- Estadisticas por barrio
 SELECT barrio, COUNT(*) as n, AVG(delta_altura) as avg_delta,
