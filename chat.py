@@ -475,29 +475,27 @@ async def create_sse_stream(
         working = False
 
         async for msg in client.receive_response():
-            if isinstance(msg, StreamEvent):
-                event = msg.event
-                etype = event.get("type", "")
-                if etype == "content_block_delta":
-                    delta = event.get("delta", {})
-                    if delta.get("type") == "text_delta":
-                        text = delta.get("text", "")
-                        if text:
-                            if working:
-                                yield SSEEvent("working", False).serialize()
-                                working = False
-                            assistant_text += text
-                            yield SSEEvent("text", text).serialize()
-                elif etype == "content_block_start":
-                    block = event.get("content_block", {})
-                    if block.get("type") == "tool_use" and not working:
-                        working = True
-                        yield SSEEvent("working", True).serialize()
-
-            elif isinstance(msg, AssistantMessage):
+            if isinstance(msg, AssistantMessage):
                 if msg.usage:
                     total_input_tokens += msg.usage.get("input_tokens", 0)
                     total_output_tokens += msg.usage.get("output_tokens", 0)
+
+                has_text = False
+                has_tool = False
+                for block in msg.content:
+                    if isinstance(block, TextBlock):
+                        has_text = True
+                        assistant_text += block.text
+                        if working:
+                            yield SSEEvent("working", False).serialize()
+                            working = False
+                        yield SSEEvent("text", block.text).serialize()
+                    elif hasattr(block, "type") and block.type == "tool_use":
+                        has_tool = True
+
+                if has_tool and not has_text and not working:
+                    working = True
+                    yield SSEEvent("working", True).serialize()
 
             elif isinstance(msg, ResultMessage):
                 if working:
