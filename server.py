@@ -11,6 +11,7 @@ Then open:
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import re
@@ -20,7 +21,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -40,7 +41,14 @@ from auth import (
 )
 
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response as StarletteResponse
+from starlette.responses import Response as StarletteResponse, StreamingResponse
+
+from chat import (
+    DOWNLOADS_DIR,
+    SessionManager,
+    cleanup_old_downloads,
+    create_sse_stream,
+)
 
 
 class AuthMiddleware(BaseHTTPMiddleware):
@@ -88,9 +96,25 @@ app.add_middleware(
 )
 
 
+sessions = SessionManager()
+
+
 @app.on_event("startup")
 def startup():
     init_users_table()
+    DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+async def _session_cleanup_loop() -> None:
+    while True:
+        await asyncio.sleep(60)
+        await sessions.cleanup_expired()
+        cleanup_old_downloads()
+
+
+@app.on_event("startup")
+async def startup_background_tasks():
+    asyncio.create_task(_session_cleanup_loop())
 
 
 # --- Auth routes ---
@@ -540,6 +564,50 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
         "parcel_polygon": polygon,
         "sections": sections,
     }
+
+
+# ── Chat routes ──────────────────────────────────────────────────
+
+
+@app.post("/api/chat")
+async def chat_endpoint(request: Request) -> StreamingResponse:
+    if os.environ.get("GOOGLE_CLIENT_ID"):
+        user = get_current_user(request)
+        if not user:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        if not user.get("activo"):
+            raise HTTPException(status_code=403, detail="Account not active")
+
+    body = await request.json()
+    session_id: str | None = body.get("session_id")
+    message: str | None = body.get("message")
+    model: str = body.get("model", "sonnet")
+
+    if not session_id or not message:
+        raise HTTPException(status_code=400, detail="session_id and message are required")
+
+    client = await sessions.get_or_create(session_id, model)
+
+    return StreamingResponse(
+        create_sse_stream(client, message),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.delete("/api/chat/{session_id}")
+async def delete_chat_session(session_id: str) -> dict[str, bool]:
+    await sessions.delete(session_id)
+    return {"ok": True}
+
+
+@app.get("/api/downloads/{filename}")
+async def download_file(filename: str) -> FileResponse:
+    safe_name = Path(filename).name
+    file_path = DOWNLOADS_DIR / safe_name
+    if not file_path.exists() or not file_path.is_file():
+        raise HTTPException(status_code=404, detail="File not found")
+    return FileResponse(path=str(file_path), filename=safe_name, media_type="application/octet-stream")
 
 
 app.mount("/", StaticFiles(directory=BASE_DIR, html=True), name="static")

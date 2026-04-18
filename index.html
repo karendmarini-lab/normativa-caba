@@ -13,276 +13,215 @@
       --bg:#000;--card:#0e0e0e;--lift:#181818;
       --border:rgba(255,255,255,.08);--bh:rgba(255,255,255,.18);
       --text:#fff;--muted:rgba(255,255,255,.4);--r:6px;
+      --accent:#e8c547;--panel:rgba(10,10,10,.94);--line:rgba(255,255,255,.1);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
-      font-size:14px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased}
+      font-size:14px;font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+      overflow:hidden;height:100vh}
 
-    /* TOPBAR */
-    .topbar{height:34px;padding:0 40px;
+    /* ── HEADER ── */
+    header{height:52px;padding:0 20px;border-bottom:1px solid var(--border);
       display:flex;align-items:center;justify-content:space-between;
-      font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
-    .topbar-name{color:color-mix(in srgb, var(--text) 75%, transparent);letter-spacing:4px;font-weight:400}
-    .topbar a{color:var(--muted);text-decoration:none;font-size:9px;letter-spacing:2px;transition:color .2s}
-    .topbar a:hover{color:var(--text)}
-    #map-wrap{display:none;margin:12px 0;border-radius:var(--r);overflow:hidden;border:1px solid var(--border)}
-    #map{height:300px;width:100%}
-
-    /* HEADER */
-    header{height:58px;padding:0 40px;border-bottom:1px solid var(--border);
-      display:flex;align-items:center;justify-content:space-between;
-      position:sticky;top:0;z-index:200;
+      position:fixed;top:0;left:0;right:0;z-index:200;
       background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(20px)}
-    .logo-wrap{display:flex;align-items:center;gap:14px}
-    .logo-mark{width:28px;height:28px;border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:400;letter-spacing:1px}
-    .logo-text{display:flex;flex-direction:column}
-    .logo-name{font-size:13px;font-weight:300;letter-spacing:5px;text-transform:uppercase}
+    .logo-wrap{display:flex;align-items:center;gap:12px}
+    .logo-mark{width:24px;height:24px;border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:400;letter-spacing:1px}
+    .logo-name{font-size:12px;font-weight:300;letter-spacing:5px;text-transform:uppercase}
     .logo-name em{color:var(--muted);font-style:normal}
-    .logo-sub{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
-    .header-nav{display:flex;gap:32px}
+    .header-nav{display:flex;gap:24px}
     .header-nav a{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
       color:var(--muted);text-decoration:none;transition:color .2s}
     .header-nav a:hover{color:var(--text)}
 
-    /* HERO: MAPA FONDO + BUSQUEDA CENTRADA */
-    .hero{
-      position:relative;
-      min-height:calc(100vh - 92px);
-      display:flex;align-items:center;justify-content:center;
-      overflow:hidden;
-    }
-    /* Mapa SVG de fondo */
-    .map-bg{
-      position:absolute;inset:0;
-      display:flex;align-items:center;justify-content:center;
-      pointer-events:none;
-    }
+    /* ── MAIN VIEWPORT ── */
+    .viewport{position:fixed;top:52px;left:0;right:0;bottom:0}
+
+    /* SVG background */
+    .map-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:0}
     .map-bg svg{width:100%;height:100%;max-height:100vh}
-    /* Degradado sobre el mapa para legibilidad */
-    .map-fade{
-      position:absolute;inset:0;
-      background:radial-gradient(ellipse at center, rgba(0,0,0,.45) 0%, rgba(0,0,0,.7) 100%);
-      pointer-events:none;
-    }
+    .map-fade{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(0,0,0,.45) 0%,rgba(0,0,0,.7) 100%);pointer-events:none;z-index:1}
 
-    /* Panel de búsqueda */
+    /* Leaflet map */
+    #map{position:absolute;inset:0;z-index:2}
+
+    /* ── SEARCH PANEL (centered overlay) ── */
     .search-panel{
-      position:relative;z-index:10;
-      width:92%;max-width:560px;
-      display:flex;flex-direction:column;align-items:center;gap:14px;
-      padding:40px 32px;
+      position:absolute;top:20px;left:50%;transform:translateX(-50%);z-index:100;
+      width:92%;max-width:520px;
+      display:flex;flex-direction:column;align-items:center;gap:12px;
+      padding:24px 24px 20px;
+      background:rgba(0,0,0,.7);backdrop-filter:blur(24px);
+      border:1px solid rgba(255,255,255,.08);border-radius:18px;
+      transition:opacity .3s,transform .3s;
     }
-    .search-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;
-      color:rgba(255,255,255,.45);text-align:center;margin-bottom:4px}
-
-    /* Input barra */
+    .search-panel.collapsed{opacity:0;transform:translateX(-50%) translateY(-20px);pointer-events:none}
+    .search-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.35);text-align:center}
     .acwrap{position:relative;width:100%}
     .search-bar{
-      width:100%;
-      display:flex;align-items:center;gap:12px;
-      background:rgba(0,0,0,.6);
-      backdrop-filter:blur(24px);
-      border:1px solid rgba(255,255,255,.14);
-      border-radius:100px;
-      padding:16px 26px;
-      transition:border-color .25s;
-    }
+      width:100%;display:flex;align-items:center;gap:12px;
+      background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.14);
+      border-radius:100px;padding:14px 22px;transition:border-color .25s}
     .search-bar:focus-within{border-color:rgba(255,255,255,.32)}
     .search-ico{font-size:14px;opacity:.45;flex-shrink:0}
-    #inp-addr{
-      background:transparent;border:none;outline:none;
-      font-family:'Inter',inherit;font-size:14px;font-weight:300;
-      color:#fff;width:100%;letter-spacing:.2px;
-    }
+    #inp-addr{background:transparent;border:none;outline:none;font-family:'Inter',inherit;font-size:14px;font-weight:300;color:#fff;width:100%}
     #inp-addr::placeholder{color:rgba(255,255,255,.28);font-size:13px}
-    #suggestions{
-      display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
-      background:rgba(6,6,6,.97);backdrop-filter:blur(24px);
-      border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;
-    }
-    .si{padding:12px 20px;cursor:pointer;font-size:13px;
-      border-bottom:1px solid rgba(255,255,255,.06);color:#fff;transition:background .15s}
+    #suggestions{display:none;position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
+      background:rgba(6,6,6,.97);backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden}
+    .si{padding:10px 18px;cursor:pointer;font-size:13px;border-bottom:1px solid rgba(255,255,255,.06);color:#fff;transition:background .15s}
     .si:last-child{border-bottom:none}
     .si:hover{background:rgba(255,255,255,.06)}
-
-    /* Mensajes */
-    .msg{display:none;padding:10px 16px;border-radius:100px;font-size:12.5px;width:100%;text-align:center}
+    .msg{display:none;padding:8px 14px;border-radius:100px;font-size:12px;width:100%;text-align:center}
     .msg.on{display:block}
-    #msg-err {background:rgba(220,38,38,.1);color:#f87171;border:1px solid rgba(220,38,38,.2)}
+    #msg-err{background:rgba(220,38,38,.1);color:#f87171;border:1px solid rgba(220,38,38,.2)}
     #msg-warn{background:rgba(234,179,8,.08);color:#fcd34d;border:1px solid rgba(234,179,8,.2)}
     #msg-info{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
-    #debug-panel{display:none}
-
-    /* Botones pill */
-    .pill-stack{display:flex;flex-direction:column;gap:10px;width:100%}
-    .btn-pill{
-      width:100%;background:#fff;color:#000;
-      border:none;border-radius:100px;
-      padding:16px 28px;font-family:'Inter',inherit;
-      font-size:10px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
-      cursor:pointer;transition:opacity .2s,transform .1s;
-      display:flex;align-items:center;justify-content:center;gap:10px;
-    }
+    .pill-stack{display:flex;gap:8px;width:100%}
+    .btn-pill{flex:1;background:#fff;color:#000;border:none;border-radius:100px;padding:12px 20px;
+      font-family:'Inter',inherit;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
+      cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
     .btn-pill:hover{opacity:.86}
-    .btn-pill:active{transform:scale(.98)}
     .btn-pill.loading{opacity:.35;pointer-events:none}
-    .btn-pill.secondary{
-      background:rgba(0,0,0,.5);color:#fff;
-      backdrop-filter:blur(12px);
-      border:1px solid rgba(255,255,255,.2);
-    }
-    .btn-pill.secondary:hover{border-color:rgba(255,255,255,.45)}
+    .btn-pill.secondary{background:rgba(0,0,0,.5);color:#fff;border:1px solid rgba(255,255,255,.2)}
 
-    /* RESULTADOS */
-    #results{display:none;opacity:0;transform:translateY(8px);transition:all .35s}
-    #results.on{display:block;opacity:1;transform:none}
-    .results-wrap{max-width:860px;margin:0 auto;padding:48px 24px 80px}
+    /* ── LEFT PANEL (filters + parcel detail) ── */
+    .panel{
+      position:absolute;top:16px;left:16px;z-index:100;
+      width:340px;background:var(--panel);border:1px solid var(--line);
+      border-radius:18px;backdrop-filter:blur(24px);
+      padding:20px;display:flex;flex-direction:column;gap:14px;
+      max-height:calc(100% - 32px);overflow-y:auto}
+    .panel::-webkit-scrollbar{width:4px}
+    .panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+    .eyebrow{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted)}
+    .panel h2{font-size:18px;font-weight:300;letter-spacing:-.3px}
+    .sub{font-size:12px;color:var(--muted);line-height:1.5}
+    .filter-group{display:flex;flex-direction:column;gap:6px}
+    .filter-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted)}
+    .filter-row{display:flex;gap:5px;flex-wrap:wrap}
+    .chip{padding:7px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;
+      color:var(--text);font:inherit;font-size:11px;cursor:pointer;transition:all .15s}
+    .chip.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+    .chip:hover:not(.active){border-color:rgba(255,255,255,.3)}
+    .stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;
+      background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+    .stat{padding:10px 12px;background:rgba(255,255,255,.03)}
+    .stat-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+    .stat-value{font-size:16px;font-weight:300}
+    .loading-bar{display:none;height:3px;background:rgba(232,197,71,.15);border-radius:2px;overflow:hidden}
+    .loading-bar.active{display:block}
+    .loading-bar-fill{height:100%;width:30%;background:var(--accent);border-radius:2px;animation:slide 1s ease infinite}
+    @keyframes slide{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
 
-    .res-header{border:1px solid var(--border);border-radius:var(--r);
-      padding:22px 26px;margin-bottom:20px;
+    /* Parcel card (inside panel) */
+    .parcel-card{display:none;padding:14px;border:1px solid var(--accent);border-radius:14px;background:rgba(232,197,71,.06)}
+    .parcel-card.visible{display:block}
+    .parcel-title{font-size:15px;font-weight:500;margin-bottom:4px}
+    .parcel-sub{font-size:11px;color:var(--muted);margin-bottom:8px}
+    .parcel-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+    .parcel-metric-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted)}
+    .parcel-metric-value{font-size:15px;font-weight:300}
+    .parcel-link{display:inline-block;padding:8px 14px;border-radius:999px;background:var(--accent);
+      color:#000;text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px}
+
+    /* Legend */
+    .legend{position:absolute;bottom:16px;right:16px;z-index:100;
+      background:var(--panel);border:1px solid var(--line);border-radius:14px;
+      backdrop-filter:blur(18px);padding:12px 14px}
+    .legend-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+    .legend-bar{width:180px;height:10px;border-radius:5px;background:linear-gradient(to right,#1a1a2e,#e8c547,#f97316)}
+    .legend-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:3px}
+
+    /* ── RESULTS (scrollable detail below map) ── */
+    #results{display:none;position:absolute;top:0;right:0;bottom:0;width:420px;z-index:100;
+      background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-left:1px solid var(--border);
+      overflow-y:auto;padding:24px;transition:transform .3s}
+    #results.on{display:block}
+    .res-header{border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:16px;
       display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-    #res-addr{font-size:22px;font-weight:200;letter-spacing:-.5px;line-height:1.2}
+    #res-addr{font-size:18px;font-weight:200;letter-spacing:-.3px;line-height:1.2}
     #res-coords{font-size:10px;color:var(--muted);margin-top:4px;letter-spacing:.5px}
     .dbadge{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
-      padding:5px 16px;border-radius:100px;
-      background:rgba(255,255,255,.07);color:rgba(255,255,255,.65);
-      border:1px solid rgba(255,255,255,.12);white-space:nowrap;flex-shrink:0}
+      padding:5px 14px;border-radius:100px;background:rgba(255,255,255,.07);
+      color:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.12);white-space:nowrap}
     .dbadge.unknown{opacity:.4}
-
     .slabel{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);
-      margin:24px 0 12px;display:flex;align-items:center;gap:10px}
+      margin:20px 0 10px;display:flex;align-items:center;gap:10px}
     .slabel::after{content:'';flex:1;height:1px;background:var(--border)}
-
-    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-      gap:1px;background:var(--border);border:1px solid var(--border);
-      border-radius:var(--r);overflow:hidden;margin-bottom:14px}
-    .card{background:var(--card);padding:18px 20px;transition:background .2s}
+    .cards{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:var(--border);
+      border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:12px}
+    .card{background:var(--card);padding:14px 16px;transition:background .2s}
     .card:hover{background:var(--lift)}
-    .card-ico{font-size:13px;color:rgba(255,255,255,.22);margin-bottom:10px}
-    .card-lbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-    .card-val{font-size:22px;font-weight:300;line-height:1}
-    .card-val.sm{font-size:14px;font-weight:400;letter-spacing:.4px}
-    .card-unit{font-size:10px;color:var(--muted);margin-top:4px}
-
+    .card-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .card-val{font-size:18px;font-weight:300;line-height:1}
+    .card-val.sm{font-size:13px;font-weight:400}
+    .card-unit{font-size:9px;color:var(--muted);margin-top:3px}
     #aph-box,#u-box,#cur-box{display:none}
     #aph-box.on,#u-box.on,#cur-box.on{display:block;background:rgba(234,179,8,.04);
-      border:1px solid rgba(234,179,8,.12);border-radius:var(--r);
-      padding:11px 14px;font-size:12.5px;color:#fcd34d;margin-bottom:14px}
-
-    #calc-block{display:none;border:1px solid var(--border);border-radius:var(--r);
-      padding:22px;margin-bottom:14px;position:relative}
-    #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:16px;
-      font-size:8px;letter-spacing:3px;background:var(--bg);color:rgba(255,255,255,.22);padding:0 8px}
-    .cgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
-      gap:1px;background:var(--border);border:1px solid var(--border);border-radius:3px;overflow:hidden}
-    .citem{background:var(--card);padding:15px 17px}
-    .clbl{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
-    .cval{font-size:20px;font-weight:300}
+      border:1px solid rgba(234,179,8,.12);border-radius:var(--r);padding:10px 12px;font-size:12px;color:#fcd34d;margin-bottom:12px}
+    #calc-block{display:none;border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;position:relative}
+    #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:14px;
+      font-size:7px;letter-spacing:3px;background:rgba(0,0,0,.95);color:rgba(255,255,255,.22);padding:0 6px}
+    .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);
+      border:1px solid var(--border);border-radius:3px;overflow:hidden}
+    .citem{background:var(--card);padding:12px 14px}
+    .clbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+    .cval{font-size:18px;font-weight:300}
     .cunit{font-size:9px;color:var(--muted);margin-top:3px}
-    .cval-input{width:100%;background:transparent;border:none;
-      border-bottom:1px dashed rgba(255,255,255,.1);
-      color:rgba(255,255,255,.75);font-family:inherit;font-size:20px;font-weight:300;
-      padding:2px 0;outline:none;-moz-appearance:textfield;appearance:textfield}
+    .cval-input{width:100%;background:transparent;border:none;border-bottom:1px dashed rgba(255,255,255,.1);
+      color:rgba(255,255,255,.75);font-family:inherit;font-size:18px;font-weight:300;padding:2px 0;outline:none;
+      -moz-appearance:textfield;appearance:textfield}
     .cval-input:focus{border-bottom-color:rgba(255,255,255,.3)}
     .cval-input::-webkit-inner-spin-button{-webkit-appearance:none}
-
     #fin-block{display:none}
-    #map-wrap{display:none}
-    .nnote{font-size:11px;color:var(--muted);padding:9px 14px;
-      border:1px solid var(--border);border-radius:var(--r);margin-bottom:12px}
+    .nnote{font-size:11px;color:var(--muted);padding:8px 12px;border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px}
     .nnote a{color:rgba(255,255,255,.4);text-decoration:none}
-    .divider{border:none;border-top:1px solid var(--border);margin:24px 0}
-    #calc-source{font-size:9px;color:var(--muted);text-align:right;margin-top:8px;letter-spacing:.5px}
+    .results-close{position:absolute;top:12px;right:12px;background:none;border:none;color:var(--muted);
+      font-size:18px;cursor:pointer;padding:4px 8px;border-radius:4px}
+    .results-close:hover{color:var(--text);background:rgba(255,255,255,.05)}
 
-    .ref-section{border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;margin-bottom:12px}
-    .ref-section details summary{cursor:pointer;font-size:8px;color:var(--muted);
-      letter-spacing:2.5px;text-transform:uppercase;list-style:none;
-      display:flex;align-items:center;gap:10px;user-select:none}
-    .ref-section details summary::before{content:'+';color:rgba(255,255,255,.3);font-size:14px}
-    .ref-section details[open] summary::before{content:'−'}
-    .dist-table{margin-top:12px}
-    .dist-row{display:flex;align-items:center;gap:10px;padding:8px 0;
-      border-bottom:1px solid var(--border);font-size:13px}
-    .dist-row:last-child{border-bottom:none}
-    .dist-code{font-weight:500;width:90px}
-    .dist-h{color:var(--muted);font-size:11px;flex:1}
-    .dist-cpu{font-size:10px;color:var(--muted)}
+    /* Advanced filters */
+    .adv-filters{margin-top:2px}
+    .adv-filters summary{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;user-select:none}
+    .adv-input{width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:12px}
+    .adv-select{width:100%;margin-top:4px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);
+      background:rgba(18,18,18,.98);color:var(--text);font:inherit;font-size:12px;color-scheme:dark}
+    .adv-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
 
-    /* LOGO CLOUD */
-    .logo-cloud{border-top:1px solid var(--border);padding:20px 40px;
-      display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap}
-    .logo-cloud-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.12)}
-    .logo-cloud-items{display:flex;gap:28px;flex-wrap:wrap;justify-content:center}
-    .lc-item{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.12);font-weight:500}
-
-    footer{border-top:1px solid var(--border);padding:16px 40px;
-      display:flex;align-items:center;justify-content:space-between;
-      font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.2)}
-    footer a{color:rgba(255,255,255,.28);text-decoration:none}
-
-    /* SIDEBAR */
-    .sidebar{position:fixed;left:0;top:92px;bottom:0;width:28px;z-index:300;
-      display:flex;flex-direction:column;transition:width .25s ease;
-      background:color-mix(in srgb, var(--bg) 95%, transparent);backdrop-filter:blur(16px);
-      border-right:1px solid var(--border);overflow:hidden}
-    .sidebar:hover{width:200px}
-    .sidebar-hint{position:absolute;top:14px;left:5px;font-size:22px;color:var(--text);opacity:.5;transition:opacity .2s;pointer-events:none}
-    .sidebar:hover .sidebar-hint{opacity:0}
-    .sidebar-inner{opacity:0;transition:opacity .2s ease .05s;padding:24px 20px;display:flex;flex-direction:column;gap:6px;min-width:200px}
-    .sidebar:hover .sidebar-inner{opacity:1}
-    .sidebar-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;margin-top:12px}
-    .sidebar-label:first-child{margin-top:0}
-    .sidebar a{font-size:12px;color:var(--text);text-decoration:none;padding:8px 10px;border-radius:var(--r);transition:background .15s;display:block;white-space:nowrap}
-    .sidebar a:hover{background:var(--lift)}
-    .sidebar a .sidebar-desc{display:block;font-size:10px;color:var(--muted);margin-top:2px}
+    /* Barrio dropdown */
+    #barrioBtn{width:100%;padding:10px 14px;border-radius:12px;border:1px solid var(--line);
+      background:rgba(255,255,255,.04);color:var(--text);font:inherit;font-size:13px;cursor:pointer;outline:none;text-align:left}
+    #barrioList{display:none;position:absolute;top:100%;left:0;right:0;margin-top:4px;
+      max-height:280px;overflow-y:auto;background:rgba(18,18,18,.98);border:1px solid var(--line);
+      border-radius:12px;backdrop-filter:blur(16px);z-index:100;padding:4px}
 
     @media(max-width:640px){
-      .topbar,.footer{padding:0 20px}
-      header{padding:0 20px;height:52px}
-      .logo-sub,.header-nav{display:none}
-      .search-panel{padding:24px 16px;width:96%}
-      .results-wrap{padding:28px 16px 60px}
-      .cards{grid-template-columns:repeat(2,1fr)}
-      footer{flex-direction:column;gap:6px;text-align:center;padding:14px 20px}
+      .panel{width:calc(100% - 32px);max-height:40vh}
+      .search-panel{width:96%;max-width:none}
+      #results{width:100%}
+      header{padding:0 12px}
+      .header-nav{display:none}
     }
   </style>
 </head>
 <body>
 
-<div class="topbar">
-  <span class="topbar-name">Karen Marini</span>
-  <a href="mailto:karendmarini@gmail.com">Contacto</a>
-</div>
-
 <header>
   <div class="logo-wrap">
     <div class="logo-mark">E</div>
-    <div class="logo-text">
-      <span class="logo-name">Edific<em>IA</em></span>
-      <span class="logo-sub">Pre-factibilidad urbanística · CABA</span>
-    </div>
+    <span class="logo-name">Edific<em>IA</em></span>
+  </div>
+  <div class="header-nav">
+    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
+    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
+    <a href="mailto:karendmarini@gmail.com">Contacto</a>
   </div>
 </header>
 
-<div class="sidebar">
-  <span class="sidebar-hint">☰</span>
-  <div class="sidebar-inner">
-    <div class="sidebar-label">Herramientas</div>
-    <a href="/mapa.html">Mapa de oportunidades<span class="sidebar-desc">Heatmap por barrio y métrica</span></a>
-    <a href="/3d.html">Viewer 3D<span class="sidebar-desc">Sobre edificable por parcela</span></a>
-    <div class="sidebar-label">Externo</div>
-    <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D GCBA ↗</a>
-    <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa CUR ↗</a>
-    <div style="flex:1"></div>
-    <a href="mailto:karendmarini@gmail.com" style="margin-top:auto;border-top:1px solid var(--border);padding-top:12px">Contacto<span class="sidebar-desc">karendmarini@gmail.com</span></a>
-  </div>
-</div>
-
-<!-- HERO: mapa fondo + búsqueda -->
-<div class="hero">
-  <!-- Mapa SVG de fondo -->
+<div class="viewport">
+  <!-- SVG background -->
   <div class="map-bg">
     <svg viewBox="0 0 600 680" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" style="opacity:.35;position:absolute;inset:0;width:100%;height:100%">
       <defs><style>
@@ -341,7 +280,6 @@
       <text class="lb2" x="104" y="275">FLORES</text>
       <text class="lb2" x="405" y="248">CABALLITO</text>
       <text class="lb2" x="408" y="332">BOEDO</text>
-      <text class="lb2" x="412" y="326">SAN CRISTÓBAL</text>
       <text class="lb2" x="295" y="338">P. PATRICIOS</text>
       <text class="lb2" x="493" y="195">PTO. MADERO</text>
       <text class="lb2" x="108" y="448">MATADEROS</text>
@@ -352,784 +290,182 @@
   </div>
   <div class="map-fade"></div>
 
-  <!-- Panel de búsqueda centrado -->
-  <div class="search-panel">
-    <div class="search-eyebrow">⟡ &nbsp;Consulta de parcela · Normativa CUR · CABA</div>
+  <!-- Leaflet map -->
+  <div id="map"></div>
 
+  <!-- Search panel (centered top) -->
+  <div class="search-panel" id="searchPanel">
+    <div class="search-eyebrow">⟡ &nbsp;Consulta de parcela · Normativa CUR · CABA</div>
     <div class="acwrap">
       <div class="search-bar">
         <span class="search-ico">◎</span>
-        <input type="text" id="inp-addr"
-          placeholder="Buscar parcela  (ej. Acoyte 960, CABA)"
-          autocomplete="off">
+        <input type="text" id="inp-addr" placeholder="Buscar parcela  (ej. Acoyte 960, CABA)" autocomplete="off">
       </div>
       <div id="suggestions"></div>
     </div>
-
-    <input type="hidden" id="inp-frente">
-    <input type="hidden" id="inp-fondo">
-    <input type="hidden" id="inp-distrito" value="">
-
-    <div id="msg-err"  class="msg"></div>
+    <div id="msg-err" class="msg"></div>
     <div id="msg-warn" class="msg"></div>
     <div id="msg-info" class="msg"></div>
-    <div id="debug-panel"><div id="debug-log"></div></div>
-
     <div class="pill-stack">
-      <button class="btn-pill" id="btn-main" onclick="consultarParcela()">
-        Generar informe de normativa &nbsp;↗
-      </button>
-      <button class="btn-pill secondary" id="btn-reset" onclick="resetBusqueda()">
-        Consultar otra parcela &nbsp;↗
-      </button>
+      <button class="btn-pill" id="btn-main">Consultar ↗</button>
+      <button class="btn-pill secondary" id="btn-reset">Limpiar</button>
     </div>
   </div>
-</div>
 
-<!-- RESULTADOS -->
-<div id="results">
-  <div class="results-wrap">
+  <!-- Left panel (filters + map parcel card) -->
+  <div class="panel" id="leftPanel">
+    <div>
+      <div class="eyebrow">EdificIA</div>
+      <h2>Mapa de Oportunidades</h2>
+      <p class="sub">Parcelas coloreadas por potencial. Elegí un barrio para ver lotes.</p>
+    </div>
 
-    <div class="res-header">
-      <div>
-        <div id="res-addr">—</div>
-        <div id="res-coords"></div>
+    <div class="loading-bar" id="loading"><div class="loading-bar-fill"></div></div>
+
+    <div class="filter-group">
+      <div class="filter-label">Colorear por</div>
+      <div class="filter-row" id="metricFilters"></div>
+    </div>
+
+    <div class="filter-group">
+      <div class="filter-label">Barrio</div>
+      <div id="barrioDropdown" style="position:relative">
+        <button id="barrioBtn">Todo CABA</button>
+        <div id="barrioList"></div>
       </div>
+    </div>
+
+    <details class="adv-filters">
+      <summary>Búsqueda avanzada</summary>
+      <div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;font-size:12px">
+        <div style="display:flex;gap:8px">
+          <div style="flex:1"><span class="adv-label">Pisos mín</span><input id="fPisosMin" type="number" min="0" placeholder="—" class="adv-input"></div>
+          <div style="flex:1"><span class="adv-label">Pisos máx</span><input id="fPisosMax" type="number" min="0" placeholder="—" class="adv-input"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1"><span class="adv-label">Área mín m²</span><input id="fAreaMin" type="number" min="0" placeholder="—" class="adv-input"></div>
+          <div style="flex:1"><span class="adv-label">Área máx m²</span><input id="fAreaMax" type="number" min="0" placeholder="—" class="adv-input"></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <div style="flex:1"><span class="adv-label">FOT mín</span><input id="fFotMin" type="number" min="0" step="0.5" placeholder="—" class="adv-input"></div>
+          <div style="flex:1"><span class="adv-label">PL mín (m)</span><input id="fPlMin" type="number" min="0" placeholder="—" class="adv-input"></div>
+        </div>
+        <div><span class="adv-label">Uso actual</span>
+          <select id="fUso" class="adv-select"><option value="">Todos</option>
+            <option>RESIDENCIAL</option><option>UNICOMERCIAL</option><option>INDUSTRIAL</option>
+            <option>EQUIPAMIENTO</option><option>OBRA EN CONSTRUCCION</option><option>OFICINAS</option>
+            <option>SIN USO IDENTIFICADO</option><option>GARAGE COMERCIAL</option><option>LOTE</option>
+          </select>
+        </div>
+        <div><span class="adv-label">Protección patrimonial</span>
+          <select id="fAph" class="adv-select"><option value="">Todos</option>
+            <option value="0">Sin protección</option><option value="1">APH / Protegido</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:12px">
+          <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="fRiesgo" style="accent-color:var(--accent)"> Riesgo hídrico</label>
+          <label style="font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px"><input type="checkbox" id="fEnrase" style="accent-color:var(--accent)"> Enrase</label>
+        </div>
+        <button id="btn-apply-filters" style="padding:8px;border-radius:8px;border:1px solid var(--accent);background:rgba(232,197,71,.1);color:var(--accent);font:inherit;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer">Aplicar filtros</button>
+      </div>
+    </details>
+
+    <div class="stat-row">
+      <div class="stat"><div class="stat-label">Parcelas</div><div class="stat-value" id="statCount">-</div></div>
+      <div class="stat"><div class="stat-label">Vol. total</div><div class="stat-value" id="statVol">-</div></div>
+      <div class="stat"><div class="stat-label">Delta prom.</div><div class="stat-value" id="statDelta">-</div></div>
+    </div>
+
+    <div class="parcel-card" id="parcelCard">
+      <div class="parcel-title" id="parcelTitle">-</div>
+      <div class="parcel-sub" id="parcelSub">-</div>
+      <div class="parcel-grid" id="parcelGrid"></div>
+      <a class="parcel-link" id="parcelLink" href="#" target="_blank">Ver en Ciudad 3D ↗</a>
+    </div>
+
+    <div style="font-size:11px;color:var(--muted);line-height:1.7" id="metricDesc"></div>
+    <p style="font-size:9px;color:rgba(255,255,255,.2)">Escala normalizada por percentiles p5–p95. Datos orientativos.</p>
+
+    <div id="parcelDocs" style="display:none">
+      <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Documentos oficiales</div>
+      <div style="display:flex;flex-direction:column;gap:4px" id="parcelDocsInner"></div>
+    </div>
+  </div>
+
+  <!-- Right panel (search results detail) -->
+  <div id="results">
+    <button class="results-close" onclick="document.getElementById('results').classList.remove('on')">&times;</button>
+    <div class="res-header">
+      <div><div id="res-addr">—</div><div id="res-coords"></div></div>
       <div class="dbadge unknown" id="res-badge">—</div>
     </div>
 
-    <div id="aph-box" class="aph-box"><strong id="aph-box-title">APH</strong> — Área de Protección Histórica. Verificar con el organismo competente.</div>
-    <div id="u-box"><strong id="u-box-title">U</strong></div>
-    <div id="cur-box"><strong id="cur-box-title">CUR</strong> — <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Verificar en ciudad3d.buenosaires.gob.ar</a></div>
+    <div id="aph-box"><strong>APH</strong> — Área de Protección Histórica.</div>
+    <div id="u-box"><strong>U</strong></div>
+    <div id="cur-box"><strong>CUR</strong> — <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Verificar en ciudad3d.buenosaires.gob.ar</a></div>
 
     <div class="slabel">Parámetros Normativos</div>
     <div class="cards">
-      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Altura Dominante</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
-      <div class="card"><div class="card-ico">⬆</div><div class="card-lbl">Plano Límite</div><div class="card-val" id="res-plano">—</div><div class="card-unit">metros</div></div>
-      <div class="card"><div class="card-ico">⬜</div><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos indicativos</div></div>
-      <div class="card"><div class="card-ico">∑</div><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
-      <div class="card"><div class="card-ico">▣</div><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
-      <div class="card"><div class="card-ico">◈</div><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">zonificación CUR</div></div>
-      <div class="card"><div class="card-ico">↔</div><div class="card-lbl">Frente</div><div class="card-val sm" id="res-fr">—</div><div class="card-unit">metros</div></div>
-      <div class="card"><div class="card-ico">↕</div><div class="card-lbl">Fondo</div><div class="card-val sm" id="res-fo">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-lbl">Altura Dominante</div><div class="card-val" id="res-alt">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-lbl">Plano Límite</div><div class="card-val" id="res-plano">—</div><div class="card-unit">metros</div></div>
+      <div class="card"><div class="card-lbl">Pisos Est.</div><div class="card-val" id="res-pis">—</div><div class="card-unit">pisos</div></div>
+      <div class="card"><div class="card-lbl">F.O.T.</div><div class="card-val" id="res-fot">—</div><div class="card-unit">factor ocup. total</div></div>
+      <div class="card"><div class="card-lbl">F.O.S.</div><div class="card-val" id="res-fos">—</div><div class="card-unit">factor ocup. suelo</div></div>
+      <div class="card"><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">CUR</div></div>
     </div>
+
+    <details style="margin-bottom:12px">
+      <summary style="cursor:pointer;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Metodología de cálculo</summary>
+      <div style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.6">
+        <p>Pisos = 1 + floor((Plano Límite − 3.30m) / 2.90m). PB = 3.30m, piso tipo = 2.90m entrepiso.</p>
+        <p>Pisada = frente × min(fondo, 22m) si fondo > 16m (LFI). Eficiencia ≈ 85%.</p>
+        <p>Volumen incluye retiros CUR: último piso −8m, penúltimo −4m desde fondo.</p>
+        <p>Fuentes: CUR Ley 6099/2018, EPOK catastro GCBA, tejido fotogramétrico.</p>
+      </div>
+    </details>
 
     <div id="calc-block">
       <div class="cgrid">
-        <div class="citem"><div class="clbl">Superficie del Lote <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-sup" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · catastro oficial</div></div>
-        <div class="citem"><div class="clbl">Pisada Edificable <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-pb" type="number" min="1" value="" oninput="recalcularRendimiento()"><div class="cunit">m² · ajustá por LFI</div></div>
-        <div class="citem"><div class="clbl">Área Edif. Oficial <span style="font-size:7px;opacity:.5">(Ciudad 3D)</span></div><input class="cval-input" id="input-area-edificable" type="number" min="1" placeholder="Opcional (m²)" oninput="recalcularRendimiento()"><div class="cunit" id="lbl-area-edificable">Override para manzana atípica</div></div>
-        <div class="citem"><div class="clbl">Volumen Total Edificable</div><div class="cval" id="c-edif">—</div><div class="cunit">m² construibles</div></div>
-        <div class="citem"><div class="clbl">Superficie Vendible Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">m² · efic. 85%</div></div>
+        <div class="citem"><div class="clbl">Superficie Lote <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-sup" type="number" min="1" oninput="recalculate()"><div class="cunit">m²</div></div>
+        <div class="citem"><div class="clbl">Pisada Edificable <span style="font-size:7px;opacity:.5">(editable)</span></div><input class="cval-input" id="c-pb" type="number" min="1" oninput="recalculate()"><div class="cunit">m²</div></div>
+        <div class="citem"><div class="clbl">Área Edif. Oficial <span style="font-size:7px;opacity:.5">(Ciudad 3D)</span></div><input class="cval-input" id="input-area-edificable" type="number" min="1" placeholder="Opcional" oninput="recalculate()"><div class="cunit">Override mzna atípica</div></div>
+        <div class="citem"><div class="clbl">Volumen Edificable</div><div class="cval" id="c-edif">—</div><div class="cunit">m²</div></div>
+        <div class="citem" style="grid-column:span 2"><div class="clbl">Superficie Vendible Est.</div><div class="cval" id="c-vend">—</div><div class="cunit">m²</div></div>
       </div>
-      <div id="calc-source"></div>
     </div>
 
-    <!-- Módulo financiero -->
     <div id="fin-block" style="display:none">
-      <div class="slabel" style="color:#5A9E7A">◈ Análisis de Inversión</div>
-      <div style="background:#0d1f14;border:1px solid #22c55e33;border-radius:6px;padding:20px 22px;margin-bottom:14px">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
-          <div>
-            <div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Precio del Terreno (USD)</div>
-            <input id="fin-terreno" type="number" min="0" placeholder="ej. 500000"
-              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
-              oninput="calcularFinanzas()">
-          </div>
-          <div>
-            <div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:6px">Valor de Venta Esperado (USD/m²)</div>
-            <input id="fin-precio-m2" type="number" min="0" placeholder="ej. 3000"
-              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;color:#e2e8f0;padding:8px 10px;font-family:inherit;font-size:14px;box-sizing:border-box"
-              oninput="calcularFinanzas()">
-          </div>
+      <div class="slabel" style="color:#5A9E7A">Análisis de Inversión</div>
+      <div style="background:#0d1f14;border:1px solid #22c55e33;border-radius:6px;padding:16px 18px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+          <div><div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Precio Terreno (USD)</div>
+            <input id="fin-terreno" type="number" min="0" placeholder="ej. 500000" oninput="recalcFinancials()"
+              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;color:#e2e8f0;padding:8px 10px;font:inherit;font-size:14px;box-sizing:border-box"></div>
+          <div><div style="font-size:9px;letter-spacing:2px;color:#6b7280;text-transform:uppercase;margin-bottom:4px">Venta (USD/m²)</div>
+            <input id="fin-precio-m2" type="number" min="0" placeholder="ej. 3000" oninput="recalcFinancials()"
+              style="width:100%;background:#0a1409;border:1px solid #22c55e55;border-radius:4px;color:#e2e8f0;padding:8px 10px;font:inherit;font-size:14px;box-sizing:border-box"></div>
         </div>
         <div id="resultados-financieros"></div>
       </div>
     </div>
 
     <div class="nnote" id="norm-note">Datos orientativos basados en el CUR CABA (Ley 6099/2018).</div>
+  </div>
 
-    <div class="divider"></div>
-
-    <div class="slabel">Referencia Normativa</div>
-    <div class="ref-section">
-      <details>
-        <summary>Ver tabla CUR completa</summary>
-        <div class="dist-table" id="dist-table-body"></div>
-      </details>
-    </div>
-
-    <div id="map-wrap" style="display:none"><div id="map"></div></div>
-
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-title" id="legendTitle">Delta oportunidad</div>
+    <div class="legend-bar"></div>
+    <div class="legend-labels"><span>Bajo</span><span>Alto</span></div>
   </div>
 </div>
 
-<div class="logo-cloud">
-  <span class="logo-cloud-label">Fuentes oficiales</span>
-  <div class="logo-cloud-items">
-    <span class="lc-item">CUR 2024</span>
-    <span class="lc-item">AGIP</span>
-    <span class="lc-item">GCBA</span>
-    <span class="lc-item">EPOK</span>
-    <span class="lc-item">USIG</span>
-    <span class="lc-item">Catastro</span>
-  </div>
-</div>
-
-<footer>
-  <div>EdificIA · CUR 2024 · Catastro AGIP/EPOK</div>
-  <div>Desarrollado por <a href="#">Karen Marini</a></div>
-</footer>
-
-<script>
-
-'use strict';
-
-
-
-// ── HELPERS ─────────────────────────────────────────────────────
-const eid = id => document.getElementById(id);
-const fmt = n => Math.round(n).toLocaleString('es-AR');
-
-function setLoad(on) {
-  const btn = eid('btn-main');
-  if (btn) {
-    if (on) { btn.classList.add('loading'); btn.disabled = true; }
-    else    { btn.classList.remove('loading'); btn.disabled = false; }
-  }
-}
-
-function setMsg(type, text) {
-  ['err','warn','info'].forEach(t => {
-    const el = eid('msg-' + t);
-    if (t === type && text) { el.textContent = text; el.classList.add('on'); }
-    else { el.classList.remove('on'); }
-  });
-}
-
-// ── USIG NORMALIZAR ──────────────────────────────────────────────
-async function normalizarDir(dir) {
-  const url = 'https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion='
-    + encodeURIComponent(dir) + '&geocodificar=true';
-  const r = await fetch(url);
-  if (!r.ok) throw new Error('No se pudo conectar con USIG. Verificar conexión.');
-  const data = await r.json();
-  const lista = data.direccionesNormalizadas;
-  if (!lista || lista.length === 0)
-    throw new Error('Dirección no encontrada en CABA. Verificar calle y número.');
-  const dn = lista[0];
-  const partido = (dn.nombre_partido || dn.cod_partido || '').toUpperCase();
-  if (partido && partido !== 'CABA' && !partido.includes('CIUDAD') && !partido.includes('BUENOS AIRES'))
-    throw new Error('La dirección parece estar fuera de CABA.');
-  let coords = null;
-  if (dn.coordenadas) {
-    coords = { lat: parseFloat(dn.coordenadas.y), lng: parseFloat(dn.coordenadas.x) };
-  }
-  return { direccion: dn.direccion || dir, coords };
-}
-
-
-// ── GRID PRECALCULADO (CABA 100m, embebido) ─────────────────────
-const _GRID_B64 = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUlJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUlJSUlJSUggIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlJSUlJSCAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgICAgICAgICFIICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgIB0RECAgICAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEggICAdERERECAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASEhIICAgHB0RERAgICAgICAgICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0SEhISEggIBwdEREQICAgICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NEhISEhIICAcHREQHCAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0SEhISEhISCAgHBwcHBwgICAgICAgICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NABISEhISEhISEggIBwcHBwgICAgICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0SEhISEhISEhISEhIICFJSB0QICAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDRISEhISEhISEhISEhISUlJSRkRERAhECAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0FBQUSEhISEhISEhISPj47O0ZGRlJEREREREQICAgICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDRISBQUFUlISEhISEhISOzs7O0ZGRlJSREREREQICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NEhISEgUFBQUSEhISEhI7Ozs7RkZGRkZGRkZERERECAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgoNDRISEhISEhIFBQUFEhISEjs7OztGRlJGRkZGRkZGRERECAgICAgICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKCgoKEhISEhISEhISBQUFBRI7Ozs7O0ZGRkZGRkZGRkYICERERAgICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoKCjEKChISEhISEhISEgUFBTs7OztGRkZSRkZGRkZGUggIUlJEREQICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKCjExMTExCgoSEhISEhISEhIFRkY7O0ZGRkZGRkZGRkZSUlJSUlJSREQICAgICAgICFJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICFIxMTExCgoKEhISEhISEhISEhJGRkZSRkZGRkZGRlJSUlJSUlJSUkRECAgICAgIUlJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFBQICAgKCgoKChISUhISEhISEhISEhISRkZGRkZGRkZSUlJSUlJSUlJSCAhEREQIRERSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQUFBQUCAgICgoKCgoIUgASEhISEhISEhISEhISRkZGRlJSUlJSUlJSUlJSUlJSRAcHUlJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFBQUFBQUFAgICgoICgcHCFIFBRISEhISEhISEhISEkZGCFJSUlJSUlJSUlJSUlIICAcIUlJSUlJSUlJSCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUFBQUFBQUFBQICAgICAgHCFISEgUSEhISBRISEhISCAgICFJSUlJSUlJSUlJSUlIICEIICFJSUlJSUlIICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQUFBQUFBQUFBQICAgICAgHCAhSEhIFEhIFEhISElBQUFBQUlJSUlJSUlJSUlJSCAhCQkJCCAgICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHBwcUFBQHFBQUFBQICAgICAcHBwhSElIFBQUSEhISEhJQUFBQUFJSUlJSUlJSUlJSCEJCQkJCCAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoKBz4+BwcUFBQUACEhCAgICAgHBwgIUhJSBQUSEhIHUFBQUFBQUFBSUlIIUlJSCFJSQkJCQkJCQggICAgICAgICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACgoKClI+BwcUFBQAISEhIQgIBwcHCAgIUgUSAAUFEhISUFBQUFBQUFBQAAgICAgICAhCQkJCUkJCQgAICAgICAgICAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoKCgoKCgoKPgcHFCEhISEHBwcHBwcICAgIUlISElISBRISElASUFBQUFBQUFAICAgIQkJCQlJSUlJSQkIICAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgKCgoKCgoKCgoHISEhIQcHBwcHBwgICAhSUlISEhISEhISElASUFBQUFBQUFBQCAhCQkJCUlJSUlJSUlJSCAgICAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASEggICgoKCgoKCgo+ISEhPgcHBwcHCAgICBISElJSEhISEhISEhJQUFBQUFBQUFBQUEJCQkIIUlJSUlJSUlJSCAgICAgICAgICAwMCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEhISEhIICAgKCgoKCj4+PiE+BwcHBwcHBwgIEhISEhJSEhISEhISEhISAFBQUFBQUFAICAhCCAgIUlJSUlJSUlJSQwgICAgICAgMCAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASEhISEhISCAgIHgoKPj4+Pj4+EwcHEwcHBwcICAgSEhJSABISEhISEhISCAgIUlJSUAgICAgICAgIUlJSUlJSUlJSQ0MICAgMDAgICAgICAgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABISEhISEhISEggIHh4+Pj4+Pj4+ExMTExMHBwcHBwgIEhJSUhISEhISEhIICAgICFJSUlJSCAgICFJSUlJSUlJSUlJSUkMIDAgICAgICAgICAgIHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATExMSEhISEhISEggeHh4ePj4+Pj4+ExMIExMTBwcHCAgICBISUhISEhISEhIICAgICAhSUlJSUlIICAhSUlJSUlJSUlJDQwweCAgICAgICAgICB0dHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMTExMTEhISEhIICB4eHh4eHlI+Pj4TExMTExMHBwcICAgICBISUlISEhISEggICAgIUlJSUlJSUlJSUggIUlJDQ1JSUkNDDB4eHggICAgICAgIHR0dHR0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAExMTExMICAgSEhISCAgeHh4eHiA+Uj4TExMTEwcHBwgICAgIEhISElJREhISEggICAhSUlJSUlJSUlJSUlJSUghDQ0NDQ0MMHh4eHh4ICAgICB0dHR0dHQoKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMTExMTEwgICAgIEhISEh4eHh4eICAgExMTExMTBwcHCAgICBISEhISUVJSURISEhISCFJSUlJSUlJSUlJSUlJSUlJSQ0NDQwweHh4eHh4eCAgdHR0dHR0dHQoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAExMTExMTCAcHBwcICBISEggeHh4gICAgIBMTExMTBwcICAgIEhISEhJRUVFSUVESEhISUlJSUlJSUlJSUlJSUj4IUlJSUlIMHh4eHh4eHh4SElIdHR0dHR0dCgoKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATExMTEwgIBwcHBwcHCAgSCAgHHiAgICAgIAUTExMTBwcHCAgSEhISEhISElFSUlFRElJSUlJSUlJSUlJSUlJSPj4+CFJSUgwFEhIeHh4eHhISEhJSUh0dHQoKCgoKCgoKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAExMTExMTCAgHBwcHBwcHBwgICAcgICAgICAgCgoFExMHBwcIEhISEhISEhISEhJRUlFRDw9SUlJSUlJSUlJSUlI+Pj4+PghSDAsLCBISEh4SEhISEhISUlJSHQoKCgoKCgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATExMTCAgICAcHBwcHBwcHBwcHByAgICAgICAKCgoKBQUACAgSEhISEhISEhISEhJRUlFRUQ8PUlJSUlJSUlJSUlJSPj4+Pj4MPgAICAgFEhISUhISEhISEhJSUlIKCgoKCgoKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABMTExMTCAgIBwcHBwcHBwcHBwcHAVIgICAgCgoKCgoHBwcIBQUSEhISEhISEhISElFRUVFRUQ8PD1JSUlJSUlJSUlJSUlI+DAw+PhIIEhISBRISEhISEhISEhISElJSUgoKCgoKCgoKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAoKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0FBRMTExMTEwcHBwcHBwcHBwcBUlJSICAKCgoKCgcHBwgICAgFBRISEhISEhISEgUFPVFRUVEICFJSUlJSUlJSUlJSUlIMDD4AEhISEgUFEgUSEhISEhISEhIICAgIUlJSCgoKCgoKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJiYmOjo6CgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0NEQUFExMTExMTBwcHBwcHUlJSUlIgIAoKCgoKBwcHBwcHCAgICAUSEhISEhISBRI9PVFRUVFRCAhSUlJSUlJSUlJSPgw+Pj4+PhISUgUSEhIFEhISEhISEggICAgIBwdSUgoKCgoKCgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJiZSAAAmCgoKCgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDQ0RERERBRMTExMTEwcHBwcgIFJSUiAgCgoKCgoHBwcHBwcHBwgICAgFBRISEhIFEhI9PT1RUVEICAgIUghSUlJSUlJSDAA+Pj4+Pj5SUlISEhISBQUSEhISCAgICAgHBwcHB1JSCgoKCgoKCgoKCgAAAAAAAAAAAAAACgoKCgoANzcmJgBSUgAmCgoKCgoKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0NDREREREREREFExMTExMHBwcgICAgIAoKCgoKCgcHBwcHBwcHBwcICAgICAUSEgUSEj09PT1RUQgICAgICAgIUlJSUlIMAAA+Pj4+PhwcUlJSUhISEhIFEhIICAgIBwdSBwcHBwcHUlIKClJSCgoKCgoKQAoAAAAACgoKCgoKCgoKNzcmJgAAACYmCgoKCgoKCgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDQ0NERERERERERERBQUTExMTBwcHICAgBQUKCgoHBwcHBwcHBwcHBwcICAgIEhIFBRISEj09PT0SEhIICAgICAgICFJSDAwAAAAICD4+HBwcHBxSUlISEhJSCAgICAgHBwcHUgcHBwcJCQkJUgoKCgoKCgoKBQAKCgAKCgAJCgoKCgoKNyYmJiYmJiYmCgoKCgoKCgoKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NDQ0NERERERERERERERAFExMTEwcHByAHCgoFCgcHBwcHBwcHBwcHCAgICAgSEgUSEgUSEhI9PRISEhISEggICAgICAgMDAAAAAAICBwcPj4cHBwcUlJSEhJSUlIICAcHBwcHBwcHBwkJCQkJCQlSCgoKCgoIBQAAAAAAAAAJCgoKLS0tLSYmJiYmJiYmCgoKCgoKChIKCgoKCgoKCgoICAgICAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREREQ0NDQ0REVIREREREREREREQBRMTExMTBwcHBwoKBQcIBwcHBwcHBwcICAgIEhISBRISEhIFEhISEhISEhISEhIICAgICAwICAAAAAgIHBwcCxwcHBwcHFJSUggIUlJSBwcHBwcHBwcHCQkJCQkJCQkJCVJSCgoIBQUAAAAAAAAKCgoKLS0tLSYmJiYmJiYmCgoKCgoKChISCgoKCgoKCgoICAgICAgKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANEREREREREREREREREREREREREREREAUFExMTEwcHBwcHBwUICAcHBwcHBwgICAgSEhIFEhISEhISBRISEhISEhISEhISCAgMDAgICAgAAAAcHBwcHBwcHBwcHBxSCAgICFIICAcHBwcHBycJCQkJCQkJCQkJCQkJCQhSBRERBQAAAAAKCgoKCgotJiYmJiYmJiYmOQcHBwcHBxISCAoKCgoKCgEBUggICgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRERERERERERERERERERERERERERERAQBRMTExMHBwcHCAgFBQgHBwcHCAgIEhISBRISEhISExMTEwUSEhISEhISEhISEgwMCAgICAgIHBwcHBwcHBwcHBwcHBwcHAgICAgICAgIBwcHCScnCQkJCQkJCQkJCQkJCAgIBRERERIFAAoKCgoKCgoKJiYmJiYmJiYmBwcHBwcHBxISCAgICAoKCggBAQgICgoKCgpSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0REREREREREREREREREREREREREREQEAUTExMTBwgIEhIIBQUIBwgICAgSEhIFEhISEhMTExMTExMFEhISEhISElISDAgICAgICAhSUhwcHBwcHBwcHBwcHBwcHBwICAgICAgICAcJJwkJCQkJCQkJCQkJCQgICAgIBREREhISEhIKCgoKCgoAJiYmUiYmJiYmEhISEhISEhISExMTCAgICAgBAQgKCgoKClIKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDREREREREREREREREREREREREREREREREBAFExMTEwgSEhISCAgFCAgICBISEgUSEhISEhITExMTExMTBRISEhISElIMCAgICAgICFJSUlImJhwcHBwcHBwcHBwcHAgICAgICAgICAgnCQkJUgkJCQkJCQkJCAgICAgIBREREhIIEhISCgoKCgomJiYmJiYmJiYmEhISEhISUlISExMTExMTEwgBAQEICgoKClIKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRERERERERERERERERERERERERERERERERAQBRMTEhISEhISEggIBQgSEhIFBRISEhISEhISExMTExMTEwUSEhISEgwMCAgICAgIEhJSUlJSUhwcHBwcHBwcHBwcCAgICAgICAgICAgICAkJCQkJCQkJCQkHCAgICAgIBREREhISEhITEwUKCgomJiYmUiYmJiYmEhISEgESUlJSDBMTExMTExMBEwgTBwcICFIKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NEREREREREREREREREREREREREREREREREREQEAUSEhISEhISEhISCAUSEgUSEhISEhISEhISEgETExMTExMFBRISDAwMCAgICBISEhISCAgICAgICAgICAgICCYmJiYmJiYmJiYmJggICAgJCQkJCQkJBwcHBwgICAgIBRESEhISEhITExMFCiYmJiYmJiYmJiYICAgICAEBAVIMBQUTExMTExMBExMTBwcIUgQKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NERERERERERERERERCAgREREREREREREREREREBAFBRISEhISEhISEhIFBRISEhISEhISEhISAQEBExMTExMTBQwMDAwMDBISEhISEhISEggICAgICAgICAgIJiYmJiYmJiYmJiYmJiYmJgwIB1IHBwcHBwcHBwcHMzMzBRISEhISEhMTExMTEyYmCAgIClJSJiYHBwcHCAEBAVIMERERExMFBQETExMTExNSUgQKCgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NEREREREREREREREFCAgIEREREREREREREREREREQBQUSEhISEhISEgUFBQUSEhISEhISEgEBAQEMDAwMDBISEgUSEhIMDBISEhISEhISEggICAgICAgICAgmJiYmJiYmJiYmJiYmHh4mJggICAcHBwcHBwcHBzMzMzMIBRIIUggSEhISEhIHBwYmCgoKCgoKClIHBwcHCBISUlIMERERExMTEwETEwUTE1JSBAoKCgoKCgoKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NEREREREREREREQUREQgICBEREREREREREREREREREAUFEhISEhISBQUSEhIFEhISEhISAQwMDAEBAQESEhISEhIFEhISDAwSEhISEhISCAgICAgICAgICAgmJiYmJiYmJiYmJiYeHh4eEhIICAhSBwcHB1IzMzMICAUFBRISEggSEhISUhISBwcGCgoKClIKCgoKUgcHOAcHCAgICAgIExMTEwETEwUTE1IIBAgICAgICgoKCgABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NERERERERERERBRERERERCAgRERERERERERERERERERAQBRISEhIFEhISEhISBRISEgwMAQEBAQEBAQEBEhISEhISBRISEgwMEhISEhIICAgICAgICAgICAgICCYmJhISEhISEjAeHh4SEhISCAgFBQhSUlIICAgIBQgIBRISEhISEhISEhISEgcHUgAKMjJSUggKCgpSAAcHCAgICAgICAgIAQETExMTE1IIBAgICAgICgoKCgoBUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NESUlJSUlJSUFEREREREREQgIEREREREREREREREREREQEAUSEgUSEhISEhISEgwMDAEBAQEBAQEBAQESEhISEhISBRISEhIMEhISEgUICAgICAgICAgICAgIJiYmEhISEhISMDAwMBISEhISEggIBQUICAgICAgFCAgIBQgSEhISEhISEhISEhIHBwoKMjIyMjJSCgoKCgpSCAgIUlJSCAgIAQgICBMTE1IIBAgICAgIBwgICgoBCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NJSUlJSUlJSURERERERERCAgICBEREREREREREREREREREBAFBRISEhISEhISDAwBAQEBAQEBAQEBARISEhISEhISEgUFEgUMDBISBQUICAgICAgICAgSCAgICBISEhISEhISMDAwEhISEhISEhISCAUFCAgICAUICAgIBQgIEhISUhISEhISEhIHBwcKCgoyMjIyMlJSCgoKCFJSUlJSUlJSUggIExMTUggICAgICAgHBwgICAhSCAoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NESUlJSUlJQUREREREREICAgIERERERERERERERERERERERAQBQUSEhISEgwMEhIBAQEBAQEBAQEBEhISEhISEhISEhISBQUFDAUFBQgICAgICAgICBISEggICBISEhISEhISMDAwEhISEhISEhISEggFBQgIBQgICAgIBQgIERERUlIREhISEhIHBwcHBgoKCDIyMjIyMlIKCAgIUlJSUlJSUggICBMTUggICAgHBwcHBwcHCAgICAgICgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NERElJSUlJQURERERCAgICAgRERERERERERERERERERERERAQEBAFBRISDAwSEhIBAQEBAQEBAQESEhISEhISEhISEhISEgUFAAwFCAgICAgICAgSEhISEhISCAgIUlISEhISEhISEhISEhISEhISEhIICAUFCAgICAgIBQgICAgICAgRERISEhISEgcHBwcGCAgICjIyMjIyCAgIUlJSUlJSUggICBMTUggDEQgHBwcHBwcHCAgICAgICgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEQgRERElJSUlJQUREREREQgICFIREREREREREREREREREREREREREREREQwMEhISEhIBAQEBAQEBEhISEhISEhISEhISEhISEhISBQwMBQgICAglJSUlJRISEhISCAgICBISEhISEhIFBRISEhISEhISEhISCAgFBQgICAgIBQgICAgICAgRERISEhISEgcHBwcHBwYKCgoKMggICAgICAgICFJSUggICAgIUggDERERBwcHBwgICAgICAgKCgoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQlJSUlJRERERERERAQUhERERERERERERERERERERERERERERERDAwSBQUSEgEBAQEBAQESEhISEhISEhISEhISEhISEhISEgUMDAUFCAUlJSUlEhISEggICAgIEhISEhISEhISEhISBQUFEhISBQUSEgUFBQUFBQUFBQgICAgICAgRERISEhISEhIABwcHBwUHBgoKCggICAgICAgICAgICBMTCAhSUggDERERBwcHBwgICAgICAoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQlJSUlJRAQEBAQEBAQEBAQERAREREREREREREREREREREREREMDBISEhISBQEBAQEBARAFEhISEhISEhISEhISEhISEhISEhIQDAwMBSUlJSUSEhISCAgICAgSEhISEhISEhISEhISEhISEhIABQUFEgUFBQUFBQUFBQUFBQUICAgIERERERESEhJSUgcSEhISEggICAgICAgICAgICAgICBMTEwhSUggREREHBwcHBwgICAgIEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAQEBAQEBAQEBBAQEBAQEBAQEBAQEBAQEBARERARERAQEBAQEREREREMEhISEhIQBRAFAQEBEBAQEAUSEhISEhISEhISEhISEhISEhIQEAwMDCUlJRISEhIICAgIEhISEhISEhISEhISEhISEhISEhISExMTAQUFBQUFBQUFBQUFBQUIUlJSUlJSUhESEhISUlISBRISEggICAgICAgICAgICAgICBMTEwhSERERERERBwcHCAgICAgTEwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEVJSUlJSUgQEBQUFBQUFBQUFERERBQUFBQUQEBAQEBAQEBAQEBAQEAwSEhISEhAQBRAQEAUQEBAQEBAFBRISEhISEhISEhISEhISEhAQEBARDAwlJRISEhISCAgSEhISEhISEhISEhISEhISEhISEhMTEwgICAgTExMTEwUFBQUFBQUFUlJSUlJSUhEREhISEhISEhISCAgICAgICAgICAgICAgIBxMTCFJSEQMREREREQQHBQUFCAgTExMTEBABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAERERERFSUlIRETU1NTU1NTURERERERERERERBQUFBQUQEBAQEBAQDBISEhISEhAQEBAQEBAQBQUQEBAQEAUSEhISEhISEhISEhISEhAQEBERJQwMEhISEhISEhAQEhISEhISEhISEhISEhISEhISEhMTEwgIBQgTExMTExMFBQUFBQUFBVJSUlJSBQUREhISEhIFEhISCAgICAgICAgICAgICAgIB1IICFJSEQMRERERBQQICAgICBAFExMQEBMTAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEREREREREQwMDDU1NTU1NTU1NTU1NTU1NREREREREREREQUFBQUMEBAQEBAQEBAFEBAQEBAQEBAFBRAQEBAQBQUSEhISEhISEhISEBAQERElJSUMDAwSEhIQEBAQEBASEhISEhISEhISEhISEhISEhITCAgIBQgTExMTExMTBQURBQUFBQUFBQUFBQUFBQUFBQUFEhISUlIICAgICAgICAgICAgIB1JSCFJSEQMBAQEREQQICAgIUhAQEAUFExMECAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDREMDAwICAwMDDU1NTU1NTU1NTUMDAwMDAwMDAwAEREMDAASEhIFBQUQEBAFEBAQEBAQEBAQEBAFEBAQEBAQBQUSEhISEhIIEBARESUlJREREQwMDAwMDAwMUlJSEBAQEBISEhISEhISEhISEhITCAgICwgTExMTExMTBREFBREREREREREFBQUFBQUFBQUFBQVSUlIICAgIEQgICAgICAgIUggICFIREREREREREQgICAgICAgQEBAQEAQTEwgIDAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADA0MDAwICAgICAgIAAwMNTU1NTUMDAwSEhISEhISEhISEhISEhJSEhISEhISBQUFEBAQEBAQEBAQEBAQEAUFEBAQEBAQBQUFEhISEBERJSUlJREREREFEREQEBBSDAxSUlJSUlIFBRISEhISEhISEhMTCAgICAgAExMTExMTBREREQURERERERERERERBQUFBQUFBQVSUggICAgIEREREVIICAgHUggIUlIREREREREREQgICAhSCBMTEBAQEAQTBQUHBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDAUFBQgICAgICB4eAAwMDAgFDQ0NUhISEhISEhISEhISEhISEhISEhISUhISEgAFBRAQEBAQEBAQEBAQBQUFEBAQEBAQBQUFEBERJREAEREREQURERAQEBAQUgwMUlJSUlIQJSURBQUFBRISEhMTCAgFCAgLExMTExMTBREREREFBRERERERERERCBEREQUREQUFCAgICAgREREIUlJSCAgHUgAIUlIRERERERERBAgICFIICBMTEBAQBBMFEwcHDAwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhISEhISBQUICB4eCAgIBQ0NDQ0NUggIEhISEhISEhISEhISEhISEhISEhISEhJSBQURBQUFEBAQEBAQEBAQBQUFEBAQEBAQBQUFEREREREREQUREREQEBAQEFJSDAxSUiUlJREREQEBBQUSEhMTExMFExMTExMTExMTBREREREREQURERERERERERERBRERERERCAgICAUFCAURUlJSUggIUlIIUlIRAwQRERERBAgICFJSUhMQEBAQEBMTExMHBwwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NEhISEhISCAgSEhISEhISDQ0NDQ0SEhISEhISEhISEhISEhISEhISEhISEhISEhIFAQFSEREREQUFBRAQEBADEBADAwMQEBAQEBAQEAUFBVIQBREREREREREQEBBSUgwMECUlEREREQEBBQUFEhITExMFExMTExMTEBAQBREREREREREFERERERERERERBREREREICAgICAUICAgICAVSUggIUlJSUhEREREEERERBAgIUlJSUg8PEBAEEAUTExMHBwwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NEhISEhIICAgIEhISEhINDQ0NDRISEhISEhISEgUSEhISEhISEhISEhISEhISEgUBAQEBEREBEREREREFBQMDAwMDAwMDAwMQEBAQEBAQEAUFBREREREREREREREREFIQDAwlEREREQEBERERBQUFBQUTExMTExMTEBAQBRERERERERERBQUREREREREREREREREICAgICAUICAgICAgICAUIUlJSUgMDERERBBERBAgIUlJSDw8PEAQQBRMTEwcHDAAAAAoKCgoKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NEhISEhISEggIEhISDQ0NDQ0NEhISEhISEhISBRISEhISEhISEhISEhISEhISBQEBAQEBAQEBAQUFEREREQMDAwMDAwMDAwMDAwMDEBAQEBAQEAUFBQUREREREREREBAQECUMDBEREREREREREREREQUTExMTExMTEBAQBREREREREREQEAUREREREREFEREREREICAgICAUICAgICAgICAgEUlJSAwMDEREREQQBBAEIUlJSDw8EBBAFExMTCAcHDAAACgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0lJSUlJRISEhISEhINDQ0NDQASEhISEhISEgUSEhISEhIICAgSEhISEhISEhIFBRIBAQEBAQEBAQUFBQUFUgMDAwMDAwMDAwMBAwMDAxAQEBAQEBAQEBAQBQUFBQUQEBAQEBAQEBAMDAwMDAwREREREQUTExMTExMTEBAQBREREREREBEQEBAFEREREREFEREREQUICAgICAUICAgICAgICAgEUlJSUlIICBEREREBAQEPD1IEUgQQEBMTExMHBwcMAAAACgoKCgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0lJSUlJRISUlISEg0NDQ0NEhISEhISEhISBRISEhISEggICAgSEhISEhISEgUFEhISEhISAQEBBQUFBQUFBQUFBQMDAwMDAwEBAwMDAxAQEBAQEBAQEBAQEBAQEBAQEAUFBQUFEBAQEBAQEBAMDAwMDAwMExMTExMTEBAQBREREREREBAQEBARBREREREFEREREQgICAgICAUICAgICAgICAgEUlJSUggICBEREQEBAQEICAwMBBAQFxMXEwcHBwwMAAAKCgoKAAAAAAAACgoKAAAAAAAAAAAAAAAAAAAAAAANDQ0lJSUlEgVSUlISDQ0NDQ0SEhISEhISEhIIEhISEhISEhIICBISEhISEhIFCFISEhISEhISEhISBQUFBQUFBQUFBRAQEAMDAwEDAwMDAwMDAxAQEBAQEBAQEBAQEBAQEBAQEBAQEBAFBQUFBRAQEBAQEBAQDAwMDAwMDAwQBRERERERERAQEBAREQUREQYFBhAQEAgICAgIBQUICAgICAgICAgEUlIMDAEIAQEBAQEBAQEICAgICBcXFxcXBwcHDAAAAAoKCgoKCgoACgoKCgoAAAAKCgoAAAAAAAAAAAAAAAANDQ0lJSUlEhISEg0NDQ0NDQUSEhISEhISBQgICBISEhISEhISEhISEhISEgUICFIICBISEhISEhIABQUFBQUFBQUFBRAQEAEBAVIDAwMDAwMDAwMDEBAQEBAQEBAQEBAQEBANEBAQEBAQCAgICAgIBQUFBBAQEBERERERERAMDAwMDAwMDAwMEBAQEBAQBgYGEBAQEBAQEBAQBQUFUgUFBQUFBQVSUlIMAwMBAQEBAQEBAQEBBARSFxcXFxcXBwwMAAAKCgoKCgoKCgoKCgoKAAAACgoKCgoKAAAAAAAAAAAAAAANDQ0lJSUlEhISDQ0NDQ0SEhISEhISEhIFCAgICAgSEhISEhISEhISEhISBQgICAgICAgSEhISEhIFBQUFBQUFBQUFBRAQEBAQEAEBEhIDAwMDAwMQEBAQEBAQEBAQEBAQEBAQEBAQEBAICAgICAgICAgIBAQEBAQEBAQRERAQBAQEBAQQEBAADAwMDAwMDAUGEBAQEBAQEBAQEAUIUlJSCAgICAhSUgwMAwEBAQEBAQEBAQEBBARSUlJSThcXDAAAAAoKCgoKCgoKCgoKCgoKAAAKCgoKCgoKAAAAAAAAAAAAAAANDQ0SEiUlEg0NDQ0NDRISEhISEhISEgUQCAgICAgIEhISEhISEhISEhIFEhIICAgICAgICAgIEhIFBQUFBQUFBQUFEBAQEBAQEBAQEBABElIDAxAQAAAQEBAQEBAQEBAQEBAQEBAQEBAICAEBCAgICAgIBAQEERERERERBAQEBAQEBAQQEBAQEBAQEBAQBAwMDAwMDBAQEBAQEAUICAgICAgICAhSUgwMAwEBAQEBAQEBAQEBBARSUk5OUgwMAAAKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoAAAAAAAAAAAAAAAANDRISEhINEg0NDQ0NEhISEhISEhIFEBAQEAgICAgICBISEhISEhISBSUSEhISCAgICAgICAgICAUFBQUFBQUFBQUFCBAQEBAQEBAQEBAQEAEQEAAQEBAQAAAQEA4OEBAQEBAQEBAQEBAQCAEBCAgICAgIBAQEERERERERBAQEBBEREREEBAQEBAQEEBAQBAQEEBAQDAwMDAwQEAgICAgICAgICAMDDAwDAQEBAQEBAQEBAQEBBAQEBCgoDAwACgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKAAAAAAAAAAAAAAAAAAANDRISEg0NDQ0NDRISEhISEhISEgUQBRAQEBAICAgICAgIEhISEhIFJSUlEhISCAgICAgICAgICAUFBQUFBQUFBQUICAgIEhAQEBAQEBAQEBAQEBA0NBAQEBAAAA4QEBAQEBAQEBAQEBAQEBAQEBAQEBAQBAQEERERERERBAQEBBEREREEBAQEBAQEBAQEBAQEBAQQEBAQEAwMDAwMDAwICAgICAMDDAwBAQEBAQEBAQEBAQEBBAQoKCgoKAoKCgoKCgoKCgoLCwsLCwsLCwsLCwsKCgoAAAAAAAAAAAAAAAAAAAANDRINDQ0NDQ0NEhISEhISEhISBRIQEAUQEBAQCAgICAgIEhISEgUSJSUlJQgICAgICAgICAgICAgIBQUFBQUFBQUICAgSEhISEhAQEBAQBRAQEBAQNDQ0NDQQEBAAABAQEBAQEBAQEBAQEBAQEBAQEBAEBAQEERERERERBAQEBBEREVIICAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQIAAwMDAwMDAwMDAwMDAwMDAwMDAwMDAEMDAwoKCgoFhYKCgoKCgoKCgsLCwsLCwsLAAsLCwALAAAACwAAAAAAAAAAAAAAAAANDQ0NDQ0NDQ0SEhISEhISEgUSEhISEBAFEBAQEAgICAgIEhISEhIlJSUlEhIICAgICAgICAgICAgICAAFBQUFBQgICAgSEhISEhISEBAFEBAQEBAQEBA0NDQ0NBAQEAAAEBAQEBAQEBAQEBAQEBAQEBAEBAQEBBERERERBAQEBBEREREICAgICAgIBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgICAQEBAQEBAQEBDAwMDAwoKCgoFhYWCgoKCgoKCwsLCwsLCwsLAAsLCwsLCwsLCwAAAAAAAAAAAAAAAAANDQ1SDQ0NEhISEhISEhISBRISEhISEhAQBRAQEBAQCAgSEgUSEhIlJSUSEhISCAgICAgICAgIEggICAgIAAUFBQgICBISEhISEhIQEBAQEBAQEBAQEBA0NDQ0NDQQEBAQEAAAEBAQEBAQEBAQEBAQEBAEBAQRERERERERBAQEBAQEBBEICAgICAgIBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgIBAQEBAQEBAQEBAQEBAwMoKCgoFhYWFgoKCgoKCwsLCwsLCwsAAAALCwsLCwsLCwAAAAAAAAAAAAAAAAANDQ1SDQ0SEhISEhISEhIFEhISEhISEhISEBAFEBAQEBAQBRISEhISEhISEhISEhIICAgICAgIEhISCAgICAgFBQgICBISEhISEhIQEBAQERERERAQEBAQEDQ0NDQ0UgAQEBAQAAAAABAQEBAQEBAQEBAEBAQRERERERERBAQEEREREREICAQEBAgEBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgICAQEBAQEBAQEBAQEBAwMoKCgoFhYWFhYKCgoLCwsLCwsLCwsAAAALCwsLCwsLAAAAAAAAAAAAAAAAAAANDQ0NDRISEhISEhISBRISEhISEhISEg0NDRAQEAUQEBAFEBISEhISEhISEhISEhISCAgICAgSEhISEBAICAgICAUFCBAQEBISEhAQEBAQERERERERERAQEBAICAgIEBAQUhAQEBAAAAAAEBAQEBAQEBAEBAQRERERERERBAQEEREREQgICAgICAgEBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgICAQEBAQEBAQEBAQEDAwMoKCgoFhYWFhZSCgpJSUlJCwAAAAsLCwsACwsLCwsLAAAAAAAAAAAAAAAAAAANDQ0NEhISEhISEhIFEhISEhISEhISEg0NDQ0NEBAQBQgIEBASEhISEhISEhISEhISEggICBISEhIQEBAQEAgICAgIBAQQEBAQEhAQEBAQEBEREREREREREBAQCAgIEBAQEBBSEBAQEAAAEFJSUhAQEAQEBAQRERERERERBAQEEREREQgICAgICAgEBAQEBAQEBAQEBAQEBAQEBAQEBAQPDw8PDwEBAgICAQEBAQEBAQEBAQEDAwMoKCgoFhYWFhZSUgtJSUlJSUkLCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NBQ0SEhISEhISEgUSEhISEhISEhISEhISDQ0SEhIQEBAFEBAQEhISEhISEhISEhISEhISEhISEhAQEBAFEBAQCAgSEBAEBBAQEBAQEBAQEBAQEREREREREREREBAQEBAQEBBSEFIQEAAQEABSUhAQEAQEBAQRERERERERBAQEEREREQgICAgICAgEBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgICAQEBAQEBAQEBAQEDAwMoKCgWFhYWFhZSUgsLCwtJSQsLCwALCwsLAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRIFEhISEhISBRISEhISEhISEhISEhISEhISEhISEgUQEAUICBISEhISEhIFEhISEhISEhISEBAQEAUQEBASEhISEBAQEBAEEBAQEBAQEBAREREREREREREREREREBAQEBAQUhAQEAAQEFJSBAQQEAQEBAQREREREREEBAQEEREREQgICAgICAgEBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgEBAQEBAQEBAQEBAQEDAwMoKCgWFhYWFhZSUlJSCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAA0NDRISBRISEgUSEhISEhISEhJSUhISEhISEhISEggIBRISEBAFEBASEhISEgUSEhISEhISEhISEBAQBRAQEBASEhISEBAQEBAQEAQEEBAQEFJSUggREREREREREREREREQEBAQEBAQBBAQUlIQEBAEBAQEBAQRCAgICAgEBAQEEREREQgICAgICAgEBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgICAQEBAQEBAQEBAQEDAygoKCgWFhYWFhZSUgsLCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAANDQ0SEgUSBRISEhISEhISElJSUggSEhISEhISCAgICBISEhIQEAUQEBISEhISEhISEhISEhIQEBAFEBAQEBISEhITExMQEBAQEBAQBAQQEFJSUggRERERERERERERERERERAQEBAQBBAQEBAQEBAQEAQEBAQRCAgICAgEBAQEEREREQgICAgICAQEBAQEBAQEBAQEBAQEBAQEBA8PDw8PDw8PDwICAgICAgIBAQEBAQEBAQEDAygoKCgWFhYWFhZSCwsLCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAANDQ0NEgUFBQUSEhISEhIICFJSCBISEhISEhISCAgICAgIEhISEBAQBQUSEhISEhISEhISEhAQEBAFEBAQEhISEhMTExMTExAQEBAQEBAQCFJSCAgREREREREREREREREREREQEBAQBBAQEBAQEBBSEBAQEAQRBAgICAgEBAQEEREREQQEBAQEBAQEBBAQEBAQEBAQEBAQEAQEBAQEBAQEDw8PDwICAgICAgEBAQEBAQEBAQEDAygoKCgWFhYWFhZSCwsLCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAAADQ0NBRISEgUFEhISEggICAgICBISEhIFEhISEg0ICAgICAgSEhIQEBAQBRISEhISEhISEBAQEAUQEBASEhISExMTExMTExMTEBAQEBAQCAgICAgREREREREREREREREREREQEBAEExMTExAQEBAQEFIQEBAQBAQEBAQEBAQREREREQQEBAQEBAQEBBAQEBAQEBAQEBAQEBAGBAYGBgYGBgYGBgICAgICAgEBAQEBAQEBAQEDAygoKCgWFhYWFlILCwsLCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAAADQ0FEhISEhISBRISCAgICAgIEhISEhISEgUSDQ0NDQgICAgICBISEhAQEAUSEhISJSUQEBAQBRAQEBISEhITExMTExMTExMTExMQEBAICAgREREFBRERERERERERERERERAQEBAEExMTExMTEBAQEBAQEBAQEBAEBAQEBAQREREREQQEBAQEBAQEBBAQEBAQEBAQEBAQEBAGBAYGBgYGBgYGBgICAgEBAQEBAQEBAQEBAQFSUigoKCgWFhYWFlILCwsLCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAAAAA0SEhISEhISEgUSEhIICAgSEhISEhISEhIFBQ0NDQ0ICAgICBISEhISEBAFEhISJSUQEBAFEBAQEBISEhITExMTExMTExMTExMTExALEwgREREREQUFEREREREREREREBAQEBATCBMTExMTExAQEBAQEBAQUhAQEAQEBAQEBAQEEQQEBAQEBAQEBAQEBBAQEBAQEBAQEBAGBAYGBgYGBgYGBgICAgIBAQEBAQEBAQEBAQFSUigoKCgWFhYWFlILCwsLCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0SEhISEhISBRISCBISEhISEhISEgUNDQUNDQ0NDQgIEhISEhISEhAQEAUlJSUlJQUQEBAQEhISEhMTExMTExMTExMTExMTExMTExMTERERERERBREREREREREREBAQEAQTCAgTExMTExAQEBAQEBAQEBAQEAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQBAVJSUgEBAQYGBgICAgIBAQEBAQEBAQEBAQFSUigoKCgWFhYWUgsLCwsLCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhISEhISEg0FEhISEhISEhISBQ0NDQ0NBQ0NDQ0NEhISEhISDQ0NEBAQEAUlJQUQEBASEhISExMTExMTExMTExMTExMTExMTExMTExMREREREREFEREREREQEBAQEBMICBMTExMTEBAQEBAQEBAQEBAQEBAQUgQEBAQEUkVFBAQEBAQEBAQEBAQEBAQEBAQEBAQBAVJSUlJSAQEBAQEBAQEBAQEBAQEBAQEBAQFSUigoKBYWFhYWUgsLCwsLCwsLCwsLCwsLCwsLCwsAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NEhISEhISDQ0NBRISEhISEhIFEhINDQ0NDQ0FDQ0NDRISEhISDQ0NDQ0QEBAQBRIFBRISEhITExMTExMTExMTExMTExMTExMTExMTExMTExEREREFBQURBQUFEBAQEAgICFJSUlJSEBAQEBAQCAgICAgEBAQEBAQEBBBFRVJSUlJSUlJSBAQEBAQEBAQEBAQEBAQDAQMDAQEDAwMDAwICAQEBAQEBAQEBAQEBAVJSUigoKBYWFhYWUgsLCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhISEhINDQ0NDQ0FEhISEgUSEhISDQ0NDQ0NDQ0NDQ0NEhINDQ0FDQ0NDRAFEhISEhISEhITExMTExMTCAgIExMTExMTExMTExMTExMTExMREREFBQUFBQUFEBAQEAgIUlJSUlIIEBAQEBAQCAgICAgQEBAQEBAQEBAQCAgICAgICAQEBAQEBAQEBAQEBAQEBAQDAQMDAQEBAQEDAwICAgICAgICAgEBAQEBAVJSKCgoKBYWFhZSCwsLCwsLCwsLCwsLCwsLCwsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDRISEg0NDQ0NDQ0NDQUSEhISEhISEhINDQ0NDQ0FDQ0NDQ0NDQUNDQ0NDQUSEhISEhISEhISEhMTCBMICAgICAgTExMTExMTEwMTExMTEwUTBQUFBQUFEQURBAQEAAgIUlJSUlIIEBAQEBAQCAgICAgQEBAQEBAQEBAQCAgICAgICAQEBAQEBAQEBAQEBAQEBAQDAQMDAwMDAQEDAwICAgICAgICAgEBAQEBAVJSKCgoKBYWFhZSCwsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRISDQ0NDQ0NDQ0NAQ0FEgESEhISEhISEg0NDQ0NDQUNDQ0NBQ0NDQ0NBRISEhISEhISEhISEhISCAgICAgICAgICAgTExMDEwMDAxMFBQUFBQUREQUFEREREREREQRSUlJSUlJSEBAQEBAQCAgICAgQEBAQEBAQEBAQCAgICAgICAgEBAQEBAQEBAQEBAQEBAMDAQMDAwMDAwMDAwICAgICAgICAgEBAQEBAVJSKCgoKBYWFhZSCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRINDQ0NDQ0NDQ0BAQENDQEBEhISEhISEhINDQ0NDQ0NBQ0FDQ0NDQ0FEhISEhISEhISEhISEhISCAgICAgICAgICAgIAxMDAwMDAwMFEREREREREREREREREREREREREVILUlIIEBAQEBAQCAgICAgQEBAQEBAQEBAQEAgICAgEBAQEBAQEBAQEBAQEBAQEBAMDAwMDAwMDAwMDAwICAgICAgICAgEBAQEBAVJSKCgoKBYWFlILCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0NDQ0NDQ0NDQEBAQEBAQ0FEhISEhISEhISEg0NDQ0FBQUNDQ0NDQUSEhISEhISEhISEhISEhISEhIICAgICAgICAMDAwMDAwMDAwMRERERERERERERERERERERERERERAQUhAQEBAQEBAQCAgICAgQEBAQEBAEBAQEBAQEAQQEBAQEBAQEBAQEBAQEBAQEBAMDAwMDAwMDAwMDAwICAgICAgICAgEBAQEBAVJSKCgoKBYWFlILCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ1SUlJSUlINDVJSUlIBAQENDQUSEhISEhISEg0NDQ0FBQUFBQ0NDRISEhISEhISEhISEhISEhISEhISCAgDAwMDAwMDAwMDAwgIAwQIERERERERERERERERBgYREREREBAQEBAQEBAQEBAQCAQEBAQEBBAQEBAQEBAQBAQEAQQEEREREQQEBAQEBAQEBAQEBAMDAwMDAwMDAwMDAwICAgICAgICAgEBAQEBAgJSKCgoKBYWFlILCwsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SDQ0NDQ0NDQ0BAQEBAQENDQ0NEgBSUlISDQ0NDQUFBQUFBQUFBRISEhISEhISEhISEhISEhISEhISAwMDAwMDAwMDCAgICAgICAgECAgREREREREREREGBgYGBhEAEBAQEAQEBAQEEBAQEBAQEBAQEBAQEBAQEBARBAQEEREREREREQQEBAQEBAQEBAQEBAMBAwMDAwMDAwMBAQICAgICAgICAgEBAQEBAgICKCgoFhYWUgsLCwsLCwsLCwsLCwsLCwsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhINDQ0NDQEBAQEBAQEBDQ0NDQUMDAwMDAwMBQUFBQUMUlJSUlISEhISEhISEhISEhISEhIFBQcHBwMDAwcHCAgICAgICAgICAgIBAQIEREREQYGBgYGEAYGBgYQEAQEBAQEBBAQEBAQEBAQEBAQEBAQEBAREREREREREREREREREQQEBAQEBAQEBAQEBAMBAwMDAwMDAwMBAQECAgICAgICAgEBAQEBAgICKCgoFhYWUgsLCwsLCwsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhISDQ0NAQEBAQEBCAEBAQENDQ0NBQwMDAwMDAUFBQwMDAUSEhIQEBAQEBAQEBBSUlJSBwcHBwcHBwcHBwcHCAgICAgICAgICAgICAgECAgRBgYGBgYQEBAQBgQEBAQQBBAEEBAQEBAQEBAQEBAQEBAQEREREREREREREREREREREQQEBAQEBAQEBAQEBAMBAwMDAwMDAwEBAQICAgICAgICAgEBAQEBAgIoKCgoFhYWUgsLCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRISEhIBAQEBAQEBAQEBAQENDQ0NDQ0FDAwMDAwMDAwMBRISEhIQEBAQEBAQEAVSBwcICAhSUlIHBwcHBwcHBwgICAgICAcHBwcICAgIBAQIEAYGBhAQEBAQEAQEBAYQEBAQEBAQEBAQEBAQEBAQCAgRCAgRERAQEREQEBAQEBAQEBAEBAQICAgICAgICAMBAwMDAwMDAwEBAgICAgICAgICAgEBAQEBAgIoKCgoFhZSCwsLCwsLCwsLCwsLCwsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0SEhISEgEBAQEBAQEBAQ0NDQ0NDQ0NBQwMDAwMDAwMBRISEhAQEBAQEBAFUlJSBwcICAgICAhSUlJSUgcHBwgIBwcHBwcHBwcHCAgICAgEEBAGEBAQEBAQBA8EBgYGBhAQEBAQEBAQEBAQCAgICAgICAgQEBAQEBAQEBAQEBAQEAQEBAgICAgICAgICAMBAQEDAwMDAwMDAwMDAwMDAwMDAAEBAQECAigoKCgWFhZSCwsLCwsLCwsLCwsLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhISEhIBAQEBAQEBDQ0NDQ0NDQ0NDQ0FDAwMDAwFEhISBQUFBQUFBVJSUlJSUgcHCAgICAgIUlJSUlIHBwcHBwcHBwcHBwcHBwgICBAQBAAQEBAQEBAEDw8PDwYGBgYGEBAQEBAREQgIBQUFBQUFBQgPDw8PDw8PDw8PDw8PDw8EBAgICAgICAgIAwMBAQEDAwMDAwMDAwMDAwMDAwMDAQEBAQEYGEhIUlJSUlILCwsLCwsLCwsLCwsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhJSEhISEgEBAQENDQ0NDQ0NDQ0NDQUFBQgICAgICAgICBISEgEBUlJSUlJSUiMjIyMjIyMIUlJSUlJSBwcHBwcHBwcHBwcHBwcHBwcQEBAEEBAQEAQPDw8PEREGBgYGBhAREREREQUICAgICAgICBERDw8PDw8PCAgIDw8PDw8PBAQIBAQEBAQEAwMDAwMDAwMDAwMDAwMDAwMDAwMBAQEBAQEYGEhIAAAAAFIAAAsLCwsLCwsLCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhISEhISEhIAUg0NDQ0NDQ0NDQ0FBRISEhISCAgICAgICAgBAQFSUlJSUlJSUlIjIyMjIyMIExMTExMTCAgICAgICFIHBwcHBwcHBwcHEBAQBBAQBA8PDw8REREREQYGBgYGEREFERERCAgICAgRERERDw8PDw8ICAgIDw8PDw8PBAQEBAQEBAQEAwMDAwMDAwMDAwMDAwMDAwMDAQEBAQEBARgYSEgAAAAAAFIAAAAACwsLCwsAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhISEhJSEhISCBISEhISUg0NBRISEhISEhISEggICAgICAgICFJSUlJSUlJSUlIjIyMjIyMIExMTExMTCAgICAgICAhSBwcHBwdSBwcICBAQEBAEDw8PDxERERERERERBgYGBQURERERERERERERERERDw8PDwgICAgIDw8PDw8PBAQEBA8PDw8PDwMBAwMDAwMDAwMDAwMDAwMDAQEBAQEBARgYSEgAAAAAAAAAAAAAAAAAAAsLCwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRISEhJSEhISCAgIEhISBQUFEhISElISEhISEhISCAgICAgICFJSUlJSUlJSUlIjIyMjCAgICBMTExMTEwgICAgICAgIUgcHBwcHBwdSCAgHEAQPDw8PEREREREREREREQYFBRERERERERERERERERERDw8PDwgICA8PDw8PDwQEDwQPDw8PDw8PDwMBAwMDAw8PDw8PDw8DDw8PAQEBAQEBGBhISEhSAAAAUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NEhISEhISEhISCAgIBQUICAgSEgUSEhISEhISElJSEggICAgIUlJSUlJSUlJSUlJSIyMjCAgICBMTExMTEwgICAgICAgICFIHBwcHBwcHB1IHBA8PDw8RERERERERERERBREREREFEREREREREREREREREQ8PDw8PCAgPDw8PBA8PDwQPDw8PDw8PDw8BAwMDAw8PDw8PDwMDDw8PDw8PAQEBGBhISFJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhISEhISEgUFCAgICBISEhIFEhISEhISEhISEhISCAhSUlJSUlJSUlJSUlJSBwcICAgICAATExMTCAgICAgICAgICAhSBwcHUgcHUgcEEQ8PDxEREREREREREREFERERERERBRERERERERERERERDw8PDw8PDw8PDw8EDw8PDw8EDw8PDw8PDw8PAQ8PDw8PDw8PDw8PDw8PDw8PUgEBARhISFJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDRISEhISBQUFCAgICAgIEhISEhISEgUSEhISEhISEhISEhJSUlJSUlJSUlJSUgcHBQcHBwgICAcHUhMICAgICAgICAgICAgICAdSUlJSUgQREQ8PERERERERERERBREREREREREREREFEREREREREQ8PDw8PDw8PDw8PDwQPDw8PDw8EDw8PDw8PDw8EDwEPDw8PDw8PAQEPDw8PD09PT1IBAQFISFJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NBQUSEhISCAgICAgSEhISEhISEhISBRISEhISEhISEhISUlJSUlJSCAgIBwcHBwUHBwcHCAcHB1IICAgICAgICAgICAgICAhSUlJSBAQEEREREREREREREREFERERERERERERERERBREREREPDw8PDw8PDw8PDw8EDw8PDw8PDw8PDw8PDw8PDwQEDw8BDw8PDwEBDw8MAw8PT09SUlJSAQEBUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQUSEhISEhISEhISEgUSEhISEhISEhISEgUSEhISEhISEhISEhJSLy8vCAgICAcHBwcHBwcHBwcHBwdSCAgICAgICAgICAgICFJSUlIEBAQRERERERERERERBREREREREREREREREREREREFDw8PDw8PDw8PDw8PDwQPDw8PDw8PDw8PBA8PDw8PBAQBDw8PAQ8PAQ8PDw8MDFJSUlJSUlJSAQEBFRUVUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NEhISEhISEhISEhIFEhISEhISEhISEhISBRISEhISEhISEhIvLy8vLwgICAgHBwcHBwUHBwcHBwcHBwgICAgICAgICAgIUlJSUgQEEREREREREREREREFERERERERERERERERERERERERBQ8PDw8PDw8PDw8PBAsPDw8PDw8PDw8PDwQPDw8EAQEBAQ8PDwEPDw8PDw9SUlJSUlJSUlJSCAgVFRUVFRUVUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRISEhISEhISEhISEgUSEhISEhISEhISEgUSEhISEhISEi8vLy8vLwgICAgICAcHCAgIBwcHUgcHBwcICAgICAgICABSUgQEBAQRERERERERERERBQUICAgREREREREREREREREREREPDw8FDw8PDw8PDwQPDwsPDw8PDw8PDw8PDw8PDwQEAQEBAQEPAQ8BDw8PUlJSUlJSUlJSUggICAgVFRUVFRUVUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDRISEhISEhISEhISEhISBRISEhISEhISEhISBRISEhISEhIvLy8vLy8ICAgICAgICAgIBQcHBwcHBwcHCAgICAgIUlIEBAQEBAQREREREREREREfHx8fHwgINhEREREREREREREREQ8PDw8PBAQPDw8PBA8PDw8PDw8PDw8PDw8PDw8EDw8PDwEBAQEBAQ8PAQBSUlJSUlJSUlIICAgICAgVFRUVFRUVUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhISEhISEhISEhISEgUSEhISEhISEhISEhIFEhISEhIvLy8vLy8ICAgICAgICAgIBQcHBwcHBwcHB1IIUlJSUkpKBAQRERERERERERERBR8fHx8fHx8ICDY2ERERERERERERDw8PDw8PDw8EDwQPDw8PDw9SUg8PDw8PCAgPDwQPDw8PDw8BAQEBAQ9SUlJSUlJSUlJSUlIICAgICBUVFRUVFRVSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDRISEhISEhISEhISEhISEhISBRISEhISEhISEhISBRISEi8vLy8vLy8vCAgICAgICAcHBwcHCAcHBwUFBwdKSkpKSkoEBBEREREREREREREfHx8fHx8fHx8fCAg2NjYREREREQ8PDw8PDw8PDw8PBA8PDw8PUlJSUlIPDw8PCAgIBFJSUg8BAVJSAVJSUlJSUlJSUlJSUlJSUlIVCAgVFRUVFRUVFVJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0SEhISEhISEhISEhISEhISEhIFEhISEhISEhISEhIFLy8vLy8vLy8vLwgICAgICAcHBwUICAUHBwcHBwcHBwdKSgcHBwUREREREREFHx8fHx8fHx8fHx8fHwgINjY2ERERDw8PDw8PDw8PDwRSDw8PDw8PD1JSUlIPDw8PDwgEDw9SUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlIVFRUVFRUVFRVSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0SEhISEhISEhISEhISEhISEhIFBRISEhISCBISEhISEi8vLy8vLy8vLy8FCAgICAgIBQUICAgHBwcHBwcHBwcHBwcHBwcRERERBR8fHx8fHx8fHx8fHx8fHx8ICDY2NhEPDw8PDw8PDw8PBFJSUg8PDw8PD1JSUgQEDw8EBA8PDw8PUlJSUlIICFJSUlJSUlJSUlJSUhUVFSYVFRUVFRUVFVJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NEhISEhISEhISEhISEhISEgUSEhIFEhIICAgIEhISEhISLy8vLy8vLy8vLwgFBQUFCAUICAgHBwcHBwcHBwcHBwcHBxEFBQUfHx8fHx8fHx8fHx8fHx8fHx8fHwgINjYPDw8PDw8PDwRSUlJSUlIPDw8PBAQPDw8PDw8PDw9SUlJSUlJSUlJSCFJSUlJSUlJSUlIVFSYVJiYVFRUVFRVSUlJSUlJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlISEhISEhISEhISEhISEhISBQgICAgSEhISEhISEhIvLy8vLy8vLy8REREREREREREHBwcHBwcHBwcHBxERERERHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8ICDYIDw8PDw8PBFJSUlJSBA8PDw8PBAQPDwgIDw8BAQFSUlJSUlJSUlJSUlJSUlJSUlJSFRUmFRUVFRUVFRUVUlJSUgAAAAAAAABSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhISEhISEgsLUlJSEhISEggICAgICBAQEhISEhISEBISLy8vLy8vLxEREREREREREREREREREREREREREREREREFBR8fHx8fUh8fHx8fHx8fHx8fHx8fHx8fCAgICA8PDw9SUlJSUlJSUg8PDw8PDw8EDw8PDwEBAQEBAQEBUlJSUlJSUlJSUlJSUlIVJhUVFRUVFRUVFVJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0SEhISEhISEhISEgUSEhISAAgICAgIEBAQEBASEhIQEBASEBAvLy8REREREREREREREREREREREREREREREREFBREREQUfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHwgICAgPBARSUlJSUlJSUg8PDw8PDw8PDw8PAQEBAQEBAQEBAVJSUlJSUlJSUlJSUiYVFRVSUlJSUlJSUlJSUlJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADRISEhISEhISEhISEgUSEhISEggICAgQEBAQEBAQEBAQEBAQEAUFERERERERERERERERERERERERERERBQUFBREREREREREfHx8fHx8fHx8fHx8fHx8fHx8fHx8fHx8ICAgEDw8PUlJSUlJSUlIPDw8PDw8PDw8PDwEBAQEBAQEBAVJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlIAAFJSUlJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHgASEhISEhISEhISBRISEhISCAgICAhSEBAQEBAQEBAQEBAQBRERERERERERERERESQkJBEREREREREREREREREREREREREFHx8fHx8fHwgfHx8fHx8fHx8fHx8fHwQECFIPDw8PUlJSUlJSUlIPDw8PDw8PUg8PDw8PAQEBAQEBUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4eEhISEhISEhISEhISEhIICAgICBEICAgQEBAQEBAQEAUREREREREREREREREuJCQkJCQRERERERERERERERERERERERERHx8fHx9SCAgfHx8fHx8fHx8fHwQEDwgICFIPDw8PD1JSUlJSUlJSDw8PAQFSUlIPDw9SAQEBAVJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4eHh4SEhISEhISEhISCAgICBEREREREQhSBBAQBAQQBRARERERERERERERES4RJCQkJCQkJBERERERERERERERERERERERBR8fHx8fUh8fUhEQEBAfHx8EBA8PCAgICAhSDw8PDw8PUlJSUlJSUgEBAQEAUg8PGhoBAQFSUlJSUlJSUlJSUlJSUlJSUgAAAFJSUlJSUlJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4eHh4eHgAIEhISEhIICAgIERERERERERERC1IEBAQQEBAQEBERERERERERLhEkJCQkJCQkJCQkERERERERERERERERERERER8fHx8fUhEREBAQEBAEBA8PAA8ICAgICAtSUg8PDw8PUlJSUlIBAQEBAQEBAQ9SUhoaAVJSUlJSUlJSUlJSUlJSUlIAAAAAAFJSUlJSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeHh4eHggICAgSEhEICAgREREREREREREEBAQLBAQQEBAQEBAREREREREuLiQkJCQkJCQkJCQkJBEREREREREREREREREREQUfHxEREREQEBAQEAgICAgPDw8PUgsLCwsLUg8PDw8PD1JSAQEBAQEBAQEBAVJSUlIaUlJSUlJSUlJSUlJSUlJSAAAAAABSUlIAAAAAAFJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeHh4eCAgICAgREREREREREREREREREQQEBAQEBBAEEBAQEBAQEBEREREuJCQkJCQkJCQkJCQkJCQREREREREREREREREREVIEEREREBAQEBAEDw8ICAgPDw8RERFSCwsLUlIPDw8PDwEBAQEBAQEBAQEBAQFSUlJSUlJSUlJSUlJSUlJSUlIAAAAAUlJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHh4eCAgICBEREREREREREREREREREREEBAQEBBBSEAQQEBAQERERES4kJCQkJCQkJCQkJCQkJCQkERERERERERERERFSTRAQBBEQEBAQBAgICAgICAgPEREREREICFILC1IPDwEBAQEBAQEBAQEBAQEBAQEBUlJSUlJSUlJSUlJSUlJSAAAAAFJSUlJSUlJSUlJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHh4eHh4REREREREREREREREREREREQQEBBAEEBAQUhARBBARERERLiQkJCQkJCQkJCQkJCQkJCQkJBERERERERFSUk0QEA8PBBAQEAQECAgICAgICA8PDxEREQgICAgIUlJSAQEBAQEBAQEBAQEBAQEBAQEBAVJSUgwMUlJSUhkZGRkAAAAAUlJSUlJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4eEREREREREREREREREREREREREQQEEBAQEBAQEBEREQQRERERJCQkJCQkJCQkJCQBJCQkJCQkJCQRERFSUk1NEBAPDw8PDwQEBA8PDw8ICAgIDw8PDw8RCAgICAgIAQFSUgEBAQEBAQEBAQEBAQEBAQEBUlJSDFJSUlJSGRkZGQAAAFJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFIRERERERERERERERERERERERERBBAQEBAQEBAQEBERERERES4REREkJCQkJCQkJAEkJCQkJCQkJCRSEBBNUhAQEA8PDw8PBAQPDw8PDg4ODggPDw8PDw8ICAgICAEBAQEBUlIBAQEBAQEBAQEBAQEBAVJSCFIMUlJSUhkZGRkZGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUhEREREREREREREREREREREEEREQEBAQEBAQERERERERES4RERERJCQkJCQkASQkJCQkJCRSEBAQEBAQEBAPDw8PDwQEDw8PDw8ODg4ODg8PDw8PDw8ICAgIAQEBAQEBAQFSUgEBAQEBAQEBAQFSUggIDFJSUlJSUhkZGRkZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSERERERERERERERERERERERERERAQEBARERERERERLlIREREREQ0kJCQBJCQkAQEBARAQEBAQEBAQDw8PDw8EBA8PDw8ODg4ODgwODg8PDw8PDw8PCAEBAQEBAQEBAQEBAQFSUlJSUlJSUgEBCFIMUlJSUlJSGRkZGRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlIAEREREREREREREREREREREREQEBEREREREREuDg4OAVIFDQ0NDQEkJCQkUhERBRAQEBAQEBAPDw8PBAQPDw8ODg4ODg4ODAwMDw8PDw8PDw8BAQEBAQEBAQEBAQEBUgEBAQEBAQEBAQEBDAxSUhsbUlIZGRkZGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUiwsLAARERERERERERERERERERERERERERERES4ODgEBAQEBDgUREREREREREREQEBAQEBAQDw8PDwQEDw8PDAwMDg4ODg4MDA8PDw8PDw8PAQEBAQEBAQEBAQEBAVIBAQEBAQEBAQEBAQwMGxsbGxtSUlIZGRkZGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSLCwsLCwsLBERERERERERERERERERERERERERLg4ODgEBAQEBDg4IERERERERERAQEBAQEBAPDw8DAwMPDw8MDAwMDA4ODgwMDw8PDw8PDw8BAQEBAQEBAQEBAQFSAQEBAQEBAQEBAQEMDBsbGxsbGxtSUhkZGRkZGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSLCxSLCwsLFJSEREREREREREREREREREREREqEREODg4ODgEBDggIDgUREREREBAQEBAQEA8DAwMDAwMDDwwMDAwMDAwMDAwPDw8PDw8PAQEBAQEBAQEBAQEBUgEBAQEBAQEBAQEBDAwbGxsbGxsbG1JSGRkZGRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUiwsUlJSUg0RERERERERERERERERESoREVIREQ4ODg4ODggODhAFEREREBAQEBAQDw8DAwMDAwMPDw8PDAwMDAwMDA8PDw8PDwEBAQEBAQEBAQEBAVIBAQEBAQEBAQEBAQwMGxsbGxsbGxsbUhkZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSLCxSUlJSUg1SUhERERERERERERERKhERABERERERDg4ODg4OEBAQEAUQEBAQEBAPDwMDAwMDAwMPDw8PDw8MDAwPDw8PDwFSAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBUhsbGxsbGxsbGxtSGQAAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSLCxSUlJSUlJSUggIERERERERERERKhFSEREREREREREODg4RERAQEBAFEAMDEA8PAwMDAwMDAwMPDw8PAQ8PDA8PUgEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEMGxsbGxsbGxsbG1IZAAAAAAAAGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSLFJSUlJSUlJSCAgIDQ0REREREREqEREREREREREREREREREREREREBAQAwMDAw8DAwMDAwMDAwMDDw8BAQEBDxAQEBABAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQwbGxsbGxsbGxsbGxkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlJSUlJSUlJSUlINDQ0RERERESoqEREREREREREREREREREREREREREQEAMDAwMDAwMDEBADAwMDAwEBAVIAABAQEAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEMDBsbGxsbGxsbGxsbAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlJSUlJSUlINDRERERERESoRUhERERERERERERERERERERERERERERAQAwMDAwMQEBAQEAMDAQFSAAAAAAAiAQEBAQEBAQEBAQEBAQEBAQEIAQEBAQEBAVIMGxsbGxsbGxsbGwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlJSUlJSUlJSDRERERERKhEREREREREFBRERERERERERERERERERERAQEAMDAxAQEBAQEBAQA1IAAAAAACIiIgEBAQEBAQEBAQEBAQEBAQgICAgBAQEMDBsbGxsbGxsbGxsbGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUlJSUlILDQ0NEREREREqKhERERERBQUFBQUREREREREREREREREREBAQAwMDEBAQEBAQEBBSAAAAAAAAACIiIiIiAQEBAQEBAQEBAQEBCAgICAgIAVIMGxsbGxsbGxsbGxsAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUlJSUlINDQ0REREREQAqEVIREREFBQUFEREREREREREREREREREQEBADAwMDEBAQEBAQEAAAAAAAAAAAIiIiIiIiIiIBAQEBAQEBAQEICAgICAgMDBsbGxsbGxsbGxsbGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlJSUgAREQUFBQUFBSoFUhEFBQUFERERERERERERERERCBERERAQEAMDAwMQEBAQEBAIAAAAAAAAAAAiIiIiIiIiIiIiAQEBAQEBCAgICAgICAAMGxsbGxsbGxsbABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlJSUhEREREREQURKipSBREFBRERERERERERERERERERCAgIEBAQBAQDAxAQEBAQUgsICAAAAAAAACIiIiIiIiIiIiIiIiIBAQEICAgICAgMDBsbGxsbGxsbGRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSEREREREREREqKgUAEREREREREREREREREREREREREQgIEBAEBBERERAQEBAICAsICAgQAAAAIiIiIiIiIiIICCIiIiIiUggICAgIDAwbGxsbGxsbGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlIREREREREREREqEVIRERERERERERERERERERERERERERAQEAQEBBEREREREAgICAgICBAQDQ0iIiIiIiIiIiIiCAgiUlJSUlIICAhSDBsbGxsZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUhERERERERERESoRERERERERERFSUlJSUhERERERERERERAQBAQEEREREREREREICAgICBAQDQ0NDSIiIgsLIiIICCIiEhJSUlJSUgwbGxsbGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUg0NERERERERKioRERERERERERFSUlJSUlIREREREREREBAEBAQREREREREREREREQgIEBANDQ0NDQ0iIiILCwgIUiJSUlJSUgwMUlJSGRkZGRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDRERERERKipSERErERERERFSUlJSUlIREREREREQEBAEBBEREREREREREREREREPEA0NDQ0NDQ0NUiIiIghSUlJSUlIMDFJSUlIZGRkZGRkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQ0NEREqKhERESsrKysRERERERERERERERERERAQEAQEERERERFSEREREREPEQ8PDQ0NDQ0NDQ1SUlISIlJSUlJSUgxSUlJSUlIZGQAAABkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NKioqCxERCAgIKysRERERERERERERERERERAQBAQRERERERFSEREREREPDwBBQQ0NDQ0NDQ1SUlISUlJSUlIMDFJSUlJSUlIZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAKioqUggICAgIEg0REREREREICBERERERERERBAQREREREREREREREQ8PUkFBQUENDQ0NDQ1SUlJSUlJSUgwIUlJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAqCAgICAgIDQ0NDREREQgICBEREREREREEBBERERERERERERERDw9SUlJBQUFBCAgICAgIUlJSUgwMCAgIUlJSUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICAgIDQ0NDQ0NEQgIEREREREREQQEEREREREREREREREPD1JSUlJSQUFBCAgICAgIUlIMDAgICAgIUlJSUlJSUhkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgNDQ0NDQ0NCAgIERERERERBAQRERENDRERUhERDxEPUlJSUlJSUkFBQQgICAgIUgwICAgICAgIUlJSUlJSGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADQ0NDQ0ICAgRERERERERBAQREQ0NDQ0NERERDw9SUlJSUlJSUkFBQUEICAgMDAgICAgICAgIGVJSUhkZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAANDQ0NDQ0REREREREEBBEREQ0NDQ1SEREPUlJSUlJSUlJSUlJBQUFBUgwICAgICAgICAgICFIZAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA0NDQwMDAwREREEERERDQ0NDQ0REQ9SUlJSUlJSUlJSUlJSQVIMCAgICAgICAgICAgIUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMDAwMSwQRERENDQ0NDQ0RDw8IUlJSUlJSUlJSUlIMDAgICAgICAgICAgICFJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDAQMDA0NDQ0NDVIRDwgICFJSUlJSUlJSDAgICAgICAgICAgICwsIAAAAUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMBAwMDAwMDQ0NDREPCAgICAhSUlJSUggICAAACAgICAgICAAAC1JSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMDAwMDAwNUg8PCAgICAgIUlIMCAgIAAAAAAgICAgACwsLC1JSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwMDAwMDw8ICAgICAgIDAAICAgIAAAAAAAIAAsLCwtSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADAwMDw8ICAgICAwIUlJSAAgICAAAAAAIAAALUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSDwgICAgIAAhSUlJSUggACAgICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICFIIDFJSUlJSCAgIAFIICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlIICAgICABSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUlJSCAgICABSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlJSUlIICAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFJSUlJSUlJSUggAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABSUlJSUlJSAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUlIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUlJSUgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-const _GRID_CODES = ["APH", "C1", "C2", "C3 I", "C3 II", "E1", "E2", "E3", "I", "I1", "NCI", "R1", "R1b I", "R1b II", "R2a I", "R2a II", "R2b I", "R2b II", "R2b III", "U1", "U10", "U11", "U12", "U13", "U14", "U15", "U16", "U17", "U19", "U2", "U20", "U21", "U22", "U23", "U26", "U28", "U3", "U31", "U31 i", "U32", "U33", "U34", "U35", "U36", "U37", "U38", "U39", "U4", "U40", "U41", "U42", "U43", "U44", "U45", "U46", "U47", "U48", "U49", "U5", "U50", "U51", "U52", "U53", "U54", "U55", "U56", "U57", "U58", "U59", "U6", "U60", "U61", "U62", "U63", "U64", "U65", "U66", "U67", "U68", "U8", "U9", "UP"];
-const _G = {lng0:-58.535,lat0:-34.71,step:0.0009,ncols:228,nrows:212};
-let _gridArr = null;
-
-function gridLookup(lng, lat) {
-  if (!_gridArr) {
-    const bin = atob(_GRID_B64);
-    _gridArr = new Uint8Array(bin.length);
-    for (let i=0; i<bin.length; i++) _gridArr[i] = bin.charCodeAt(i);
-  }
-  const col = Math.round((lng - _G.lng0) / _G.step);
-  const row = Math.round((lat - _G.lat0) / _G.step);
-  if (col<0||col>=_G.ncols||row<0||row>=_G.nrows) return null;
-  const idx = _gridArr[row * _G.ncols + col];
-  return idx > 0 ? _GRID_CODES[idx-1] : null;
-}
-
-
-function cleanDistrito(raw) {
-  if (!raw) return null;
-  const s = raw.toString().trim();
-  // "APH 51" → "APH",  "R2b I" → "R2b I",  "C3 II 2" → "C3 II"
-  const roman = new Set(['I','II','III','IV','V']);
-  const parts = s.split(/\s+/);
-  const base = parts[0];
-  const ind = (parts[1] && roman.has(parts[1].toUpperCase())) ? parts[1] : null;
-  const full = ind ? base + ' ' + ind : base;
-  const match = Object.keys(ZONAS).find(k => k === full);
-  return match || full;
-}
-
-let _centroids = null;
-async function loadCentroids() {
-  if (_centroids) return _centroids;
-  try {
-    const r = await fetch('./cur_centroids.json?v=7');
-    _centroids = await r.json();
-  } catch(e) { _centroids = []; }
-  return _centroids;
-}
-
-function findByNearest(lng, lat, centroids) {
-  const MAX2 = 0.002 * 0.002;
-  let best = null, bestD2 = MAX2;
-  for (const c of centroids) {
-    const d2 = (c[0]-lng)**2 + (c[1]-lat)**2;
-    if (d2 < bestD2) { bestD2 = d2; best = c[2]; }
-  }
-  return best;
-}
-
-
-// ── MOTOR KD-TREE — 280k parcelas reales CUR 2024 ────────────────
-let _curData = null;
-let _curPoints = null;
-
-let _smpIndex = null;  // SMP normalizado → índice en _curData
-
-// Normaliza SMP quitando ceros: '011-049-026' y '11-049-026' → '11-49-26'
-function smpNorm(s) {
-  if (!s) return '';
-  return s.toUpperCase().split('-').map(p => {
-    const digits  = p.replace(/[^0-9]/g,'');
-    const letters = p.replace(/[^A-Z]/g,'');
-    return digits ? String(parseInt(digits)) + letters : p;
-  }).join('-');
-}
-
-async function loadCurData() {
-  if (_curData) return;
-  const r = await fetch('./cur_optimizado.json', { signal: AbortSignal.timeout(20000) });
-  if (!r.ok) throw new Error('No se pudo cargar cur_optimizado.json');
-  const d = await r.json();
-  _curPoints = d.points;
-  _curData   = d.data;
-  // Índice con SMP normalizado (sin ceros) → O(1)
-  _smpIndex = {};
-  for (let i = 0; i < _curData.length; i++) {
-    const norm = smpNorm(_curData[i].smp);
-    if (norm) _smpIndex[norm] = i;
-  }
-}
-
-function nearestNeighbor(lat, lng) {
-  let bestD2 = Infinity, bestIdx = -1;
-  for (let i = 0; i < _curPoints.length; i++) {
-    const dlat = _curPoints[i][0] - lat;
-    const dlng = _curPoints[i][1] - lng;
-    const d2 = dlat*dlat + dlng*dlng;
-    if (d2 < bestD2) { bestD2 = d2; bestIdx = i; }
-  }
-  return { idx: bestIdx, dist: Math.sqrt(bestD2) * 111000 };
-}
-
-
-// ── ESCUDO SANITIZADOR CUR ───────────────────────────────────────
-// Corrige errores del Shapefile aplicando reglas duras del CUR
-function sanitizarDatosCUR(parcela) {
-  const p = { ...parcela };
-
-  // REGLA 1: Distritos bajos (U.S.A.B.) — plano = h
-  if (p.h > 0 && p.h <= 14.6) { p.plano = p.h; }
-
-  // REGLA 2: Corredor Alto — corrige bug 39.2m → 38.2m del Shapefile
-  if (p.plano > 38 && p.plano < 40) { p.plano = 38.2; }
-
-  // REGLA 3: Corredor Medio — asegura 31.2m
-  if (p.plano > 31 && p.plano < 32) { p.plano = 31.2; }
-
-  // REGLA 4: U.S.A.A. — asegura 29.8m de plano límite
-  if (p.plano > 29 && p.plano < 30) { p.plano = 29.8; }
-
-  // REGLA 5: plano=0 en CUR → usar h como fallback
-  if (!p.plano || p.plano <= 0) { p.plano = p.h || 0; }
-
-  return p;
-}
-
-async function getDistrito(lat, lng) {
-  const GK_OX=107253.769166, GK_OY=102807.160072;
-  const LNG_O=-58.384222,    LAT_O=-34.603939;
-  const M_LNG=91724.6547,    M_LAT=111003.9032;
-  const gkx = GK_OX + (lng - LNG_O) * M_LNG;
-  const gky = GK_OY + (lat - LAT_O) * M_LAT;
-
-  await loadCurData();
-
-  // PASO 1: SMP exacto via USIG reversegeocoding
-  let epokSmp = null;
-  try {
-    const revR = await fetch(
-      `https://ws.usig.buenosaires.gob.ar/geocoder/2.2/reversegeocoding?x=${gkx.toFixed(3)}&y=${gky.toFixed(3)}`,
-      { signal: AbortSignal.timeout(4000) });
-    if (revR.ok) {
-      const raw     = (await revR.text()).trim().replace(/^\(|\)$/g,'');
-      const usigSmp = JSON.parse(raw).parcela || '';
-      if (usigSmp) {
-        const parts = usigSmp.split('-');
-        epokSmp = usigSmp;  // smpNorm() normaliza en el lookup
-      }
-    }
-  } catch(e) { console.warn('[NORM-AR] revgeo:', e.message); }
-
-  // PASO 2: búsqueda EXACTA por SMP en el JSON (O(1))
-  let base = null;
-  let source = '';
-  const smpKey = smpNorm(epokSmp);
-  if (smpKey && _smpIndex && _smpIndex[smpKey] !== undefined) {
-    base   = { ...(_curData[_smpIndex[smpKey]]), dist: 0 };
-    source = 'Exacto por SMP';
-  } else {
-    // Fallback KD-Tree si el SMP no está en el JSON
-    const { idx, dist } = nearestNeighbor(lat, lng);
-    if (idx < 0) return null;
-    base   = { ...(_curData[idx]), dist: Math.round(dist) };
-    source = 'KD-Tree (' + Math.round(dist) + 'm)';
-    console.warn('[NORM-AR] SMP no en JSON, KD-Tree fallback:', epokSmp);
-  }
-
-  // PASO 3: escudo sanitizador CUR (corrige bugs del Shapefile)
-  base = sanitizarDatosCUR(base);
-
-  // PASO 4: EPOK por SMP -> fr, fo, area oficiales
-  const smpFetch = epokSmp || base.smp;
-  if (smpFetch) {
-    try {
-      const epR = await fetch(
-        'https://epok.buenosaires.gob.ar/catastro/parcela/?smp=' + smpFetch,
-        { signal: AbortSignal.timeout(4000),
-          headers: { 'Referer': 'https://ciudad3d.buenosaires.gob.ar/' } });
-      if (epR.ok) {
-        const ed  = await epR.json();
-        const sup = parseFloat(ed.superficie_total);
-        const fr  = parseFloat(ed.frente);
-        const fo  = parseFloat(ed.fondo);
-        if (sup > 0) base.area = Math.round(sup);
-        if (fr  > 0) base.fr   = fr;
-        if (fo  > 0) base.fo   = fo;
-        base.smp    = ed.smp || smpFetch;
-        source += ' · EPOK catastro';
-      }
-    } catch(e) { console.warn('[NORM-AR] EPOK:', e.message); }
-  }
-
-  base.source = source;
-  return base;
-}
-
-function recalcularRendimiento() {
-  const pisosEst   = window._pisosEstimados || 1;
-  const planoSan   = window._planoSanitizado || 0;
-  const frActual   = window._frente || 0;
-  const supInput   = eid('c-sup');
-  const pbInput    = eid('c-pb');
-  if (!supInput || !pbInput) return;
-
-  // ── OVERRIDE MANZANA ATÍPICA ────────────────────────────────────
-  const inputAreaOficial    = document.getElementById('input-area-edificable');
-  const area_edificable_manual = inputAreaOficial ? parseFloat(inputAreaOficial.value) : NaN;
-  const areaLote = parseFloat(supInput.value) || 0;
-  const fo_act   = window._fondo  || 0;
-  const fr_act2  = window._frente || 0;
-
-  let nuevaPisada = 0;
-  let modoManzanaAtipica = false;
-  if (!isNaN(area_edificable_manual) && area_edificable_manual > 0) {
-    nuevaPisada = Math.min(area_edificable_manual, areaLote);
-    modoManzanaAtipica = true;
-  } else {
-    // Regla general LFI
-    const pbVal = parseFloat(pbInput.value) || 0;
-    nuevaPisada = pbVal > 0 ? pbVal
-      : (fo_act <= 16 ? areaLote : Math.min(fr_act2 * 22, areaLote));
-  }
-  if (nuevaPisada <= 0 || pisosEst <= 0) return;
-
-  // Actualizar label pisada
-  const lblPisada = document.querySelector('#c-pb')?.closest('.citem')?.querySelector('.cunit');
-  if (lblPisada) lblPisada.textContent = modoManzanaAtipica
-    ? '⬡ Dato Oficial: Manzana Atípica'
-    : '✦ Calculado: LFI a 22m';
-
-  // ── PROFUNDIDAD EFECTIVA DEL EDIFICIO ───────────────────────────────
-  const profEdificio = frActual > 0 ? nuevaPisada / frActual : 20;
-
-  // ── VOLUMEN CON RETIROS EXACTOS CUR (no 0.8 aproximado) ─────────────
-  let nuevoVolumen = 0;
-  if (planoSan <= 14.6) {
-    // Distritos bajos USAB — sin retiros
-    nuevoVolumen = nuevaPisada * pisosEst;
-  } else {
-    if (pisosEst > 2) {
-      // Retiro 1 (piso penúltimo): profundidad máx 4m desde fondo
-      const retiro1 = Math.max(0, frActual > 0 ? frActual * (profEdificio - 4) : nuevaPisada * 0.8);
-      // Retiro 2 (último piso): profundidad máx 8m desde fondo
-      const retiro2 = Math.max(0, frActual > 0 ? frActual * (profEdificio - 8) : nuevaPisada * 0.6);
-      nuevoVolumen = (nuevaPisada * (pisosEst - 2)) + retiro1 + retiro2;
-    } else {
-      nuevoVolumen = nuevaPisada * pisosEst;
-    }
-  }
-
-  // ── EFICIENCIA DINÁMICA POR PATIOS (no 0.85 fijo) ───────────────────
-  let eficiencia = 0.85; // estándar
-  if (profEdificio <= 13) {
-    eficiencia = 0.88;   // lote corto, sin zona oscura
-  } else if (profEdificio > 18) {
-    eficiencia = 0.82;   // lote profundo, exige patio principal
-  }
-  const vendibleCubierto = nuevoVolumen * eficiencia;
-
-  // ── BALCONES (rentabilidad semicubierta) ────────────────────────────
-  const anchoBalcon  = Math.max(0, (frActual || 0) - 1.20); // 0.60m c/medianera
-  let totalBalcones  = 0;
-  if (pisosEst > 1 && anchoBalcon > 0) {
-    // ancho libre × 1.20m saliente × 2 frentes (LO + LFI) × pisos sobre PB
-    totalBalcones = (anchoBalcon * 1.20) * 2 * (pisosEst - 1);
-  }
-
-  const nuevosVendibles = vendibleCubierto + totalBalcones;
-
-  // ── DISPLAY: tres líneas de desglose ──────────────────────────
-  eid('c-edif').textContent = fmt(nuevoVolumen);
-  const unitEdif = document.querySelector('#c-edif')?.closest('.citem')?.querySelector('.cunit');
-  if (unitEdif && frActual > 0) unitEdif.textContent = 'prof. edif. ' + profEdificio.toFixed(1) + 'm';
-
-  // Tarjeta c-vend: desglose en tres sub-líneas
-  const cvendEl = eid('c-vend');
-  if (cvendEl) {
-    cvendEl.innerHTML =
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:300">Vendible cubierto</div>' +
-      '<div style="font-size:20px;font-weight:400">' + fmt(vendibleCubierto) + ' <span style="font-size:10px;font-weight:300">m²</span></div>' +
-      '<div style="font-size:10px;color:var(--muted);margin-bottom:8px">Eficiencia: ' + Math.round(eficiencia*100) + '%</div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:300">Balcones (semicubierto)</div>' +
-      '<div style="font-size:20px;font-weight:400">' + fmt(totalBalcones) + ' <span style="font-size:10px;font-weight:300">m²</span></div>' +
-      '<div style="border-top:1px solid var(--border);margin:8px 0"></div>' +
-      '<div style="font-size:11px;color:var(--muted);margin-bottom:2px;font-weight:300">Total vendible</div>' +
-      '<div style="font-size:24px;font-weight:500;color:var(--text)">' + fmt(nuevosVendibles) + ' <span style="font-size:11px;font-weight:300">m²</span></div>';
-  }
-
-  // Actualizar módulo financiero
-  _finMetrosTotales   = nuevoVolumen;
-  _finMetrosVendibles = nuevosVendibles;
-  calcularFinanzas();
-}
-
-// ── MÓDULO FINANCIERO ────────────────────────────────────────────
-let _finMetrosVendibles = 0;
-let _finMetrosTotales   = 0;
-
-function calcularFinanzas() {
-  const terreno  = parseFloat(document.getElementById('fin-terreno')?.value)   || 0;
-  const precioM2 = parseFloat(document.getElementById('fin-precio-m2')?.value) || 0;
-  const container = document.getElementById('resultados-financieros');
-  if (!container) return;
-
-  if (!_finMetrosVendibles || !_finMetrosTotales || (!terreno && !precioM2)) {
-    container.innerHTML = ''; return;
-  }
-
-  const fmtUSD = n => 'USD ' + Math.round(n).toLocaleString('en-US');
-
-  const incidencia = terreno  ? Math.round(terreno / _finMetrosVendibles) : null;
-  const costoCons  = Math.round(_finMetrosTotales * 800);
-  const gdv        = precioM2 ? Math.round(_finMetrosVendibles * precioM2) : null;
-
-  container.innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px">
-      ${incidencia != null ? `
-      <div style="background:#0a1409;border:1px solid #22c55e33;border-radius:4px;padding:12px 14px">
-        <div style="font-size:9px;letter-spacing:2px;color:#4ade80;text-transform:uppercase;margin-bottom:4px">Incidencia del Terreno</div>
-        <div style="font-size:20px;font-weight:600;color:#f0fdf4">${fmtUSD(incidencia)}<span style="font-size:11px;color:#6b7280"> /m²</span></div>
-      </div>` : ''}
-      <div style="background:#0a1409;border:1px solid #22c55e33;border-radius:4px;padding:12px 14px">
-        <div style="font-size:9px;letter-spacing:2px;color:#4ade80;text-transform:uppercase;margin-bottom:4px">Costo Construcción Est.</div>
-        <div style="font-size:20px;font-weight:600;color:#f0fdf4">${fmtUSD(costoCons)}</div>
-        <div style="font-size:10px;color:#6b7280;margin-top:2px">${Math.round(_finMetrosTotales).toLocaleString('en-US')} m² × USD 800</div>
-      </div>
-      ${gdv != null ? `
-      <div style="background:#0a1409;border:1px solid #22c55e33;border-radius:4px;padding:12px 14px">
-        <div style="font-size:9px;letter-spacing:2px;color:#4ade80;text-transform:uppercase;margin-bottom:4px">Volumen de Ventas Est. (GDV)</div>
-        <div style="font-size:20px;font-weight:600;color:#f0fdf4">${fmtUSD(gdv)}</div>
-        <div style="font-size:10px;color:#6b7280;margin-top:2px">${Math.round(_finMetrosVendibles).toLocaleString('en-US')} m² vendibles</div>
-      </div>` : ''}
-    </div>`;
-}
-
-// ── MAPA──────────────────────────────────────
-let map = null, marker = null;
-
-function initMap(lat, lng, addr) {
-  if (!map) {
-    map = L.map('map').setView([lat, lng], 17);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-      { attribution: '© OpenStreetMap', maxZoom: 19 }).addTo(map);
-  } else {
-    map.setView([lat, lng], 17);
-    if (marker) map.removeLayer(marker);
-  }
-  const icon = L.divIcon({
-    className: '',
-    html: '<div style="width:16px;height:16px;background:#E8C547;border:3px solid #0d1117;border-radius:50%;box-shadow:0 0 0 2px #E8C547,0 0 24px rgba(232,197,71,.5)"></div>',
-    iconSize: [16,16], iconAnchor: [8,8]
-  });
-  marker = L.marker([lat, lng], { icon }).addTo(map);
-  marker.bindPopup('<span style="font-family:monospace;font-size:12px;color:#E8C547">' + addr + '</span>').openPopup();
-  setTimeout(() => map.invalidateSize(), 150);
-}
-
-// ── MOSTRAR RESULTADOS ───────────────────────────────────────────
-function mostrar(addr, parcel, lat, lng, frente, fondo) {
-  eid('res-addr').textContent = addr;
-  eid('res-coords').textContent = lat ? lat.toFixed(6) + ', ' + lng.toFixed(6) + '  · WGS84' : '';
-
-  const cpu     = parcel ? parcel.cpu   : null;
-  const h       = parcel ? parcel.h     : null;
-  const fot     = parcel ? parcel.fot   : null;
-  const plano   = parcel ? parcel.plano : null;
-  const distM   = parcel ? parcel.dist  : null;
-
-  // Badge del código CPU
-  // FIX 3: mapeo CPU (nomenclatura derogada) → CUR vigente
-  const CPU_TO_CUR = {
-    'R2a I':'U.S.A.A.', 'R2a II':'U.S.A.A.',
-    'C3 I':'Corredor Medio', 'C3 II':'Corredor Medio',
-    'C2':'Corredor Alto', 'C1':'Corredor Alto',
-    'R2b I':'U.S.A.B. 2', 'R2b I 1':'U.S.A.B. 2',
-    'R2b II':'U.S.A.B. 1', 'R2b III':'U.S.A.B. 1',
-    'R1b I':'U.S.A.B. 2', 'R1b II':'U.S.A.B. 2',
-    'E1':'E1', 'E2':'E2', 'E3':'E3',
-  };
-  const cpuLabel = cpu ? (CPU_TO_CUR[cpu] ? CPU_TO_CUR[cpu] + ' (' + cpu + ')' : cpu) : 'Distrito no det.';
-  const badge = eid('res-badge');
-  badge.textContent = cpuLabel;
-  badge.className = 'dbadge ' + (cpu ? 'residential' : 'unknown');
-
-  // Ocultar todas las alertas
-  ['aph-box','u-box','cur-box'].forEach(id => {
-    const el = eid(id); if (el) el.classList.remove('on');
-  });
-
-  // APH alert
-  if (cpu && cpu.toString().startsWith('APH')) {
-    const ab = eid('aph-box'); if (ab) ab.classList.add('on');
-  }
-
-  // Altura Dominante (h) + Plano Límite (plano)
-  eid('res-alt').textContent = h ? h : '—';
-
-  // Plano Límite + pisos calculados sobre plano (CE CABA)
-  // Plano Límite card
-  // FIX 1: sanitizar plano límite — en distritos bajos (≤14.6m) el plano = h
-  // planoSan: h si es bajo (<=14.6) O si plano es inconsistente (<h)
-  const planoSan = (h && (h <= 14.6 || !plano || plano < h)) ? h : plano;
-
-  const planoEl = eid('res-plano');
-  if (planoEl) planoEl.textContent = planoSan ? planoSan : '—';
-
-  // FIX 2: pisos calculados sobre plano sanitizado — formato PB + N
-  if (planoSan > 0) {
-    const pisos = Math.max(1, 1 + Math.floor((planoSan - 3.30) / 2.90));
-    eid('res-pis').textContent = pisos <= 1 ? 'PB' : 'PB + ' + (pisos - 1);
-    const u = eid('res-pis').closest?.('.card')?.querySelector('.card-unit');
-    if (u) u.textContent = 'pisos · PL ' + planoSan + 'm';
-  } else {
-    eid('res-pis').textContent = '—';
-  }
-
-  // FOT y FOS (FOS no viene en el KD-Tree → mostrar nota)
-  eid('res-fot').textContent = fot ? fot : '—';
-  eid('res-fos').textContent = '—';
-  eid('res-dis').textContent = cpu || '?';
-
-  // Retiros — no disponibles a nivel parcelario, redirigir a plancheta
-  ['res-rf','res-ro','res-rl'].forEach(id => {
-    const el = eid(id);
-    if (el) el.textContent = 'Ver plancheta';
-  });
-
-  // Usos — no disponibles a nivel parcelario
-  const usosEl = eid('res-usos');
-  if (usosEl) usosEl.innerHTML = '<span class="uchip">Ver plancheta CUR</span>';
-
-  // Nota normativa
-  const noteEl = eid('norm-note');
-  if (noteEl && cpu) {
-    const distInfo = distM != null ? ` (parcela a ${distM}m)` : '';
-    noteEl.innerHTML = `<strong>${cpu}</strong>${distInfo}. ` +
-      `Datos del CUR 2024. ` +
-      `<span style="display:block;margin-top:6px;font-size:10.5px">⚠ Verificar normativa completa en ` +
-      `<a href="https://ciudad3d.buenosaires.gob.ar" target="_blank" style="color:var(--acc)">ciudad3d.buenosaires.gob.ar</a></span>`;
-  } else if (noteEl) {
-    noteEl.innerHTML = '';
-  }
-
-  // Calculadora (frente × fondo)
-  const cb = eid('calc-block');
-  const area = parcel ? parcel.area : 0;
-  if (area && area > 0) {
-    // Auto-llenar inputs editables con datos oficiales
-    const altRef = planoSan > 0 ? planoSan : (h || 0);  // usa plano sanitizado
-    const pisosEst = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
-    window._pisosEstimados  = pisosEst;
-    window._planoSanitizado = planoSan;
-    window._frente          = parcel.fr || 0;
-    window._fondo           = parcel.fo || 0;
-    const fr = parcel.fr || 0;
-    const fo = parcel.fo || 0;
-    let pisadaCalc, bandaLabel;
-    if (fr > 0 && fo > 0) {
-      if (fo <= 16) {
-        pisadaCalc = Math.min(Math.round(fr * fo), Math.round(area));
-        bandaLabel = fr.toFixed(2) + ' x ' + fo.toFixed(2) + ' m (100%)';
-      } else {
-        pisadaCalc = Math.min(Math.round(fr * 22), Math.round(area));
-        bandaLabel = fr.toFixed(2) + ' x 22 m (LFI)';
-      }
-    } else {
-      pisadaCalc = Math.round(area * (parcel.pisada_pct || 0.65));
-      bandaLabel = 'estimado ' + Math.round((parcel.pisada_pct||0.65)*100) + '%';
-    }
-    eid('c-sup').value = Math.round(area);
-    eid('c-pb').value  = pisadaCalc;
-    const lblSup = document.querySelector('#c-sup')?.closest('.citem')?.querySelector('.cunit');
-    if (lblSup) lblSup.textContent = (fr && fo) ? 'm² · ' + fr.toFixed(2) + ' x ' + fo.toFixed(2) + ' m' : 'm² · catastro';
-    const lblPb = document.querySelector('#c-pb')?.closest('.citem')?.querySelector('.cunit');
-    if (lblPb) lblPb.textContent = 'm² · ' + bandaLabel;
-    const srcEl = eid('calc-source');
-    if (srcEl) srcEl.textContent = 'Datos obtenidos de: ' + (parcel.source || 'Estimado');
-    cb.style.display = 'block';
-    recalcularRendimiento();  // calcular totales por primera vez
-    const fb = eid('fin-block');
-    if (fb) fb.style.display = 'block';
-  } else {
-    if (cb) cb.style.display = 'none';
-    const fb = eid('fin-block');
-    if (fb) fb.style.display = 'none';
-  }
-
-  if (lat && lng) {
-    eid('map-wrap').style.display = 'block';
-    initMap(lat, lng, addr);
-  }
-
-  const res = eid('results');
-  res.classList.remove('on');
-  void res.offsetWidth;
-  res.classList.add('on');
-  setTimeout(() => { const el = eid('results'); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
-}
-
-// ── CONSULTA PRINCIPAL ───────────────────────────────────────────
-async function consultarParcela() {
-  ['err','warn','info'].forEach(t => eid('msg-'+t).classList.remove('on'));
-  eid('suggestions').style.display = 'none';
-  const dp = eid('debug-panel');
-  if (dp) dp.style.display = 'none';
-
-  const dir    = eid('inp-addr').value.trim();
-  const frente = parseFloat(eid('inp-frente').value);
-  const fondo  = parseFloat(eid('inp-fondo').value);
-
-  if (!dir) { setMsg('err', '⚠ Ingresá la dirección para consultar.'); return; }
-
-  setLoad(true);
-  try {
-    const norm = await normalizarDir(dir);
-    const lat  = norm.coords ? norm.coords.lat : null;
-    const lng  = norm.coords ? norm.coords.lng : null;
-
-    if (!lat || !lng) {
-      setMsg('err', '✕ No se pudo geocodificar la dirección.');
-      return;
-    }
-
-    // Obtener dato parcelario del KD-Tree (fuente de verdad)
-    const parcel = await getDistrito(lat, lng);
-
-    // VALIDACIÓN ESTRICTA DE DISTANCIA
-    if (!parcel || parcel.dist > 30) {
-      // Distinguir: parcela sin normativa CUR vs dirección no encontrada
-      const sinNorm = parcel && parcel.dist === 0;
-      const msg = sinNorm
-        ? 'Esta parcela no tiene normativa CUR asignada (vía, lote especial o área sin regulación). Verificá en ciudad3d.buenosaires.gob.ar'
-        : 'No se pudo asociar la dirección a una parcela con precisión suficiente' +
-          (parcel ? ` (parcela más cercana a ${parcel.dist}m)` : '') +
-          '. Verificá en ciudad3d.buenosaires.gob.ar';
-      setMsg('err', msg);
-      mostrar(norm.direccion, null, null, lat, lng, null, null);
-      return;
-    }
-
-    // Inyección directa a la UI
-    mostrar(norm.direccion, parcel, lat, lng,
-      isNaN(frente) ? null : frente,
-      isNaN(fondo)  ? null : fondo);
-
-  } catch(e) {
-    setMsg('err', '✕ ' + e.message);
-  } finally {
-    setLoad(false);
-  }
-}
-// ── AUTOCOMPLETE ─────────────────────────────────────────────────
-let _sugTimer = null;
-eid('inp-addr').addEventListener('input', function() {
-  clearTimeout(_sugTimer);
-  const v = this.value.trim();
-  if (v.length < 3) { eid('suggestions').style.display = 'none'; return; }
-  _sugTimer = setTimeout(async () => {
-    try {
-      const url = 'https://servicios.usig.buenosaires.gob.ar/normalizar/?direccion='
-        + encodeURIComponent(v) + '&geocodificar=false&max_calles=5';
-      const r = await fetch(url);
-      const d = await r.json();
-      const items = d.direccionesNormalizadas || [];
-      if (!items.length) { eid('suggestions').style.display = 'none'; return; }
-      const sug = eid('suggestions');
-      sug.innerHTML = items.slice(0,5).map(i =>
-        '<div class="si" onclick="selSug(this)">' + i.direccion + '</div>'
-      ).join('');
-      sug.style.display = 'block';
-    } catch(e) { eid('suggestions').style.display = 'none'; }
-  }, 300);
-});
-
-function selSug(el) {
-  eid('inp-addr').value = el.textContent;
-  eid('suggestions').style.display = 'none';
-}
-
-document.addEventListener('click', e => {
-  if (!e.target.closest('.acwrap')) eid('suggestions').style.display = 'none';
-});
-
-eid('inp-addr').addEventListener('keydown', e => {
-  if (e.key === 'Enter') consultarParcela();
-  if (e.key === 'Escape') eid('suggestions').style.display = 'none';
-});
-
-// ── INIT ─────────────────────────────────────────────────────────
-buildTable();
-// Precargar ambos archivos en background
-setTimeout(() => {
-  loadDistricts().catch(e => console.warn('districts preload:', e));
-  loadCentroids().catch(e => console.warn('centroids preload:', e));
-}, 600);
-
-function resetBusqueda() {
-  const addr = eid('inp-addr');
-  if (addr) { addr.value = ''; addr.focus(); }
-  const res = eid('results');
-  if (res) res.classList.remove('on');
-  ['err','warn','info'].forEach(t => {
-    const el = eid('msg-'+t);
-    if (el) el.classList.remove('on');
-  });
-}
-
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script type="module">
+  import { initApp } from './static/js/app.js';
+  import { initChat } from './static/js/chat.js';
+  initApp();
+  initChat();
 </script>
 </body>
 </html>
