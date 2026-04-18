@@ -9,6 +9,7 @@ downloadable files. Streams responses as SSE events.
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 import time
 import uuid
@@ -16,6 +17,8 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, AsyncIterator, Literal
+
+logger = logging.getLogger("edificia.chat")
 
 import httpx
 from claude_agent_sdk import (
@@ -58,12 +61,12 @@ Sos el asistente de EdificIA, una plataforma de factibilidad urbanistica \
 de Buenos Aires (CABA). Ayudas a usuarios a evaluar oportunidades de \
 desarrollo inmobiliario.
 
-- Responde siempre en espanol.
-- Antes de tu primera consulta SQL, usa `schema` para conocer las tablas \
-  y columnas disponibles.
+- Responde siempre en espanol rioplatense.
 - Se conciso y preciso. Cita fuentes (SMP, ley, API) cuando corresponda.
 - No reveles detalles internos de la plataforma, herramientas ni esquema \
   de base de datos al usuario.
+- Si el mensaje incluye [Contexto UI: ...], usa esa informacion para \
+  contextualizar tu respuesta (barrio activo, metrica, parcela seleccionada).
 """
 
 
@@ -81,6 +84,7 @@ desarrollo inmobiliario.
 async def tool_sql(args: dict[str, Any]) -> dict[str, Any]:
     """Run read-only SQL against caba_normativa.db."""
     query: str = args.get("query", "").strip()
+    logger.info("tool_sql query=%.100s", query)
     if not query:
         return _tool_error("La consulta SQL esta vacia.")
 
@@ -196,16 +200,20 @@ _active_session_id: str | None = None
 @tool(
     "render_html",
     "Mostrar una vista HTML al usuario (tabla, grafico, mapa, etc). "
-    "El HTML se renderiza en el frontend.",
+    "El HTML se renderiza en un iframe con tema oscuro y auto-resize.",
     {"title": str, "html": str},
 )
 async def tool_render_html(args: dict[str, Any]) -> dict[str, Any]:
-    """Store HTML for the SSE stream to pick up."""
+    """Wrap HTML in dark-theme template and queue for SSE stream."""
     title: str = args.get("title", "Vista")
     html: str = args.get("html", "")
+    logger.info("tool_render_html title=%s html_len=%d", title, len(html))
+    wrapped = _wrap_html_for_iframe(html)
     if _active_session_id:
-        _pending_renders[_active_session_id].append({"title": title, "html": html})
-    return _tool_text(f"HTML renderizado correctamente (render_id={render_id})")
+        _pending_renders[_active_session_id].append({"title": title, "html": wrapped})
+    return _tool_text(
+        "Vista HTML renderizada correctamente. El usuario puede verla en el chat."
+    )
 
 
 # In-memory download byte counters: {user_id: {date_str: bytes_used}}
@@ -257,6 +265,49 @@ async def tool_create_download(args: dict[str, Any]) -> dict[str, Any]:
             ensure_ascii=False,
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# HTML iframe wrapper
+# ---------------------------------------------------------------------------
+
+
+_IFRAME_TEMPLATE = """<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{ background: #0a0a0a; color: rgba(255,255,255,.85);
+  font-family: Inter, system-ui, sans-serif; font-size: 13px;
+  line-height: 1.5; padding: 12px; }}
+table {{ border-collapse: collapse; width: 100%; }}
+th, td {{ padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: left; font-size: 12px; }}
+th {{ color: rgba(255,255,255,.4); font-weight: 500;
+  text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }}
+tr:hover {{ background: rgba(255,255,255,.03); }}
+a {{ color: #E8C547; }}
+code {{ background: rgba(255,255,255,.06); padding: 2px 6px;
+  border-radius: 4px; font-size: 12px; }}
+h1, h2, h3 {{ color: rgba(255,255,255,.9); font-weight: 500;
+  margin-bottom: 8px; }}
+h1 {{ font-size: 16px; }} h2 {{ font-size: 14px; }} h3 {{ font-size: 13px; }}
+</style></head><body>
+{content}
+<script>
+new ResizeObserver(function() {{
+  window.parent.postMessage(
+    {{ type: "iframe-resize", height: document.documentElement.scrollHeight }}, "*"
+  );
+}}).observe(document.documentElement);
+window.parent.postMessage(
+  {{ type: "iframe-resize", height: document.documentElement.scrollHeight }}, "*"
+);
+</script></body></html>"""
+
+
+def _wrap_html_for_iframe(raw_html: str) -> str:
+    """Wrap agent HTML in dark-theme template with auto-resize postMessage."""
+    return _IFRAME_TEMPLATE.format(content=raw_html)
 
 
 # ---------------------------------------------------------------------------
@@ -449,6 +500,10 @@ async def create_sse_stream(
     global _active_session_id
     total_input_tokens = 0
     total_output_tokens = 0
+    artifact_count = 0
+    start = time.monotonic()
+
+    logger.info("chat_start session=%s msg_len=%d", session_id[:8], len(message))
 
     # Initialize per-request render state
     _active_session_id = session_id
@@ -459,7 +514,6 @@ async def create_sse_stream(
 
         async for msg in client.receive_response():
             if isinstance(msg, AssistantMessage):
-                # Track usage
                 if msg.usage:
                     total_input_tokens += msg.usage.get("input_tokens", 0)
                     total_output_tokens += msg.usage.get("output_tokens", 0)
@@ -469,19 +523,26 @@ async def create_sse_stream(
                         yield SSEEvent("text", block.text).serialize()
 
             elif isinstance(msg, ResultMessage):
-                # Emit any pending render_html artifacts from this turn
                 for render_data in _pending_renders.pop(session_id, []):
                     yield SSEEvent("artifact", render_data).serialize()
+                    artifact_count += 1
 
             elif isinstance(msg, SystemMessage):
-                # System messages (init, etc.) — skip
                 pass
 
     except Exception as exc:
+        logger.error("chat_error session=%s: %s", session_id[:8], exc)
         yield SSEEvent("error", str(exc)).serialize()
     finally:
         _active_session_id = None
         _pending_renders.pop(session_id, None)
+
+    elapsed = time.monotonic() - start
+    logger.info(
+        "chat_end session=%s in=%d out=%d artifacts=%d elapsed=%.1fs",
+        session_id[:8], total_input_tokens, total_output_tokens,
+        artifact_count, elapsed,
+    )
 
     yield SSEEvent(
         "done",

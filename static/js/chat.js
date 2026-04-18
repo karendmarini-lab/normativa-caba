@@ -16,6 +16,8 @@
  *   - Custom views sidebar (localStorage persistence)
  */
 
+import { getActiveBarrio, getActiveMetric, getSelectedSmp } from './map.js';
+
 // ── State ────────────────────────────────────────────────────────
 
 let _mode = 'hidden';
@@ -37,6 +39,20 @@ export function initChat() {
   _loadViews();
   _buildDOM();
   _bindKeys();
+  _listenIframeResize();
+}
+
+function _listenIframeResize() {
+  window.addEventListener('message', (e) => {
+    if (e.data?.type !== 'iframe-resize' || typeof e.data.height !== 'number') return;
+    const iframes = document.querySelectorAll('#chat-messages iframe');
+    for (const iframe of iframes) {
+      if (iframe.contentWindow === e.source) {
+        iframe.style.height = Math.min(e.data.height + 2, 600) + 'px';
+        break;
+      }
+    }
+  });
 }
 
 function _buildDOM() {
@@ -166,6 +182,19 @@ export function getChatMode() { return _mode; }
 
 // ── Send message ─────────────────────────────────────────────────
 
+function _buildUIContext() {
+  const ctx = {};
+  try {
+    const barrio = getActiveBarrio?.();
+    const metric = getActiveMetric?.();
+    const smp = getSelectedSmp?.();
+    if (barrio) ctx.barrio = barrio;
+    if (metric) ctx.metric = metric.id;
+    if (smp) ctx.selected_parcel = smp;
+  } catch { /* map not initialized yet */ }
+  return Object.keys(ctx).length ? ctx : null;
+}
+
 async function _onSend() {
   const text = _inputEl.value.trim();
   if (!text || _streaming) return;
@@ -179,10 +208,14 @@ async function _onSend() {
   const updater = _renderAssistantMessage(assistantId);
 
   try {
+    const payload = { session_id: _sessionId, message: text, model: _model };
+    const ctx = _buildUIContext();
+    if (ctx) payload.context = ctx;
+
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: _sessionId, message: text, model: _model }),
+      body: JSON.stringify(payload),
       signal: _abortController.signal,
     });
 
@@ -288,7 +321,7 @@ function _renderHtmlView(title, html) {
   wrapper.className = 'chat-view';
   wrapper.innerHTML = `
     <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">${_escapeHtml(title)}</div>
-    <iframe sandbox="allow-scripts" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;height:300px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a"></iframe>
+    <iframe sandbox="allow-scripts" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
   `;
   _messagesEl.appendChild(wrapper);
   _scrollToBottom();
