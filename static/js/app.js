@@ -13,7 +13,7 @@
  */
 
 import * as Map from './map.js';
-import { addParcelCard, addInfoMessage, getChatMode } from './chat.js';
+import { addParcelCard, addParcelDocs, addInfoMessage, getChatMode } from './chat.js';
 
 // ── DOM helpers ──────────────────────────────────────────────────
 
@@ -360,24 +360,28 @@ function showParcelFromMap(props) {
   $('parcelLink').href = `https://ciudad3d.buenosaires.gob.ar/?smp=${encodeURIComponent(props.smp)}`;
 
   // Send parcel card to chat (0 LLM tokens)
-  addParcelCard(props);
+  const chatCard = addParcelCard(props);
 
-  // Fetch extra doc links
+  // Fetch extra doc links and add to both panels
   fetch(`/api/parcela/${encodeURIComponent(props.smp)}`)
     .then(r => r.ok ? r.json() : null)
     .then(data => {
       if (!data) return;
-      const docsInner = $('parcelDocsInner');
-      if (!docsInner) return;
       const links = [];
-      if (data.edif_croquis_url) links.push(['Croquis parcela', data.edif_croquis_url]);
+      if (data.edif_croquis_url) links.push(['Croquis', data.edif_croquis_url]);
       if (data.edif_plano_indice_url) links.push(['Plano índice', data.edif_plano_indice_url]);
-      if (data.edif_perimetro_url) links.push(['Perímetro manzana', data.edif_perimetro_url]);
+      if (data.edif_perimetro_url) links.push(['Perímetro', data.edif_perimetro_url]);
       links.push(['Ciudad 3D', `https://ciudad3d.buenosaires.gob.ar/?smp=${props.smp}`]);
-      docsInner.innerHTML = links.map(([label, url]) =>
-        `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:11px">${label} ↗</a>`
-      ).join('');
-      $('parcelDocs').style.display = 'block';
+      // Add to left panel (when visible)
+      const docsInner = $('parcelDocsInner');
+      if (docsInner) {
+        docsInner.innerHTML = links.map(([label, url]) =>
+          `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:11px">${label} ↗</a>`
+        ).join('');
+        $('parcelDocs').style.display = 'block';
+      }
+      // Add to chat card
+      addParcelDocs(chatCard, links);
     }).catch(() => {});
 }
 
