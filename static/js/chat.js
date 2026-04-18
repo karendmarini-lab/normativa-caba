@@ -235,11 +235,7 @@ function _handleSSEEvent(event, updater) {
       updater.append(event.data);
       break;
     case 'artifact':
-      if (event.data.collapsed) {
-        _renderCollapsedReport(event.data.title, event.data.html);
-      } else {
-        _renderReport(event.data.title, event.data.html);
-      }
+      _renderReport(event.data.title, event.data.html, !!event.data.collapsed);
       break;
     case 'error':
       _renderError(event.data);
@@ -394,101 +390,60 @@ function _renderAssistantMessage(id) {
   };
 }
 
-function _renderReport(title, html) {
-  const artId = 'art-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
-  const wrapper = document.createElement('div');
-  wrapper.className = 'chat-view';
-  wrapper.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3)">${_escapeHtml(title)}</div>
-      <div style="display:flex;gap:4px">
-        <button class="art-dl-btn" data-fmt="html" title="Descargar HTML" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer">↓ HTML</button>
-        <button class="art-dl-btn" data-fmt="pdf" title="Imprimir / PDF" style="background:none;border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.4);font-size:10px;padding:2px 8px;border-radius:4px;cursor:pointer">↓ PDF</button>
-      </div>
-    </div>
-    <iframe id="${artId}" sandbox="allow-scripts allow-modals" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
-  `;
-
-  // Download handlers
-  wrapper.querySelector('[data-fmt="html"]').addEventListener('click', () => {
-    const blob = new Blob([html], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-  wrapper.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
-    const iframe = document.getElementById(artId);
-    if (iframe?.contentWindow) iframe.contentWindow.print();
-  });
-
-  _messagesEl.appendChild(wrapper);
-  _scrollToBottom();
-}
-
-function _renderCollapsedReport(title, html) {
+function _renderReport(title, html, startCollapsed = false) {
   const fmtSize = b => b > 1024 ? (b / 1024).toFixed(1) + ' KB' : b + ' B';
   const wrapper = document.createElement('div');
-  wrapper.className = 'chat-collapsed-report';
-  wrapper.innerHTML = `
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="ccr-expand" style="cursor:pointer">▸</span>
-      <span style="font-size:12px;color:rgba(255,255,255,.7)">${_escapeHtml(title)}</span>
-      <span style="font-size:10px;color:rgba(255,255,255,.3)">${fmtSize(new Blob([html]).size)}</span>
+  wrapper.className = 'chat-report';
+
+  const headerEl = document.createElement('div');
+  headerEl.className = 'cr-header';
+  headerEl.innerHTML = `
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+      <span class="cr-toggle" style="cursor:pointer">${startCollapsed ? '▸' : '▾'}</span>
+      <span class="cr-title">${_escapeHtml(title)}</span>
+      <span style="font-size:10px;color:rgba(255,255,255,.25)">${fmtSize(new Blob([html]).size)}</span>
     </div>
-    <div style="display:flex;gap:4px;margin-left:auto">
+    <div style="display:flex;gap:4px">
       <button class="art-dl-btn" data-fmt="html">↓ HTML</button>
       <button class="art-dl-btn" data-fmt="pdf">↓ PDF</button>
     </div>
   `;
-  const expandBtn = wrapper.querySelector('.ccr-expand');
-  expandBtn.addEventListener('click', () => {
-    // Replace collapsed with full report
-    const parent = wrapper.parentNode;
-    const report = document.createElement('div');
-    report.className = 'chat-view';
-    const artId = 'art-' + Date.now();
-    report.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3)">${_escapeHtml(title)}</div>
-        <div style="display:flex;gap:4px">
-          <button class="art-dl-btn" data-fmt="html">↓ HTML</button>
-          <button class="art-dl-btn" data-fmt="pdf">↓ PDF</button>
-        </div>
-      </div>
-      <iframe id="${artId}" sandbox="allow-scripts allow-modals" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
-    `;
-    report.querySelector('[data-fmt="html"]').addEventListener('click', () => {
-      const blob = new Blob([html], { type: 'text/html' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-    report.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
-      const iframe = document.getElementById(artId);
-      if (iframe?.contentWindow) iframe.contentWindow.print();
-    });
-    parent.replaceChild(report, wrapper);
+  wrapper.appendChild(headerEl);
+
+  const bodyEl = document.createElement('div');
+  bodyEl.className = 'cr-body';
+  bodyEl.style.display = startCollapsed ? 'none' : 'block';
+  const artId = 'art-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6);
+  bodyEl.innerHTML = `<iframe id="${artId}" sandbox="allow-scripts allow-modals" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>`;
+  wrapper.appendChild(bodyEl);
+
+  // Toggle expand/collapse
+  headerEl.querySelector('.cr-toggle').addEventListener('click', () => {
+    const toggle = headerEl.querySelector('.cr-toggle');
+    const visible = bodyEl.style.display !== 'none';
+    bodyEl.style.display = visible ? 'none' : 'block';
+    toggle.textContent = visible ? '▸' : '▾';
   });
-  // Download handlers on collapsed view
-  wrapper.querySelector('[data-fmt="html"]').addEventListener('click', () => {
+
+  // Download
+  const dlName = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
+  headerEl.querySelector('[data-fmt="html"]').addEventListener('click', () => {
     const blob = new Blob([html], { type: 'text/html' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = title.replace(/[^a-zA-Z0-9áéíóúñ _-]/gi, '_').slice(0, 60) + '.html';
+    a.download = dlName;
     a.click();
     URL.revokeObjectURL(a.href);
   });
-  wrapper.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
-    expandBtn.click(); // expand first, then print
+  headerEl.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
+    bodyEl.style.display = 'block';
+    headerEl.querySelector('.cr-toggle').textContent = '▾';
     setTimeout(() => {
-      const iframe = wrapper.parentNode?.querySelector('iframe');
+      const iframe = document.getElementById(artId);
       if (iframe?.contentWindow) iframe.contentWindow.print();
-    }, 1000);
+    }, 500);
   });
+
   _messagesEl.appendChild(wrapper);
   _scrollToBottom();
 }
@@ -804,16 +759,17 @@ function _applyStyles() {
     }
 
     .chat-view { margin: 4px 0; }
-    .chat-collapsed-report {
+    .chat-report { margin: 4px 0; }
+    .cr-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 8px 12px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 8px;
-      margin: 4px 0;
+      padding: 6px 0;
+      gap: 8px;
     }
+    .cr-toggle { color: rgba(255,255,255,.4); font-size: 10px; flex-shrink: 0; }
+    .cr-title { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,.3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cr-body { margin-top: 4px; }
 
     .chat-parcel-card {
       background: rgba(255,255,255,.04);
