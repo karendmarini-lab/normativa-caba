@@ -94,6 +94,7 @@ export function initMap(containerId, callbacks = {}) {
 
 export async function loadManzanas() {
   const resp = await fetch('/manzanas_heatmap.json');
+  if (!resp.ok) throw new Error(`Failed to load manzanas: ${resp.status}`);
   _manzanasData = await resp.json();
   if (!_activeBarrio) return renderCircles();
 }
@@ -143,6 +144,7 @@ export async function loadParcels() {
   params.set('limit', '3000');
 
   const resp = await fetch(`/api/parcelas_geo?${params}`);
+  if (!resp.ok) throw new Error(`Failed to load parcels: ${resp.status}`);
   const geojson = await resp.json();
   const { p5, p95 } = percentileBounds(
     geojson.features.map(f => f.properties.score)
@@ -226,6 +228,7 @@ export function getMap() { return _map; }
 
 export async function fetchBarrios() {
   const resp = await fetch('/api/barrios');
+  if (!resp.ok) throw new Error(`Failed to load barrios: ${resp.status}`);
   const data = await resp.json();
   return data.map(b => b.name);
 }

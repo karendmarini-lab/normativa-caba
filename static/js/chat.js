@@ -24,6 +24,7 @@ let _sessionId = crypto.randomUUID();
 let _messages = [];       // {role, content, id}
 let _views = [];           // {id, title, html, created_at}
 let _streaming = false;
+let _abortController = null;
 
 // ── DOM refs (set in initChat) ───────────────────────────────────
 
@@ -119,7 +120,12 @@ function _bindKeys() {
       setChatMode(_mode === 'hidden' ? 'sidebar' : 'hidden');
     }
     if (e.key === 'Escape' && _mode !== 'hidden') {
-      setChatMode('hidden');
+      // Cancel streaming if active, otherwise close chat
+      if (_streaming && _abortController) {
+        _abortController.abort();
+      } else {
+        setChatMode('hidden');
+      }
     }
   });
 }
@@ -167,6 +173,7 @@ async function _onSend() {
   _inputEl.value = '';
   _renderUserMessage(text);
   _streaming = true;
+  _abortController = new AbortController();
 
   const assistantId = 'msg-' + Date.now();
   const updater = _renderAssistantMessage(assistantId);
@@ -176,6 +183,7 @@ async function _onSend() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ session_id: _sessionId, message: text, model: _model }),
+      signal: _abortController.signal,
     });
 
     if (!resp.ok) {
@@ -208,9 +216,10 @@ async function _onSend() {
     updater.finish();
   } catch (e) {
     updater.finish();
-    _renderError(e.message);
+    if (e.name !== 'AbortError') _renderError(e.message);
   } finally {
     _streaming = false;
+    _abortController = null;
   }
 }
 
@@ -219,25 +228,20 @@ function _handleSSEEvent(event, updater) {
     case 'text':
       updater.append(event.data);
       break;
-    case 'tool':
-      _renderToolCall(event.data.name, event.data.status);
-      break;
-    case 'html_view':
+    case 'artifact':
       _renderHtmlView(event.data.title, event.data.html);
       _saveView(event.data.title, event.data.html);
-      break;
-    case 'download':
-      _renderDownload(event.data.filename, event.data.url);
       break;
     case 'error':
       _renderError(event.data);
       break;
-    case 'rate_limit':
-      _renderError(`Rate limit alcanzado. Se reinicia en ${new Date(event.data.resets_at * 1000).toLocaleTimeString()}`);
-      break;
     case 'done':
       break;
   }
+}
+
+function _escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ── Message rendering ────────────────────────────────────────────
@@ -262,7 +266,8 @@ function _renderAssistantMessage(id) {
       accumulated += text;
       // Use marked.js if available, otherwise plain text with basic formatting
       if (window.marked) {
-        el.innerHTML = window.marked.parse(accumulated);
+        const parsed = window.marked.parse(accumulated);
+        el.innerHTML = window.DOMPurify ? window.DOMPurify.sanitize(parsed) : parsed;
       } else {
         el.innerHTML = accumulated
           .replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -278,40 +283,14 @@ function _renderAssistantMessage(id) {
   };
 }
 
-function _renderToolCall(name, status) {
-  const toolNames = {
-    sql: 'Consultando base de datos',
-    http: 'Consultando API GCBA',
-    render_html: 'Generando vista',
-    create_download: 'Creando archivo',
-    Read: 'Leyendo documento',
-    Grep: 'Buscando en normativa',
-    Glob: 'Buscando archivos',
-  };
-
-  const el = document.createElement('div');
-  el.className = 'chat-tool';
-  el.innerHTML = `<span class="chat-tool-icon">${status === 'running' ? '⟳' : '✓'}</span> ${toolNames[name] || name}…`;
-  _messagesEl.appendChild(el);
-  _scrollToBottom();
-}
-
 function _renderHtmlView(title, html) {
   const wrapper = document.createElement('div');
   wrapper.className = 'chat-view';
   wrapper.innerHTML = `
-    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">${title}</div>
+    <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">${_escapeHtml(title)}</div>
     <iframe sandbox="allow-scripts" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;height:300px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a"></iframe>
   `;
   _messagesEl.appendChild(wrapper);
-  _scrollToBottom();
-}
-
-function _renderDownload(filename, url) {
-  const el = document.createElement('div');
-  el.className = 'chat-download';
-  el.innerHTML = `<a href="${url}" download="${filename}" style="color:#e8c547;text-decoration:none;font-size:12px">⬇ ${filename}</a>`;
-  _messagesEl.appendChild(el);
   _scrollToBottom();
 }
 
@@ -348,7 +327,7 @@ function _renderViewsList() {
   if (!_viewsList) return;
   _viewsList.innerHTML = _views.map(v => `
     <div class="view-item" data-id="${v.id}">
-      <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v.title}</span>
+      <span style="font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${_escapeHtml(v.title)}</span>
       <button class="view-delete" data-id="${v.id}" style="background:none;border:none;color:rgba(255,255,255,.2);cursor:pointer;font-size:14px;padding:2px 4px">×</button>
     </div>
   `).join('');
