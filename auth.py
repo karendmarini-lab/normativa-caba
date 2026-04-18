@@ -122,15 +122,19 @@ def _upsert_seed(conn: sqlite3.Connection, email: str, plan: str) -> None:
     existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     if not existing:
         conn.execute(
-            "INSERT INTO users (email, activo, plan, acceso_hasta, modelos_habilitados, usd_mes_max, mb_mes_max) "
-            "VALUES (?, 1, ?, '2099-12-31', ?, ?, ?)",
-            (email, plan, defaults["modelos_habilitados"], defaults["usd_mes_max"], defaults["mb_mes_max"]),
+            "INSERT INTO users (email, activo, plan, acceso_hasta, creditos_usd, "
+            "modelos_habilitados, usd_mes_max, mb_mes_max) "
+            "VALUES (?, 1, ?, '2099-12-31', ?, ?, ?, ?)",
+            (email, plan, defaults["usd_mes_max"], defaults["modelos_habilitados"],
+             defaults["usd_mes_max"], defaults["mb_mes_max"]),
         )
     else:
         conn.execute(
             "UPDATE users SET activo=1, plan=?, acceso_hasta='2099-12-31', "
-            "modelos_habilitados=?, usd_mes_max=?, mb_mes_max=? WHERE email=?",
-            (plan, defaults["modelos_habilitados"], defaults["usd_mes_max"], defaults["mb_mes_max"], email),
+            "creditos_usd=MAX(creditos_usd, ?), modelos_habilitados=?, usd_mes_max=?, mb_mes_max=? "
+            "WHERE email=?",
+            (plan, defaults["usd_mes_max"], defaults["modelos_habilitados"],
+             defaults["usd_mes_max"], defaults["mb_mes_max"], email),
         )
 
 
