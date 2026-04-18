@@ -632,9 +632,7 @@ function _applyStyles() {
       border-bottom: none;
     }
     #chat-container.chat-fullscreen #chat-messages {
-      max-width: 720px;
-      margin: 0 auto;
-      padding: 40px 24px;
+      padding: 24px 32px;
     }
     #chat-container.chat-fullscreen #chat-input-wrap {
       background: transparent;
@@ -642,12 +640,11 @@ function _applyStyles() {
       padding: 0;
     }
     #chat-container.chat-fullscreen #chat-input-bar {
-      max-width: 720px;
-      margin: 0 auto;
       border: none;
       border-radius: 0;
       background: transparent;
       border-bottom: 1px solid rgba(255,255,255,.15);
+      margin: 0 16px;
     }
     #chat-container.chat-fullscreen #chat-input {
       padding: 20px 16px;
