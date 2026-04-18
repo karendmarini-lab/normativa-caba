@@ -223,7 +223,6 @@ export function clearMarker() {
 
 export function getActiveBarrio() { return _activeBarrio; }
 export function getActiveMetric() { return METRICS.find(m => m.id === _activeMetric); }
-export function getSelectedSmp() { return _selectedSmp; }
 export function getMetrics() { return METRICS; }
 export function getMap() { return _map; }
 

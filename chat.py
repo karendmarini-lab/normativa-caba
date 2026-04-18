@@ -65,8 +65,6 @@ desarrollo inmobiliario.
 - Se conciso y preciso. Cita fuentes (SMP, ley, API) cuando corresponda.
 - No reveles detalles internos de la plataforma, herramientas ni esquema \
   de base de datos al usuario.
-- Si el mensaje incluye [Contexto UI: ...], usa esa informacion para \
-  contextualizar tu respuesta (barrio activo, metrica, parcela seleccionada).
 """
 
 
@@ -490,20 +488,30 @@ class SSEEvent:
 
 
 async def create_sse_stream(
-    client: ClaudeSDKClient, message: str, session_id: str = ""
+    client: ClaudeSDKClient,
+    message: str,
+    session_id: str = "",
+    user_id: int | None = None,
+    model: str = "sonnet",
 ) -> AsyncIterator[str]:
     """Send a message to the agent and yield SSE event strings.
 
-    Yields serialized SSE events for each piece of the agent response:
-    text chunks, rendered HTML artifacts, errors, and a final "done" event.
+    Persists user/assistant messages and artifacts to chat_entries.
     """
     global _active_session_id
     total_input_tokens = 0
     total_output_tokens = 0
     artifact_count = 0
+    assistant_text = ""
     start = time.monotonic()
 
     logger.info("chat_start session=%s msg_len=%d", session_id[:8], len(message))
+
+    # Persist user message and upsert session
+    _persist_entry(
+        session_id, "user", message,
+        user_id=user_id, preview=message[:80], model=model,
+    )
 
     # Initialize per-request render state
     _active_session_id = session_id
@@ -520,12 +528,27 @@ async def create_sse_stream(
 
                 for block in msg.content:
                     if isinstance(block, TextBlock):
+                        assistant_text += block.text
                         yield SSEEvent("text", block.text).serialize()
 
             elif isinstance(msg, ResultMessage):
+                # Persist assistant text accumulated so far
+                if assistant_text:
+                    _persist_entry(session_id, "assistant", assistant_text)
+                    assistant_text = ""
+
                 for render_data in _pending_renders.pop(session_id, []):
                     yield SSEEvent("artifact", render_data).serialize()
                     artifact_count += 1
+                    _persist_entry(
+                        session_id, "report",
+                        json.dumps({
+                            "title": render_data["title"],
+                            "html": render_data["html"],
+                            "source": "agent",
+                            "size": len(render_data["html"]),
+                        }, ensure_ascii=False),
+                    )
 
             elif isinstance(msg, SystemMessage):
                 pass
@@ -534,6 +557,9 @@ async def create_sse_stream(
         logger.error("chat_error session=%s: %s", session_id[:8], exc)
         yield SSEEvent("error", str(exc)).serialize()
     finally:
+        # Persist any remaining assistant text
+        if assistant_text:
+            _persist_entry(session_id, "assistant", assistant_text)
         _active_session_id = None
         _pending_renders.pop(session_id, None)
 
@@ -551,6 +577,67 @@ async def create_sse_stream(
             "output_tokens": total_output_tokens,
         },
     ).serialize()
+
+
+# ---------------------------------------------------------------------------
+# Chat persistence
+# ---------------------------------------------------------------------------
+
+
+def init_chat_tables() -> None:
+    """Create chat_sessions and chat_entries tables if they don't exist."""
+    conn = sqlite3.connect(str(DB_PATH), timeout=SQL_TIMEOUT_S)
+    try:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS chat_sessions (
+                id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                created_at REAL DEFAULT (strftime('%s','now')),
+                last_used REAL DEFAULT (strftime('%s','now')),
+                preview TEXT,
+                model TEXT DEFAULT 'sonnet',
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            );
+            CREATE TABLE IF NOT EXISTS chat_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at REAL DEFAULT (strftime('%s','now')),
+                FOREIGN KEY (session_id) REFERENCES chat_sessions(id)
+            );
+        """)
+    finally:
+        conn.close()
+
+
+def _persist_entry(
+    session_id: str, kind: str, content: str,
+    user_id: int | None = None, preview: str | None = None,
+    model: str = "sonnet",
+) -> None:
+    """Save a chat entry and upsert the session row."""
+    conn = sqlite3.connect(str(DB_PATH), timeout=SQL_TIMEOUT_S)
+    try:
+        now = time.time()
+        if user_id is not None:
+            conn.execute(
+                "INSERT INTO chat_sessions (id, user_id, created_at, last_used, preview, model) "
+                "VALUES (?, ?, ?, ?, ?, ?) "
+                "ON CONFLICT(id) DO UPDATE SET last_used=?, preview=COALESCE(preview, ?)",
+                (session_id, user_id, now, now, preview, model, now, preview),
+            )
+        else:
+            conn.execute(
+                "UPDATE chat_sessions SET last_used=? WHERE id=?", (now, session_id)
+            )
+        conn.execute(
+            "INSERT INTO chat_entries (session_id, kind, content) VALUES (?, ?, ?)",
+            (session_id, kind, content),
+        )
+        conn.commit()
+    finally:
+        conn.close()
 
 
 # ---------------------------------------------------------------------------

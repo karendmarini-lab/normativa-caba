@@ -16,8 +16,6 @@
  *   - Custom views sidebar (localStorage persistence)
  */
 
-import { getActiveBarrio, getActiveMetric, getSelectedSmp } from './map.js';
-
 // ── State ────────────────────────────────────────────────────────
 
 let _mode = 'hidden';
@@ -182,19 +180,6 @@ export function getChatMode() { return _mode; }
 
 // ── Send message ─────────────────────────────────────────────────
 
-function _buildUIContext() {
-  const ctx = {};
-  try {
-    const barrio = getActiveBarrio?.();
-    const metric = getActiveMetric?.();
-    const smp = getSelectedSmp?.();
-    if (barrio) ctx.barrio = barrio;
-    if (metric) ctx.metric = metric.id;
-    if (smp) ctx.selected_parcel = smp;
-  } catch { /* map not initialized yet */ }
-  return Object.keys(ctx).length ? ctx : null;
-}
-
 async function _onSend() {
   const text = _inputEl.value.trim();
   if (!text || _streaming) return;
@@ -208,14 +193,10 @@ async function _onSend() {
   const updater = _renderAssistantMessage(assistantId);
 
   try {
-    const payload = { session_id: _sessionId, message: text, model: _model };
-    const ctx = _buildUIContext();
-    if (ctx) payload.context = ctx;
-
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ session_id: _sessionId, message: text, model: _model }),
       signal: _abortController.signal,
     });
 
