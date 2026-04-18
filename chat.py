@@ -470,15 +470,11 @@ async def create_sse_stream(
                         yield SSEEvent("text", block.text).serialize()
 
             elif isinstance(msg, ResultMessage):
-                # Check for any pending render_html results
+                # Emit any pending render_html artifacts from this turn
                 renders = _pending_renders_var.get({})
                 for render_data in renders.values():
                     yield SSEEvent("artifact", render_data).serialize()
                 _pending_renders_var.set({})
-
-                # Check for download URLs in the result
-                # (handled via tool results already, but emit done)
-                break
 
             elif isinstance(msg, SystemMessage):
                 # System messages (init, etc.) — skip
