@@ -34,24 +34,29 @@ Lee `ley_6099_resumen.md` en este directorio para detalles sobre la Ley 6099/201
 
 Tabla principal: `parcelas` (~280.000 filas). Tabla secundaria: `envelope_sections`.
 
-### Columnas clave de `parcelas`
+### Columnas de `parcelas`
+
+Usar `COLLATE NOCASE` en WHERE con barrio, uso, etc. para evitar problemas de mayusculas.
 
 **Identificacion:**
 - `smp` (TEXT) — SMP original (ej. "016-044-038")
 - `smp_norm` (TEXT) — SMP normalizado (ej. "16-44-38"), indexado
+- `seccion_mzna` (TEXT) — Seccion-Manzana
 - `cpu` (TEXT) — Codigo de Planeamiento Urbano (legacy)
 - `cur_distrito` (TEXT) — Distrito CUR actual
 
 **Ubicacion:**
-- `barrio` (TEXT) — Nombre del barrio en Title Case (ej. "Palermo", "Villa Crespo"). Usar `COLLATE NOCASE` en WHERE para evitar problemas de mayusculas
+- `barrio` (TEXT) — Title Case (ej. "Palermo", "Villa Crespo")
 - `comuna` (TEXT) — Numero de comuna
 - `lat`, `lng` (REAL) — Coordenadas
 - `epok_direccion` (TEXT) — Direccion postal (ej. "GORRITI 5100")
 - `epok_calle` (TEXT), `epok_altura` (INTEGER)
+- `partida_matriz` (TEXT), `elevacion` (REAL)
 
-**Normativa CUR (que se permite construir):**
-- `plano_san` (REAL) — Plano Limite sanitizado en metros (altura max edificable)
-- `h` (REAL) — Altura segun CUR (raw, antes de sanitizacion)
+**Normativa CUR:**
+- `plano_san` (REAL) — Plano Limite sanitizado (metros)
+- `plano_raw` (REAL) — PL raw antes de sanitizacion
+- `h` (REAL) — Altura segun CUR
 - `fot` (REAL) — Factor de Ocupacion Total
 - `pisos` (INTEGER) — Pisos permitidos: 1 + floor((plano_san - 3.30) / 2.90)
 - `es_aph` (INTEGER) — Area de Proteccion Historica (0/1)
@@ -59,33 +64,76 @@ Tabla principal: `parcelas` (~280.000 filas). Tabla secundaria: `envelope_sectio
 **Dimensiones del lote:**
 - `area` (REAL) — Superficie en m2
 - `frente` (REAL), `fondo` (REAL) — Medidas en metros
-- `pisada` (REAL) — Superficie de planta edificable en m2
-- `vol_edificable` (REAL) — Volumen edificable en m3
-- `sup_vendible` (REAL) — Superficie vendible estimada en m2
+- `pisada` (REAL) — Superficie de planta edificable (m2)
+- `pisada_pct` (REAL) — Porcentaje de ocupacion
+- `vol_edificable` (REAL) — Volumen edificable (m3)
+- `sup_vendible` (REAL) — Superficie vendible estimada (m2)
 
-**Construccion existente (que hay construido):**
-- `tejido_altura_max` (REAL) — Altura real maxima (fotogrametria)
-- `tejido_altura_avg` (REAL) — Altura real promedio
-- `delta_altura` (REAL) — plano_san - tejido_altura_max (gap de oportunidad)
-- `epok_pisos_sobre` (INTEGER) — Pisos construidos sobre rasante
+**Construccion existente (EPOK catastro):**
 - `epok_sup_cubierta` (REAL) — Superficie cubierta existente
+- `epok_sup_total` (REAL) — Superficie total
+- `epok_pisos_sobre` (INTEGER) — Pisos sobre rasante
+- `epok_pisos_bajo` (INTEGER) — Pisos bajo rasante
+- `epok_frente` (REAL), `epok_fondo` (REAL) — Medidas catastro
+- `epok_propiedad_horizontal` (INTEGER) — PH (0/1)
+- `epok_unidades_func` (INTEGER) — Unidades funcionales
+- `epok_locales` (INTEGER) — Locales comerciales
+- `epok_enriched` (INTEGER) — 0=pendiente, 1=ok, -1=error
+
+**Tejido (alturas reales fotogrametria):**
+- `tejido_altura_max` (REAL) — Altura real maxima
+- `tejido_altura_avg` (REAL) — Altura real promedio
+- `tejido_estructuras` (INTEGER) — Cantidad de estructuras
+- `tejido_tipo` (TEXT) — Tipo de tejido
+- `delta_altura` (REAL) — plano_san - tejido_altura_max (gap de oportunidad)
+- `delta_pisos` (INTEGER) — Diferencia en pisos
+- `ratio_subutilizacion` (REAL)
 
 **Uso del suelo:**
 - `uso_tipo1`, `uso_tipo2` (TEXT) — Tipo de uso actual
-- `uso_estado` (TEXT) — Estado de uso
-- `obra_tipo` (TEXT), `obra_destino` (TEXT), `obra_m2` (REAL) — Permisos de obra
+- `uso_estado` (TEXT) — Estado
+- `uso_pisos` (INTEGER) — Pisos segun uso
+- `uso_calle` (TEXT), `uso_puerta` (TEXT) — Direccion de uso
+- `uso_anio` (INTEGER) — Ano de relevamiento
 
-**Edificabilidad CUR3D (datos detallados de GCBA):**
-- `edif_sup_max_edificable` (REAL) — Sup. max edificable segun CUR3D
-- `edif_plano_limite` (REAL) — PL oficial de CUR3D
+**Obras y permisos:**
+- `obra_tipo` (TEXT), `obra_destino` (TEXT), `obra_m2` (REAL)
+- `obra_estado` (TEXT), `obra_fecha_inicio` (TEXT), `obra_expediente` (TEXT)
+- `obra_reg_tipo` (TEXT), `obra_reg_fecha` (TEXT), `obra_reg_expediente` (TEXT)
+- `obra_reg_ubicacion` (TEXT)
+- `cert_anio` (INTEGER), `cert_obra` (TEXT), `cert_fecha_egreso` (TEXT)
+
+**Edificabilidad CUR3D (datos detallados GCBA):**
+- `edif_sup_max_edificable` (REAL) — Sup. max edificable
+- `edif_sup_edificable_planta` (REAL) — Sup. edificable por planta
+- `edif_plano_limite` (REAL) — PL oficial CUR3D
+- `edif_altura_max_1` a `edif_altura_max_4` (REAL) — Alturas por seccion
 - `edif_fot_medianera` (REAL) — FOT entre medianeras
-- `edif_riesgo_hidrico` (INTEGER) — Riesgo hidrico (0/1)
-- `edif_enrase` (INTEGER) — Permite enrase (0/1)
+- `edif_fot_perim_libre` (REAL) — FOT perimetro libre
+- `edif_fot_semi_libre` (REAL) — FOT semi libre
+- `edif_plusvalia_incidencia_uva` (REAL) — Plusvalia: incidencia UVA
+- `edif_plusvalia_alicuota` (REAL) — Plusvalia: alicuota
+- `edif_tipica` (TEXT) — Tipologia edificatoria
+- `edif_irregular` (INTEGER) — Parcela irregular (0/1)
+- `edif_superficie_parcela` (REAL) — Superficie segun CUR3D
 - `edif_catalogacion_proteccion` (TEXT) — Catalogacion patrimonial
+- `edif_catalogacion_denominacion` (TEXT) — Denominacion del edificio protegido
+- `edif_riesgo_hidrico` (INTEGER) — Riesgo hidrico (0/1)
+- `edif_lep` (INTEGER), `edif_ensanche` (INTEGER), `edif_apertura` (INTEGER)
+- `edif_enrase` (INTEGER) — Permite enrase (0/1)
+- `edif_linderas` (TEXT) — Parcelas linderas
+- `edif_rivolta` (INTEGER)
+- `edif_croquis_url` (TEXT) — URL croquis oficial GCBA
+- `edif_perimetro_url` (TEXT) — URL perimetro manzana
+- `edif_plano_indice_url` (TEXT) — URL plano indice
 
-**Flags de enriquecimiento:**
-- `epok_enriched` (INTEGER) — 0=pendiente, 1=ok, -1=error
+**Distrito urbano:**
+- `du_comuna`, `du_barrio`, `du_comisaria`, `du_hospital` (TEXT)
+- `du_distrito_escolar`, `du_comisaria_vecinal`, `du_distrito_economico` (TEXT)
+
+**Otros:**
 - `cur3d_enriched` (INTEGER) — 0=pendiente, 1=ok, -1=error
+- `polygon_geojson` (TEXT) — GeoJSON del poligono de la parcela
 
 ### Tabla `envelope_sections`
 
