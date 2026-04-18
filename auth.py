@@ -42,9 +42,29 @@ GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
+# --- Plan tiers ---
+
+PLAN_DEFAULTS: dict[str, dict[str, Any]] = {
+    "free": {
+        "usd_mes_max": 0.02,
+        "modelos_habilitados": '["haiku"]',
+        "mb_mes_max": 1,
+    },
+    "pro": {
+        "usd_mes_max": 5.0,
+        "modelos_habilitados": '["haiku","sonnet","opus"]',
+        "mb_mes_max": 5,
+    },
+    "enterprise": {
+        "usd_mes_max": 999,
+        "modelos_habilitados": '["haiku","sonnet","opus"]',
+        "mb_mes_max": 999,
+    },
+}
+
 
 def init_users_table() -> None:
-    """Create users table if it doesn't exist, seed whitelisted users."""
+    """Create users table, migrate columns, seed users."""
     conn = sqlite3.connect(str(DB_PATH), timeout=20)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
@@ -60,20 +80,116 @@ def init_users_table() -> None:
             created_at REAL DEFAULT (strftime('%s', 'now'))
         )
     """)
-    # Add acceso_hasta column if missing (migration)
-    cols = [r[1] for r in conn.execute("PRAGMA table_info(users)").fetchall()]
-    if "acceso_hasta" not in cols:
-        conn.execute("ALTER TABLE users ADD COLUMN acceso_hasta TEXT")
-    # Seed whitelisted users
-    for email in ("karendmarini@gmail.com", "juanwisznia@gmail.com"):
-        existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
-        if not existing:
-            conn.execute(
-                "INSERT INTO users (email, activo, acceso_hasta) VALUES (?, 1, '2099-12-31')",
-                (email,),
-            )
-        else:
-            conn.execute("UPDATE users SET activo = 1, acceso_hasta = '2099-12-31' WHERE email = ?", (email,))
+    # Migrate: add columns if missing
+    for col, default in [
+        ("acceso_hasta TEXT", None),
+        ("creditos_usd REAL", "0"),
+        ("modelos_habilitados TEXT", "'[\"haiku\"]'"),
+        ("mb_mes_max REAL", "1"),
+        ("usd_mes_max REAL", "0.02"),
+    ]:
+        try:
+            stmt = f"ALTER TABLE users ADD COLUMN {col}"
+            if default is not None:
+                stmt += f" DEFAULT {default}"
+            conn.execute(stmt)
+        except sqlite3.OperationalError:
+            pass
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS user_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            month TEXT NOT NULL,
+            tokens_in INTEGER DEFAULT 0,
+            tokens_out INTEGER DEFAULT 0,
+            usd_used REAL DEFAULT 0,
+            mb_used REAL DEFAULT 0,
+            UNIQUE(user_id, month),
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
+    # Seed users
+    _upsert_seed(conn, "juanwisznia@gmail.com", "enterprise")
+    _upsert_seed(conn, "karendmarini@gmail.com", "pro")
+    conn.commit()
+    conn.close()
+
+
+def _upsert_seed(conn: sqlite3.Connection, email: str, plan: str) -> None:
+    defaults = PLAN_DEFAULTS[plan]
+    existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if not existing:
+        conn.execute(
+            "INSERT INTO users (email, activo, plan, acceso_hasta, modelos_habilitados, usd_mes_max, mb_mes_max) "
+            "VALUES (?, 1, ?, '2099-12-31', ?, ?, ?)",
+            (email, plan, defaults["modelos_habilitados"], defaults["usd_mes_max"], defaults["mb_mes_max"]),
+        )
+    else:
+        conn.execute(
+            "UPDATE users SET activo=1, plan=?, acceso_hasta='2099-12-31', "
+            "modelos_habilitados=?, usd_mes_max=?, mb_mes_max=? WHERE email=?",
+            (plan, defaults["modelos_habilitados"], defaults["usd_mes_max"], defaults["mb_mes_max"], email),
+        )
+
+
+def upsert_user(
+    email: str,
+    acceso_hasta: str,
+    plan: str = "free",
+    nombre: str = "",
+    creditos_usd: float | None = None,
+    modelos_habilitados: list[str] | None = None,
+    mb_mes_max: float | None = None,
+    usd_mes_max: float | None = None,
+) -> dict[str, Any]:
+    """Create or update a user. Custom values override plan defaults."""
+    defaults = PLAN_DEFAULTS.get(plan, PLAN_DEFAULTS["free"])
+    modelos = json.dumps(modelos_habilitados) if modelos_habilitados else defaults["modelos_habilitados"]
+    usd_max = usd_mes_max if usd_mes_max is not None else defaults["usd_mes_max"]
+    mb_max = mb_mes_max if mb_mes_max is not None else defaults["mb_mes_max"]
+    cred = creditos_usd if creditos_usd is not None else usd_max
+
+    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn.row_factory = sqlite3.Row
+    existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if existing:
+        conn.execute(
+            "UPDATE users SET activo=1, plan=?, nombre=?, acceso_hasta=?, "
+            "creditos_usd=?, modelos_habilitados=?, usd_mes_max=?, mb_mes_max=? WHERE email=?",
+            (plan, nombre, acceso_hasta, cred, modelos, usd_max, mb_max, email),
+        )
+    else:
+        conn.execute(
+            "INSERT INTO users (email, nombre, activo, plan, acceso_hasta, creditos_usd, "
+            "modelos_habilitados, usd_mes_max, mb_mes_max) VALUES (?,?,1,?,?,?,?,?,?)",
+            (email, nombre, plan, acceso_hasta, cred, modelos, usd_max, mb_max),
+        )
+    conn.commit()
+    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    conn.close()
+    return dict(row)
+
+
+def track_usage(
+    user_id: int, tokens_in: int, tokens_out: int, usd_cost: float,
+) -> None:
+    """Record token usage for the current month and decrement credits."""
+    month = time.strftime("%Y-%m")
+    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn.execute(
+        "INSERT INTO user_usage (user_id, month, tokens_in, tokens_out, usd_used) "
+        "VALUES (?, ?, ?, ?, ?) "
+        "ON CONFLICT(user_id, month) DO UPDATE SET "
+        "tokens_in = tokens_in + ?, tokens_out = tokens_out + ?, usd_used = usd_used + ?",
+        (user_id, month, tokens_in, tokens_out, usd_cost,
+         tokens_in, tokens_out, usd_cost),
+    )
+    conn.execute(
+        "UPDATE users SET creditos_usd = MAX(0, creditos_usd - ?) WHERE id = ?",
+        (usd_cost, user_id),
+    )
     conn.commit()
     conn.close()
 
@@ -117,11 +233,13 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
     conn = sqlite3.connect(str(DB_PATH), timeout=20)
     conn.row_factory = sqlite3.Row
     row = conn.execute(
-        "SELECT id, email, nombre, activo, plan, acceso_hasta FROM users WHERE id = ?",
+        "SELECT id, email, nombre, activo, plan, acceso_hasta, "
+        "creditos_usd, modelos_habilitados, usd_mes_max, mb_mes_max "
+        "FROM users WHERE id = ?",
         (int(payload["sub"]),),
     ).fetchone()
-    conn.close()
     if not row:
+        conn.close()
         return None
     user = dict(row)
     # Check expiry
@@ -130,6 +248,15 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
         if date.fromisoformat(user["acceso_hasta"]) < date.today():
             user["activo"] = 0
             user["expired"] = True
+    # Fetch current month usage
+    month = time.strftime("%Y-%m")
+    usage = conn.execute(
+        "SELECT usd_used, mb_used FROM user_usage WHERE user_id = ? AND month = ?",
+        (user["id"], month),
+    ).fetchone()
+    conn.close()
+    user["usd_used_this_month"] = usage["usd_used"] if usage else 0
+    user["mb_used_this_month"] = usage["mb_used"] if usage else 0
     return user
 
 

@@ -46,6 +46,8 @@ from auth import (
     handle_register,
     init_users_table,
     require_active_user,
+    track_usage,
+    upsert_user,
 )
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -184,6 +186,54 @@ def auth_logout():
 @app.get("/api/auth/me")
 def auth_me(request: Request):
     return handle_me(request)
+
+
+@app.get("/api/auth/plan")
+def auth_plan(request: Request) -> dict[str, Any]:
+    """Return current user's plan info for frontend model selector."""
+    user = require_active_user(request)
+    return {
+        "plan": user.get("plan", "free"),
+        "modelos_habilitados": json.loads(user.get("modelos_habilitados") or '["haiku"]'),
+        "creditos_usd": user.get("creditos_usd", 0),
+        "usd_mes_max": user.get("usd_mes_max", 0.02),
+        "usd_used": user.get("usd_used_this_month", 0),
+        "mb_mes_max": user.get("mb_mes_max", 1),
+        "mb_used": user.get("mb_used_this_month", 0),
+        "acceso_hasta": user.get("acceso_hasta"),
+    }
+
+
+class UpsertUserRequest(BaseModel):
+    email: str
+    acceso_hasta: str
+    plan: str = "free"
+    nombre: str = ""
+    creditos_usd: float | None = None
+    modelos_habilitados: list[str] | None = None
+    mb_mes_max: float | None = None
+    usd_mes_max: float | None = None
+
+
+ADMIN_EMAILS = frozenset({"juanwisznia@gmail.com"})
+
+
+@app.post("/api/admin/users")
+def admin_upsert_user(body: UpsertUserRequest, request: Request) -> dict[str, Any]:
+    """Create or update a user. Enterprise-only."""
+    user = require_active_user(request)
+    if user["email"] not in ADMIN_EMAILS:
+        raise HTTPException(403, "Admin access required")
+    return upsert_user(
+        email=body.email,
+        acceso_hasta=body.acceso_hasta,
+        plan=body.plan,
+        nombre=body.nombre,
+        creditos_usd=body.creditos_usd,
+        modelos_habilitados=body.modelos_habilitados,
+        mb_mes_max=body.mb_mes_max,
+        usd_mes_max=body.usd_mes_max,
+    )
 
 
 class SearchResult(BaseModel):
@@ -618,6 +668,17 @@ async def chat_endpoint(request: Request) -> StreamingResponse:
             raise HTTPException(status_code=403, detail="Account not active")
 
     body = ChatRequest(**(await request.json()))
+
+    # Check model access and limits
+    if user:
+        allowed = json.loads(user.get("modelos_habilitados") or '["haiku"]')
+        if body.model not in allowed:
+            raise HTTPException(403, f"Modelo {body.model} no disponible en tu plan")
+        if user.get("usd_used_this_month", 0) >= (user.get("usd_mes_max") or 0.02):
+            raise HTTPException(403, "Límite mensual de uso alcanzado")
+        if (user.get("creditos_usd") or 0) <= 0:
+            raise HTTPException(403, "Créditos agotados")
+
     client = await sessions.get_or_create(body.session_id, body.model)
 
     return StreamingResponse(
