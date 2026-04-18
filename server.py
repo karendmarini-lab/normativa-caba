@@ -56,6 +56,8 @@ from chat import (
     SessionManager,
     cleanup_old_downloads,
     create_sse_stream,
+    init_chat_tables,
+    _persist_entry,
 )
 
 
@@ -121,6 +123,7 @@ sessions = SessionManager()
 @app.on_event("startup")
 def startup():
     init_users_table()
+    init_chat_tables()
     DOWNLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -592,53 +595,87 @@ def get_envelope(parcel_smp: str) -> dict[str, Any]:
 # ── Chat routes ──────────────────────────────────────────────────
 
 
-class ChatContext(BaseModel):
-    barrio: str | None = None
-    metric: str | None = None
-    selected_parcel: str | None = None
-
-
 class ChatRequest(BaseModel):
     session_id: str
     message: str
     model: str = "sonnet"
-    context: ChatContext | None = None
 
 
-def _build_agent_message(message: str, context: ChatContext | None) -> str:
-    """Prepend UI context to user message so the agent is aware of state."""
-    if not context:
-        return message
-    parts: list[str] = []
-    if context.barrio:
-        parts.append(f"barrio seleccionado: {context.barrio}")
-    if context.metric:
-        parts.append(f"metrica activa: {context.metric}")
-    if context.selected_parcel:
-        parts.append(f"parcela seleccionada: {context.selected_parcel}")
-    if not parts:
-        return message
-    return f"[Contexto UI: {', '.join(parts)}]\n\n{message}"
+class EntryRequest(BaseModel):
+    session_id: str
+    kind: str
+    content: str
 
 
 @app.post("/api/chat")
 async def chat_endpoint(request: Request) -> StreamingResponse:
+    user = get_current_user(request)
+    user_id = user["id"] if user else None
     if os.environ.get("GOOGLE_CLIENT_ID"):
-        user = get_current_user(request)
         if not user:
             raise HTTPException(status_code=401, detail="Not authenticated")
         if not user.get("activo"):
             raise HTTPException(status_code=403, detail="Account not active")
 
     body = ChatRequest(**(await request.json()))
-    agent_message = _build_agent_message(body.message, body.context)
     client = await sessions.get_or_create(body.session_id, body.model)
 
     return StreamingResponse(
-        create_sse_stream(client, agent_message, session_id=body.session_id),
+        create_sse_stream(
+            client, body.message,
+            session_id=body.session_id, user_id=user_id, model=body.model,
+        ),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "Connection": "keep-alive", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/api/chat/sessions")
+def list_chat_sessions(request: Request) -> list[dict[str, Any]]:
+    """List the authenticated user's chat sessions."""
+    user = require_active_user(request)
+    conn = db_connect()
+    try:
+        rows = conn.execute(
+            "SELECT id, created_at, last_used, preview, model "
+            "FROM chat_sessions WHERE user_id = ? ORDER BY last_used DESC LIMIT 50",
+            (user["id"],),
+        ).fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+@app.get("/api/chat/sessions/{session_id}")
+def get_chat_session(session_id: str, request: Request) -> dict[str, Any]:
+    """Get all entries for a chat session."""
+    user = require_active_user(request)
+    conn = db_connect()
+    try:
+        session = conn.execute(
+            "SELECT * FROM chat_sessions WHERE id = ? AND user_id = ?",
+            (session_id, user["id"]),
+        ).fetchone()
+        if not session:
+            raise HTTPException(status_code=404, detail="Session not found")
+        entries = conn.execute(
+            "SELECT id, kind, content, created_at FROM chat_entries "
+            "WHERE session_id = ? ORDER BY id", (session_id,),
+        ).fetchall()
+        return {"session": dict(session), "entries": [dict(e) for e in entries]}
+    finally:
+        conn.close()
+
+
+@app.post("/api/chat/entries")
+def save_chat_entry(body: EntryRequest, request: Request) -> dict[str, bool]:
+    """Save a programmatic entry (map click, barrio selection). No LLM call."""
+    user = get_current_user(request)
+    user_id = user["id"] if user else None
+    _persist_entry(
+        body.session_id, body.kind, body.content, user_id=user_id,
+    )
+    return {"ok": True}
 
 
 @app.delete("/api/chat/{session_id}")
