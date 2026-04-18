@@ -22,6 +22,7 @@ let _sessionId = crypto.randomUUID();
 let _streaming = false;
 let _abortController = null;
 let _userPlan = null;
+let _pendingContext = [];  // programmatic messages since last user query
 
 // ── DOM refs ─────────────────────────────────────────────────────
 
@@ -210,6 +211,13 @@ async function _onSend() {
   _streaming = true;
   _abortController = new AbortController();
 
+  // Prepend programmatic context (parcel clicks, barrio changes) to the message
+  let agentMessage = text;
+  if (_pendingContext.length) {
+    agentMessage = _pendingContext.join('\n') + '\n\n' + text;
+    _pendingContext = [];
+  }
+
   const assistantId = 'msg-' + Date.now();
   const updater = _renderAssistantMessage(assistantId);
 
@@ -217,7 +225,7 @@ async function _onSend() {
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: _sessionId, message: text, model: _model }),
+      body: JSON.stringify({ session_id: _sessionId, message: agentMessage, model: _model }),
       signal: _abortController.signal,
     });
 
@@ -331,6 +339,14 @@ export function addParcelCard(props) {
     props.plusvalia_alic && `Alícuota <b>${props.plusvalia_alic}%</b>`,
   ].filter(Boolean).map(s => `<span>${s}</span>`).join('');
 
+  // Track for agent context
+  const summary = [props.smp, props.dir, props.barrio,
+    props.pl && `PL ${props.pl}m`, props.pisos && `${props.pisos} pisos`,
+    delta && `delta ${delta}m`, props.fot && `FOT ${props.fot}`,
+    props.area && `${Math.round(props.area)}m²`,
+  ].filter(Boolean).join(' · ');
+  _pendingContext.push(`[Parcela: ${summary}]`);
+
   const el = document.createElement('div');
   el.className = 'chat-parcel-card';
   el.innerHTML = `
@@ -382,6 +398,7 @@ export function addParcelDocs(cardEl, links, croquisUrl) {
  */
 export function addInfoMessage(text) {
   if (_mode === 'hidden') return;
+  _pendingContext.push(`[${text}]`);
   const el = document.createElement('div');
   el.className = 'chat-msg chat-msg-info';
   el.textContent = text;
@@ -604,6 +621,7 @@ async function _loadSession(sessionId) {
 
 export function newSession() {
   _sessionId = crypto.randomUUID();
+  _pendingContext = [];
   if (_messagesEl) _messagesEl.innerHTML = '';
 }
 
