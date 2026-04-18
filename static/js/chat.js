@@ -500,7 +500,6 @@ function _renderReport(title, html, startCollapsed = false) {
     </div>
     <div style="display:flex;gap:4px">
       <button class="art-dl-btn" data-fmt="html">HTML</button>
-      <button class="art-dl-btn" data-fmt="pdf">PDF</button>
     </div>
   `;
   wrapper.appendChild(headerEl);
@@ -532,15 +531,6 @@ function _renderReport(title, html, startCollapsed = false) {
     a.click();
     URL.revokeObjectURL(a.href);
   });
-  headerEl.querySelector('[data-fmt="pdf"]').addEventListener('click', () => {
-    bodyEl.style.display = 'block';
-    headerEl.querySelector('.cr-toggle').textContent = '▾';
-    setTimeout(() => {
-      const iframe = document.getElementById(artId);
-      if (iframe?.contentWindow) iframe.contentWindow.print();
-    }, 500);
-  });
-
   _messagesEl.appendChild(wrapper);
   _scrollToBottom();
 }

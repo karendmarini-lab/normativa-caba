@@ -126,7 +126,7 @@
       color:#000;text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px}
 
     /* Legend */
-    .legend{position:absolute;bottom:16px;right:16px;z-index:100;
+    .legend{position:absolute;bottom:16px;left:16px;z-index:100;
       background:var(--panel);border:1px solid var(--line);border-radius:14px;
       backdrop-filter:blur(18px);padding:12px 14px}
     .legend-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
@@ -214,7 +214,6 @@
     <span class="logo-name">Edific<em>IA</em></span>
   </div>
   <div class="header-nav">
-    <button id="chat-toggle" title="Chat (Ctrl+K)" style="background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.5);font:inherit;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .15s">Chat</button>
     <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
     <a href="https://www.buenosaires.gob.ar/develop/normas-urbanisticas" target="_blank">Normativa ↗</a>
     <a href="mailto:karendmarini@gmail.com">Contacto</a>
@@ -460,6 +459,10 @@
     <div class="legend-labels"><span>Bajo</span><span>Alto</span></div>
   </div>
 </div>
+
+<button id="chat-toggle" title="Chat (Ctrl+K)" style="position:fixed;bottom:20px;right:20px;z-index:500;width:48px;height:48px;border-radius:50%;background:#fff;color:#000;border:none;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 16px rgba(0,0,0,.4);transition:transform .15s,box-shadow .15s">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</button>
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
