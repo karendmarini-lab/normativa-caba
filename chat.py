@@ -196,16 +196,19 @@ _active_session_id: str | None = None
 @tool(
     "render_html",
     "Mostrar una vista HTML al usuario (tabla, grafico, mapa, etc). "
-    "El HTML se renderiza en el frontend.",
+    "El HTML se renderiza en un iframe con tema oscuro y auto-resize.",
     {"title": str, "html": str},
 )
 async def tool_render_html(args: dict[str, Any]) -> dict[str, Any]:
-    """Store HTML for the SSE stream to pick up."""
+    """Wrap HTML in dark-theme template and queue for SSE stream."""
     title: str = args.get("title", "Vista")
     html: str = args.get("html", "")
+    wrapped = _wrap_html_for_iframe(html)
     if _active_session_id:
-        _pending_renders[_active_session_id].append({"title": title, "html": html})
-    return _tool_text(f"HTML renderizado correctamente (render_id={render_id})")
+        _pending_renders[_active_session_id].append({"title": title, "html": wrapped})
+    return _tool_text(
+        "Vista HTML renderizada correctamente. El usuario puede verla en el chat."
+    )
 
 
 # In-memory download byte counters: {user_id: {date_str: bytes_used}}
@@ -257,6 +260,49 @@ async def tool_create_download(args: dict[str, Any]) -> dict[str, Any]:
             ensure_ascii=False,
         )
     )
+
+
+# ---------------------------------------------------------------------------
+# HTML iframe wrapper
+# ---------------------------------------------------------------------------
+
+
+_IFRAME_TEMPLATE = """<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+*, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{ background: #0a0a0a; color: rgba(255,255,255,.85);
+  font-family: Inter, system-ui, sans-serif; font-size: 13px;
+  line-height: 1.5; padding: 12px; }}
+table {{ border-collapse: collapse; width: 100%; }}
+th, td {{ padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
+  text-align: left; font-size: 12px; }}
+th {{ color: rgba(255,255,255,.4); font-weight: 500;
+  text-transform: uppercase; font-size: 10px; letter-spacing: 1px; }}
+tr:hover {{ background: rgba(255,255,255,.03); }}
+a {{ color: #E8C547; }}
+code {{ background: rgba(255,255,255,.06); padding: 2px 6px;
+  border-radius: 4px; font-size: 12px; }}
+h1, h2, h3 {{ color: rgba(255,255,255,.9); font-weight: 500;
+  margin-bottom: 8px; }}
+h1 {{ font-size: 16px; }} h2 {{ font-size: 14px; }} h3 {{ font-size: 13px; }}
+</style></head><body>
+{content}
+<script>
+new ResizeObserver(function() {{
+  window.parent.postMessage(
+    {{ type: "iframe-resize", height: document.documentElement.scrollHeight }}, "*"
+  );
+}}).observe(document.documentElement);
+window.parent.postMessage(
+  {{ type: "iframe-resize", height: document.documentElement.scrollHeight }}, "*"
+);
+</script></body></html>"""
+
+
+def _wrap_html_for_iframe(raw_html: str) -> str:
+    """Wrap agent HTML in dark-theme template with auto-resize postMessage."""
+    return _IFRAME_TEMPLATE.format(content=raw_html)
 
 
 # ---------------------------------------------------------------------------

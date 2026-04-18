@@ -37,6 +37,20 @@ export function initChat() {
   _loadViews();
   _buildDOM();
   _bindKeys();
+  _listenIframeResize();
+}
+
+function _listenIframeResize() {
+  window.addEventListener('message', (e) => {
+    if (e.data?.type !== 'iframe-resize' || typeof e.data.height !== 'number') return;
+    const iframes = document.querySelectorAll('#chat-messages iframe');
+    for (const iframe of iframes) {
+      if (iframe.contentWindow === e.source) {
+        iframe.style.height = Math.min(e.data.height + 2, 600) + 'px';
+        break;
+      }
+    }
+  });
 }
 
 function _buildDOM() {
@@ -288,7 +302,7 @@ function _renderHtmlView(title, html) {
   wrapper.className = 'chat-view';
   wrapper.innerHTML = `
     <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:6px">${_escapeHtml(title)}</div>
-    <iframe sandbox="allow-scripts" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;height:300px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a"></iframe>
+    <iframe sandbox="allow-scripts" srcdoc="${html.replace(/"/g, '&quot;')}" style="width:100%;min-height:60px;height:60px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0a0a0a;transition:height .2s"></iframe>
   `;
   _messagesEl.appendChild(wrapper);
   _scrollToBottom();
