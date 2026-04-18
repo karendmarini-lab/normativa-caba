@@ -704,16 +704,18 @@ class StaticFileFilterMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> StarletteResponse:
         path = request.url.path
-        # Only filter paths that would hit the catch-all static mount
         if path.startswith("/api/"):
             return await call_next(request)
         ext = Path(path).suffix.lower()
-        # Allow directory index (no extension) for html=True handling
         if ext and ext not in _SAFE_STATIC_EXTS:
             from starlette.responses import Response
 
             return Response(status_code=404)
-        return await call_next(request)
+        response = await call_next(request)
+        # Prevent browser caching of JS/CSS so deploys take effect immediately
+        if ext in (".js", ".css"):
+            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        return response
 
 
 app.add_middleware(StaticFileFilterMiddleware)
