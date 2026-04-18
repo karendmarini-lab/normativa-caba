@@ -711,20 +711,20 @@ function _applyStyles() {
     }
     #chat-input::placeholder { color: rgba(255,255,255,.25); }
     #chat-send {
-      width: 32px; height: 32px;
-      border-radius: 8px;
-      background: #fff;
-      color: #000;
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.4);
       border: none;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       flex-shrink: 0;
-      transition: opacity .15s;
+      transition: all .15s;
     }
-    #chat-send:hover { opacity: .8; }
+    #chat-send:hover { background: rgba(255,255,255,.15); color: rgba(255,255,255,.7); }
 
     .chat-msg { font-size: 13px; line-height: 1.6; max-width: 90%; }
     .chat-msg-user {

@@ -474,7 +474,7 @@ async def create_sse_stream(
         await client.query(message)
         working = False
 
-        async for msg in client.receive_messages():
+        async for msg in client.receive_response():
             if isinstance(msg, StreamEvent):
                 event = msg.event
                 etype = event.get("type", "")
