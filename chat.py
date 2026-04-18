@@ -52,6 +52,13 @@ SQL_TIMEOUT_S = 10
 HTTP_TIMEOUT_S = 15
 SESSION_TTL_S = 30 * 60  # 30 minutes
 
+# Approximate Anthropic API pricing (USD per token)
+MODEL_PRICING = {
+    "haiku": {"input": 0.25e-6, "output": 1.25e-6},
+    "sonnet": {"input": 3.0e-6, "output": 15.0e-6},
+    "opus": {"input": 15.0e-6, "output": 75.0e-6},
+}
+
 # ---------------------------------------------------------------------------
 # System prompt
 # ---------------------------------------------------------------------------
@@ -537,6 +544,14 @@ async def create_sse_stream(
         session_id[:8], total_input_tokens, total_output_tokens,
         artifact_count, elapsed,
     )
+
+    # Track usage and decrement credits
+    if user_id and (total_input_tokens or total_output_tokens):
+        pricing = MODEL_PRICING.get(model, MODEL_PRICING["haiku"])
+        usd_cost = (total_input_tokens * pricing["input"]
+                     + total_output_tokens * pricing["output"])
+        from auth import track_usage
+        track_usage(user_id, total_input_tokens, total_output_tokens, usd_cost)
 
     yield SSEEvent(
         "done",
