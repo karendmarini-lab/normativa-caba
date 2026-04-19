@@ -144,28 +144,30 @@ async def _session_cleanup_loop() -> None:
 async def startup_background_tasks():
     global _cleanup_task
     _cleanup_task = asyncio.create_task(_session_cleanup_loop())
-    # Warmup agent + precache parcelas in background thread
+    # Warmup agent in background thread
     asyncio.get_event_loop().run_in_executor(None, _warmup_sync)
-    asyncio.get_event_loop().run_in_executor(None, _precache_parcelas)
+    # Precache parcelas after a delay so server can respond to initial requests first
+    asyncio.create_task(_delayed_precache())
 
 
 _cleanup_task: asyncio.Task[None] | None = None
 
 
-def _precache_parcelas() -> None:
-    """Precache parcelas_geo for all barrios so first load is instant."""
-    import logging
+async def _delayed_precache() -> None:
+    """Precache parcelas_geo one barrio at a time, yielding between each."""
+    await asyncio.sleep(3)
     log = logging.getLogger("edificia.cache")
     log.info("precache: starting")
-    # Trigger barrios cache
     list_barrios()
     barrios = _barrios_cache or []
     for b in barrios:
-        name = b["name"]
         try:
-            parcelas_geo(barrio=name, metric="delta", limit=3000)
+            await asyncio.get_event_loop().run_in_executor(
+                None, lambda name=b["name"]: parcelas_geo(barrio=name, metric="delta", limit=3000)
+            )
         except Exception:
             pass
+        await asyncio.sleep(0.1)  # Yield to event loop between barrios
     log.info("precache: done (%d barrios)", len(barrios))
 
 
