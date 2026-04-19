@@ -322,13 +322,18 @@ async def subscribe(request: Request) -> dict[str, Any]:
     if user.get("plan") in ("pro", "enterprise"):
         return {"already_subscribed": True}
 
-    plan_id = await _get_or_create_mp_plan()
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             "https://api.mercadopago.com/preapproval",
             headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
             json={
-                "preapproval_plan_id": plan_id,
+                "reason": "EdificIA Pro — Beta",
+                "auto_recurring": {
+                    "frequency": 1,
+                    "frequency_type": "months",
+                    "transaction_amount": MP_PLAN_PRICE,
+                    "currency_id": "ARS",
+                },
                 "payer_email": user["email"],
                 "back_url": "https://edificia.website",
                 "status": "pending",
