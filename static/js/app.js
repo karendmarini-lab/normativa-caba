@@ -781,6 +781,12 @@ function openFullReport() {
     }, 150);
   }
 
+  // Inicializar chat
+  const _rcCtx2 = [getText('res-addr'),getText('res-badge'),
+    'Lote: '+getVal('c-sup')+'m²','Vendible: '+getText('full-total')+'m²'
+  ].filter(Boolean).join('\n');
+  rcInit(_rcCtx2);
+
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
