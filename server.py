@@ -27,6 +27,7 @@ logging.basicConfig(
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
+import httpx
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
@@ -384,16 +385,47 @@ def search(
 
 
 @app.get("/api/parcela_nearest")
-def get_nearest_parcel(
+async def get_nearest_parcel(
     lat: float = Query(...), lng: float = Query(...),
 ) -> dict[str, Any]:
-    """Find the nearest parcel to a lat/lng coordinate."""
+    """Find the parcel at a lat/lng coordinate.
+
+    First tries USIG reverse geocoding for exact SMP, then falls back to
+    nearest-neighbor SQL.
+    """
+    # Step 1: USIG reverse geocoding for exact SMP
+    exact_smp = None
+    try:
+        gk_ox, gk_oy = 107253.769166, 102807.160072
+        lng_o, lat_o = -58.384222, -34.603939
+        gkx = gk_ox + (lng - lng_o) * 91724.6547
+        gky = gk_oy + (lat - lat_o) * 111003.9032
+        async with httpx.AsyncClient(timeout=4) as client:
+            resp = await client.get(
+                f"https://ws.usig.buenosaires.gob.ar/geocoder/2.2/reversegeocoding?x={gkx:.3f}&y={gky:.3f}"
+            )
+            if resp.status_code == 200:
+                raw = resp.text.strip().strip("()")
+                parsed = json.loads(raw)
+                if parsed.get("parcela"):
+                    exact_smp = parsed["parcela"]
+    except Exception:
+        pass
+
     with db_connect() as conn:
-        row = conn.execute(
-            "SELECT * FROM parcelas WHERE lat IS NOT NULL "
-            "ORDER BY (lat-?)*(lat-?)+(lng-?)*(lng-?) LIMIT 1",
-            (lat, lat, lng, lng),
-        ).fetchone()
+        row = None
+        if exact_smp:
+            norm = smp_norm(exact_smp)
+            row = conn.execute(
+                "SELECT * FROM parcelas WHERE smp_norm = ?", (norm,)
+            ).fetchone()
+        if not row:
+            row = conn.execute(
+                "SELECT * FROM parcelas WHERE lat IS NOT NULL "
+                "ORDER BY (lat-?)*(lat-?)+(lng-?)*(lng-?) LIMIT 1",
+                (lat, lat, lng, lng),
+            ).fetchone()
+
     if not row:
         raise HTTPException(status_code=404, detail="No parcels found")
     data = serialize_row(row)
