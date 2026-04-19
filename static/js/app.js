@@ -311,7 +311,7 @@ function showParcelFromMap(props) {
     .then(data => {
       if (!data) return;
 
-      // Store full data for the report modal
+      // Populate _currentParcelData so the report modal has all fields
       window._currentParcelData = {
         ...props,
         edif_croquis_url: data.edif_croquis_url,
