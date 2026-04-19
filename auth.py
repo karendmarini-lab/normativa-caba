@@ -71,7 +71,23 @@ PLAN_DEFAULTS: dict[str, dict[str, Any]] = {
 
 
 def init_users_table() -> None:
-    """Create users table, migrate columns, seed users."""
+    """Create users table, migrate columns, seed users.
+
+    Retries on database lock to coexist with enrich_fast workers.
+    """
+    for attempt in range(5):
+        try:
+            _init_users_table_inner()
+            return
+        except sqlite3.OperationalError as e:
+            if "locked" in str(e) and attempt < 4:
+                import time as _t
+                _t.sleep(3)
+                continue
+            raise
+
+
+def _init_users_table_inner() -> None:
     conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
