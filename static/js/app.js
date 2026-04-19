@@ -824,3 +824,150 @@ document.addEventListener('DOMContentLoaded', () => {
   const res = document.getElementById('results');
   if (res) _resultsObserver.observe(res, { attributes: true, attributeFilter: ['class'] });
 });
+
+
+// ── REPORT CHAT — mini-chat independiente en el modal ────────────
+// NO toca chat.js. Llama a /api/chat directamente con SSE.
+
+let _rcSessionId   = null;
+let _rcStreaming    = false;
+let _rcAbortCtrl   = null;
+
+function rcInit(parcelContext) {
+  // Nueva sesión por cada apertura del informe
+  _rcSessionId = crypto.randomUUID();
+  _rcStreaming  = false;
+
+  const messagesEl = document.getElementById('rc-messages');
+  if (!messagesEl) return;
+  messagesEl.innerHTML = '';
+
+  // Mensaje de bienvenida con contexto
+  const info = document.createElement('div');
+  info.className = 'rc-msg info';
+  info.textContent = parcelContext
+    ? '📍 ' + parcelContext.split('\n')[0]
+    : 'Informe cargado. Podés preguntar sobre esta parcela.';
+  messagesEl.appendChild(info);
+
+  // Guardar el contexto para el primer mensaje
+  window._rcPendingContext = parcelContext || '';
+}
+
+function rcScrollBottom() {
+  const el = document.getElementById('rc-messages');
+  if (el) el.scrollTop = el.scrollHeight;
+}
+
+async function rcSend(textOverride) {
+  if (_rcStreaming) return;
+  const inputEl = document.getElementById('rc-input');
+  const sendBtn = document.getElementById('rc-send-btn');
+  const messagesEl = document.getElementById('rc-messages');
+  if (!messagesEl) return;
+
+  const text = textOverride || inputEl?.value?.trim();
+  if (!text) return;
+  if (inputEl) inputEl.value = '';
+
+  // Prepend context in first message
+  let agentMessage = text;
+  if (window._rcPendingContext) {
+    agentMessage = window._rcPendingContext + '\n\n' + text;
+    window._rcPendingContext = '';
+  }
+
+  // Render user message
+  const userEl = document.createElement('div');
+  userEl.className = 'rc-msg user';
+  userEl.textContent = text;
+  messagesEl.appendChild(userEl);
+  rcScrollBottom();
+
+  // Render assistant placeholder
+  const assistEl = document.createElement('div');
+  assistEl.className = 'rc-msg assistant';
+  messagesEl.appendChild(assistEl);
+
+  const workEl = document.createElement('div');
+  workEl.className = 'rc-msg working';
+  workEl.textContent = 'Analizando...';
+  messagesEl.appendChild(workEl);
+  rcScrollBottom();
+
+  _rcStreaming = true;
+  if (sendBtn) sendBtn.disabled = true;
+
+  _rcAbortCtrl = new AbortController();
+  let accumulated = '';
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: _rcSessionId,
+        message: agentMessage,
+        model: 'claude-haiku-4-5-20251001'
+      }),
+      signal: _rcAbortCtrl.signal
+    });
+
+    if (!resp.ok) {
+      workEl.remove();
+      assistEl.className = 'rc-msg error';
+      assistEl.textContent = 'Error ' + resp.status + ' — intentá nuevamente';
+      return;
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.type === 'text') {
+            accumulated += ev.data;
+            // Render markdown simple
+            assistEl.innerHTML = accumulated
+              .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+              .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+              .replace(/`([^`]+)`/g,'<code>$1</code>')
+              .replace(/\n/g,'<br>');
+            rcScrollBottom();
+          } else if (ev.type === 'working') {
+            workEl.style.display = ev.data ? 'block' : 'none';
+          }
+        } catch { /* skip */ }
+      }
+    }
+
+    workEl.remove();
+    assistEl.classList.add('done');
+
+  } catch(e) {
+    workEl.remove();
+    if (e.name !== 'AbortError') {
+      assistEl.className = 'rc-msg error';
+      assistEl.textContent = e.message;
+    }
+  } finally {
+    _rcStreaming = false;
+    _rcAbortCtrl = null;
+    if (sendBtn) sendBtn.disabled = false;
+    rcScrollBottom();
+  }
+}
+
+function rcSendChip(btn) {
+  rcSend(btn.textContent.trim());
+}
