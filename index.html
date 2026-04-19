@@ -13,7 +13,7 @@
       --bg:#000;--card:#0e0e0e;--lift:#181818;
       --border:rgba(255,255,255,.08);--bh:rgba(255,255,255,.18);
       --text:#fff;--muted:rgba(255,255,255,.4);--r:6px;
-      --accent:#e8c547;--panel:rgba(10,10,10,.94);--line:rgba(255,255,255,.1);
+      --accent:#FFCC00;--panel:rgba(10,10,10,.94);--line:rgba(255,255,255,.1);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
@@ -26,10 +26,12 @@
       position:fixed;top:0;left:0;right:0;z-index:200;
       background:color-mix(in srgb, var(--bg) 92%, transparent);backdrop-filter:blur(20px)}
     .logo-wrap{display:flex;align-items:center;gap:12px}
-    .logo-mark{width:24px;height:24px;border:1px solid var(--border);
-      display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:400;letter-spacing:1px}
-    .logo-name{font-size:12px;font-weight:300;letter-spacing:5px;text-transform:uppercase}
-    .logo-name em{color:var(--muted);font-style:normal}
+    .logo-mark{width:28px;height:28px;border:2px solid var(--accent);
+      display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;letter-spacing:0}
+    .logo-text-group{display:flex;flex-direction:column;gap:0px}
+    .branding-signature{font-size:7px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.35);font-weight:300;line-height:1.2}
+    .logo-name{font-size:15px;font-weight:300;letter-spacing:4px;text-transform:uppercase;line-height:1.1}
+    .logo-name em{color:var(--accent);font-style:normal}
     .header-nav{display:flex;gap:24px}
     .header-nav a{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
       color:var(--muted);text-decoration:none;transition:color .2s}
@@ -78,7 +80,7 @@
     #msg-warn{background:rgba(234,179,8,.08);color:#fcd34d;border:1px solid rgba(234,179,8,.2)}
     #msg-info{background:rgba(255,255,255,.05);color:var(--muted);border:1px solid var(--border)}
     .pill-stack{display:flex;gap:8px;width:100%}
-    .btn-pill{flex:1;background:#fff;color:#000;border:none;border-radius:100px;padding:12px 20px;
+    .btn-pill{flex:1;background:var(--accent);color:#000;border:none;border-radius:100px;padding:12px 20px;
       font-family:'Inter',inherit;font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
       cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
     .btn-pill:hover{opacity:.86}
@@ -211,7 +213,10 @@
 <header>
   <div class="logo-wrap">
     <div class="logo-mark">E</div>
-    <span class="logo-name">Edific<em>IA</em></span>
+    <div class="logo-text-group">
+      <small class="branding-signature">KAREN MARINI</small>
+      <span class="logo-name">Edific<em>IA</em></span>
+    </div>
   </div>
   <div class="header-nav">
     <a href="https://ciudad3d.buenosaires.gob.ar" target="_blank">Ciudad 3D ↗</a>
@@ -310,8 +315,8 @@
     .frm-hero-badge{
       display:inline-block;font-size:9px;font-weight:600;letter-spacing:2.5px;
       text-transform:uppercase;padding:6px 16px;border-radius:100px;
-      background:rgba(200,169,110,.1);color:#C8A96E;
-      border:1px solid rgba(200,169,110,.3);
+      background:rgba(255,204,0,.1);color:var(--accent);
+      border:1px solid rgba(255,204,0,.35);
     }
     .frm-hero-right{
       background:#0a0a0a;border:1px solid #222;border-radius:8px;
@@ -335,7 +340,7 @@
     }
     .frm-card-label{
       font-size:11px;letter-spacing:2px;text-transform:uppercase;
-      color:#C8A96E;font-weight:400;
+      color:var(--accent);font-weight:400;
     }
     .frm-card-val{
       font-size:clamp(1.8rem,3vw,2.8rem);font-weight:200;
@@ -346,7 +351,7 @@
 
     /* Card total — destacado */
     .frm-card.total{background:#0f0a00}
-    .frm-card.total .frm-card-val{color:#C8A96E}
+    .frm-card.total .frm-card-val{color:var(--accent)}
 
     /* ── MÓDULO NORMATIVO: tabla formal ─────────────────────── */
     .frm-table-card{
@@ -368,7 +373,7 @@
     .frm-table-item:nth-child(3n){border-right:none}
     .frm-table-item label{
       display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;
-      color:#C8A96E;font-weight:400;margin-bottom:6px;
+      color:var(--accent);font-weight:400;margin-bottom:6px;
     }
     .frm-table-item p{
       font-size:16px;font-weight:300;color:#fff;margin:0;
@@ -399,11 +404,11 @@
     .frm-croquis-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .croquis-link{
       font-size:10px;letter-spacing:2px;text-transform:uppercase;
-      color:#C8A96E;text-decoration:none;
-      border:1px solid rgba(200,169,110,.3);padding:8px 16px;border-radius:100px;
+      color:var(--accent);text-decoration:none;
+      border:1px solid rgba(255,204,0,.35);padding:8px 16px;border-radius:100px;
       transition:background .2s,color .2s;
     }
-    .croquis-link:hover{background:#C8A96E;color:#000}
+    .croquis-link:hover{background:var(--accent);color:#000}
 
     /* Footer */
     .frm-footer-note{
