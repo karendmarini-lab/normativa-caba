@@ -426,6 +426,129 @@
       .frm-hero-address{font-size:1.4rem}
     }
 
+
+    /* ── REPORT CHAT PANEL ─────────────────────────────────── */
+    .frm-with-chat {
+      display: flex;
+      height: 100%;
+    }
+    .frm-main-col {
+      flex: 1;
+      min-width: 0;
+      overflow-y: auto;
+    }
+    #report-chat-container {
+      width: 320px;
+      flex-shrink: 0;
+      border-left: 1px solid #222;
+      background: #000;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+    }
+    .rc-header {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+    .rc-label {
+      font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+      color: #E8C547; font-weight: 500; display: block; margin-bottom: 4px;
+    }
+    .rc-sublabel {
+      font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: .5px;
+    }
+    .rc-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .rc-msg {
+      font-size: 13px; line-height: 1.5;
+      padding: 8px 10px; border-radius: 6px;
+      max-width: 100%;
+    }
+    .rc-msg.user {
+      background: rgba(255,255,255,.06);
+      color: rgba(255,255,255,.85);
+      align-self: flex-end;
+    }
+    .rc-msg.assistant {
+      color: rgba(255,255,255,.8);
+    }
+    .rc-msg.assistant b { color: #E8C547; }
+    .rc-msg.assistant code {
+      background: rgba(255,255,255,.08);
+      padding: 1px 4px; border-radius: 3px;
+      font-size: 11px;
+    }
+    .rc-msg.info {
+      font-size: 10px; letter-spacing: .5px;
+      color: rgba(255,255,255,.25); font-style: italic;
+    }
+    .rc-msg.working {
+      color: rgba(255,255,255,.3); font-size: 12px;
+      animation: rc-blink .8s infinite;
+    }
+    .rc-msg.error { color: #f87171; font-size: 12px; }
+    @keyframes rc-blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+    .rc-chips {
+      padding: 8px 12px;
+      display: flex; flex-wrap: wrap; gap: 6px;
+      border-top: 1px solid #1a1a1a;
+      flex-shrink: 0;
+    }
+    .rc-chip {
+      font-size: 10px; letter-spacing: .5px;
+      padding: 5px 10px; border-radius: 100px;
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.5);
+      cursor: pointer; background: none;
+      transition: border-color .2s, color .2s;
+      white-space: nowrap;
+    }
+    .rc-chip:hover { border-color: #E8C547; color: #E8C547; }
+
+    .rc-input-row {
+      padding: 10px 12px;
+      border-top: 1px solid #1a1a1a;
+      display: flex; gap: 8px; align-items: flex-end;
+      flex-shrink: 0;
+    }
+    .rc-input {
+      flex: 1; background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 8px; padding: 9px 12px;
+      color: #fff; font: 13px/1.4 'Inter', inherit;
+      resize: none; outline: none; min-height: 36px; max-height: 80px;
+      transition: border-color .2s;
+    }
+    .rc-input::placeholder { color: rgba(255,255,255,.25); font-size: 12px; }
+    .rc-input:focus { border-color: rgba(232,197,71,.4); }
+    .rc-send {
+      width: 34px; height: 34px; flex-shrink: 0;
+      background: #E8C547; color: #000; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .2s;
+    }
+    .rc-send:hover { opacity: .85; }
+    .rc-send:disabled { opacity: .35; cursor: default; }
+
+    @media(max-width:900px) {
+      .frm-with-chat { flex-direction: column; }
+      #report-chat-container {
+        width: 100%; height: 360px; border-left: none;
+        border-top: 1px solid #222; position: static;
+      }
+    }
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -674,6 +797,8 @@
   <div id="full-report-modal" class="formal-report hidden">
     <button id="close-full-report" title="Cerrar">&times;</button>
 
+    <div class="frm-with-chat">
+    <div class="frm-main-col">
     <div class="frm-body">
 
       <!-- LOGO INSTITUCIONAL -->
@@ -778,6 +903,30 @@
       <!-- FOOTER -->
       <div class="frm-footer-note">
         Informe de carácter preliminar. No constituye autorización de obra ni verificación jurídica. Datos sujetos a verificación profesional ante el GCBA.
+      </div>
+
+    </div>
+    </div>
+
+      <!-- PANEL DE CHAT IA -->
+      <div id="report-chat-container">
+        <div class="rc-header">
+          <span class="rc-label">Consulta Normativa IA</span>
+          <span class="rc-sublabel">Preguntá sobre esta parcela</span>
+        </div>
+        <div class="rc-messages" id="rc-messages"></div>
+        <div class="rc-chips" id="rc-chips">
+          <button class="rc-chip" onclick="rcSendChip(this)">¿Qué se puede construir?</button>
+          <button class="rc-chip" onclick="rcSendChip(this)">¿Cuál es la plusvalía?</button>
+          <button class="rc-chip" onclick="rcSendChip(this)">Restricciones del distrito</button>
+          <button class="rc-chip" onclick="rcSendChip(this)">¿Conviene desarrollar?</button>
+        </div>
+        <div class="rc-input-row">
+          <textarea id="rc-input" class="rc-input" rows="1"
+            placeholder="Preguntá sobre la parcela..." 
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();rcSend()}"></textarea>
+          <button class="rc-send" id="rc-send-btn" onclick="rcSend()">↑</button>
+        </div>
       </div>
 
     </div>
