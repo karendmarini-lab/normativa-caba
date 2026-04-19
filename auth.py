@@ -326,22 +326,18 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
 
     if not existing:
-        conn.close()
-        # Not whitelisted — show denial page
-        return HTMLResponse(
-            '<html><body style="background:#000;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column">'
-            f'<h2>Acceso denegado</h2>'
-            f'<p style="color:#999;margin-top:12px">{email} no tiene acceso.</p>'
-            '<p style="color:#999;margin-top:8px">Contacto: <a href="mailto:karendmarini@gmail.com" style="color:#e8c547">karendmarini@gmail.com</a></p>'
-            '</body></html>',
-            status_code=403,
+        # New user — create with no plan, redirect to pricing
+        conn.execute(
+            "INSERT INTO users (email, nombre, google_id, activo) VALUES (?, ?, ?, 1)",
+            (email, nombre, google_id),
         )
-
-    user_id = existing["id"]
-    conn.execute(
-        "UPDATE users SET google_id = ?, nombre = ? WHERE id = ?",
-        (google_id, nombre, user_id),
-    )
+        user_id = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()["id"]
+    else:
+        user_id = existing["id"]
+        conn.execute(
+            "UPDATE users SET google_id = ?, nombre = ? WHERE id = ?",
+            (google_id, nombre, user_id),
+        )
 
     # Check expiry
     from datetime import date

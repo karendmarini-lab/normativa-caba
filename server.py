@@ -67,7 +67,7 @@ from chat import (
 class AuthMiddleware(BaseHTTPMiddleware):
     """Redirect to Google SSO if not authenticated."""
 
-    OPEN_PATHS = ("/api/auth/", "/api/health", "/api/payments/webhook")
+    OPEN_PATHS = ("/api/auth/", "/api/health", "/api/payments/", "/pricing.html")
 
     async def dispatch(self, request: Request, call_next) -> StarletteResponse:
         # Skip auth entirely if no Google credentials configured (local dev)
@@ -92,6 +92,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 f'<a href="/api/auth/logout" style="color:#666;margin-top:20px;font-size:12px">Cerrar sesión</a>'
                 f'</body></html>', status_code=403,
             )
+        # Redirect users without a plan to pricing page
+        if not user.get("plan") and path != "/pricing.html":
+            return RedirectResponse("/pricing.html", status_code=302)
         return await call_next(request)
 
 
@@ -295,6 +298,21 @@ async def _get_or_create_mp_plan() -> str:
         data = resp.json()
         MP_PLAN_ID = data.get("id")
         return MP_PLAN_ID
+
+
+@app.post("/api/payments/choose-free")
+def choose_free(request: Request) -> dict[str, bool]:
+    """Activate the free plan for the current user."""
+    user = get_current_user(request)
+    if not user:
+        raise HTTPException(401, "Not authenticated")
+    from auth import upsert_user, PLAN_DEFAULTS
+    upsert_user(
+        email=user["email"],
+        acceso_hasta="2099-12-31",
+        plan="free",
+    )
+    return {"ok": True}
 
 
 @app.post("/api/payments/subscribe")
