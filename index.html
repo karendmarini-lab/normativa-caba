@@ -230,7 +230,76 @@
         .av2{stroke:#fff;stroke-width:1.1;fill:none;opacity:.45}
         .lb{fill:rgba(255,255,255,.3);font-family:'Inter',sans-serif;font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase}
         .lb2{fill:rgba(255,255,255,.18);font-family:'Inter',sans-serif;font-size:5.5px;letter-spacing:1.5px}
-      </style></defs>
+  
+    /* ── FULL REPORT MODAL ─────────────────────────────────── */
+    .btn-full-report{
+      display:none;width:100%;margin-top:10px;padding:12px;
+      background:transparent;color:var(--accent);
+      border:1px solid var(--accent);border-radius:var(--r);
+      font:inherit;font-size:10px;font-weight:500;letter-spacing:2.5px;
+      text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s;
+    }
+    .btn-full-report:hover{background:var(--accent);color:#000}
+    .btn-full-report.visible{display:block}
+
+    #full-report-modal{
+      display:none;position:fixed;inset:0;
+      width:100vw;height:100vh;background:#000;
+      z-index:9999;overflow-y:auto;
+    }
+    #full-report-modal.open{display:block}
+    .frm-inner{
+      max-width:720px;margin:0 auto;padding:60px 32px 80px;
+    }
+    .frm-close{
+      position:fixed;top:20px;right:24px;
+      font-size:28px;color:rgba(255,255,255,.4);cursor:pointer;
+      background:none;border:none;line-height:1;transition:color .2s;z-index:10000;
+    }
+    .frm-close:hover{color:#fff}
+    .frm-eyebrow{
+      font-size:9px;letter-spacing:4px;text-transform:uppercase;
+      color:rgba(255,255,255,.35);margin-bottom:10px;
+    }
+    .frm-address{
+      font-size:clamp(22px,4vw,38px);font-weight:200;
+      color:#fff;letter-spacing:-.5px;line-height:1.15;margin-bottom:4px;
+    }
+    .frm-badge{
+      display:inline-block;font-size:9px;font-weight:600;letter-spacing:2px;
+      text-transform:uppercase;padding:5px 14px;border-radius:100px;
+      background:rgba(200,169,110,.12);color:#C8A96E;
+      border:1px solid rgba(200,169,110,.25);margin-bottom:40px;
+    }
+    .frm-divider{border:none;border-top:1px solid rgba(255,255,255,.08);margin:32px 0}
+    .frm-section-label{
+      font-size:9px;letter-spacing:3px;text-transform:uppercase;
+      color:rgba(255,255,255,.35);margin-bottom:20px;
+    }
+    .frm-hero{
+      background:rgba(200,169,110,.06);border:1px solid rgba(200,169,110,.2);
+      border-radius:8px;padding:28px 32px;margin-bottom:24px;text-align:center;
+    }
+    .frm-hero-label{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#C8A96E;margin-bottom:8px}
+    .frm-hero-val{font-size:clamp(48px,8vw,72px);font-weight:200;color:#fff;line-height:1;letter-spacing:-2px}
+    .frm-hero-unit{font-size:14px;font-weight:300;color:rgba(255,255,255,.5);margin-top:4px}
+    .frm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;
+      background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.07);
+      border-radius:6px;overflow:hidden;margin-bottom:16px}
+    .frm-cell{background:#0d0d0d;padding:20px 22px}
+    .frm-cell-label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;
+      color:rgba(255,255,255,.35);margin-bottom:8px}
+    .frm-cell-val{font-size:26px;font-weight:300;color:#fff;line-height:1}
+    .frm-cell-val.accent{color:#C8A96E}
+    .frm-cell-unit{font-size:10px;color:rgba(255,255,255,.35);margin-top:4px}
+    .frm-footer{margin-top:48px;padding-top:20px;border-top:1px solid rgba(255,255,255,.08);
+      font-size:9px;letter-spacing:2px;text-transform:uppercase;
+      color:rgba(255,255,255,.2);text-align:center}
+    @media(max-width:600px){
+      .frm-inner{padding:40px 20px 60px}
+      .frm-close{top:14px;right:16px}
+    }
+    </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
       <path class="av" d="M80,50 L55,130 L45,260 L50,380 L80,500 L140,580"/>
@@ -399,6 +468,7 @@
       <div><div id="res-addr">—</div><div id="res-coords"></div></div>
       <div class="dbadge unknown" id="res-badge">—</div>
     </div>
+    <button class="btn-full-report" id="open-full-report">Ver informe completo ↗</button>
 
     <div id="aph-box"><strong>APH</strong> — Área de Protección Histórica.</div>
     <div id="u-box"><strong>U</strong></div>
@@ -472,5 +542,79 @@
   initApp();
   initChat();
 </script>
+
+  <!-- FULL REPORT MODAL -->
+  <div id="full-report-modal">
+    <button class="frm-close" id="close-full-report" title="Cerrar">&times;</button>
+    <div class="frm-inner">
+      <div class="frm-eyebrow">EdificIA · Estudio de Factibilidad Preliminar</div>
+      <div class="frm-address" id="frm-address">—</div>
+      <div class="frm-badge" id="frm-badge">—</div>
+
+      <div class="frm-section-label">Superficie Vendible Estimada</div>
+      <div class="frm-hero">
+        <div class="frm-hero-label">Total Vendible</div>
+        <div class="frm-hero-val" id="frm-total-vend">—</div>
+        <div class="frm-hero-unit">m²</div>
+      </div>
+
+      <div class="frm-grid">
+        <div class="frm-cell">
+          <div class="frm-cell-label">Cubierto</div>
+          <div class="frm-cell-val accent" id="frm-vend-cub">—</div>
+          <div class="frm-cell-unit" id="frm-eficiencia">m²</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Balcones (semicubierto)</div>
+          <div class="frm-cell-val" id="frm-balcones">—</div>
+          <div class="frm-cell-unit">m²</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Volumen Edificable</div>
+          <div class="frm-cell-val" id="frm-volumen">—</div>
+          <div class="frm-cell-unit">m²</div>
+        </div>
+      </div>
+
+      <hr class="frm-divider">
+      <div class="frm-section-label">Parámetros Normativos</div>
+
+      <div class="frm-grid">
+        <div class="frm-cell">
+          <div class="frm-cell-label">Distrito CUR</div>
+          <div class="frm-cell-val sm" id="frm-distrito" style="font-size:18px">—</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Altura Dominante</div>
+          <div class="frm-cell-val" id="frm-altura">—</div>
+          <div class="frm-cell-unit">metros</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Plano Límite</div>
+          <div class="frm-cell-val accent" id="frm-plano">—</div>
+          <div class="frm-cell-unit">metros</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Pisos Estimados</div>
+          <div class="frm-cell-val" id="frm-pisos">—</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Superficie Lote</div>
+          <div class="frm-cell-val" id="frm-lote">—</div>
+          <div class="frm-cell-unit">m²</div>
+        </div>
+        <div class="frm-cell">
+          <div class="frm-cell-label">Pisada Edificable</div>
+          <div class="frm-cell-val" id="frm-pisada">—</div>
+          <div class="frm-cell-unit">m²</div>
+        </div>
+      </div>
+
+      <div class="frm-footer">
+        Estudio de factibilidad preliminar · EdificIA · CUR Ley 6099/2018 · Datos orientativos
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>
