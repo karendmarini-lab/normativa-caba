@@ -27,6 +27,9 @@ DB_PATH = Path(__file__).resolve().parent / "caba_normativa.db"
 
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "")
+MICROSOFT_CLIENT_ID = os.environ.get("MICROSOFT_CLIENT_ID", "")
+MICROSOFT_CLIENT_SECRET = os.environ.get("MICROSOFT_CLIENT_SECRET", "")
+MICROSOFT_TENANT_ID = os.environ.get("MICROSOFT_TENANT_ID", "common")
 JWT_SECRET = os.environ.get("JWT_SECRET", secrets.token_hex(32))
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRY_SECONDS = 30 * 24 * 3600  # 30 days
@@ -41,6 +44,10 @@ def _base_url(request: Request) -> str:
 GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
+MICROSOFT_AUTH_URL = f"https://login.microsoftonline.com/{MICROSOFT_TENANT_ID}/oauth2/v2.0/authorize"
+MICROSOFT_TOKEN_URL = f"https://login.microsoftonline.com/{MICROSOFT_TENANT_ID}/oauth2/v2.0/token"
+MICROSOFT_USERINFO_URL = "https://graph.microsoft.com/v1.0/me"
 
 # --- Plan tiers ---
 
@@ -369,6 +376,152 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
         max_age=JWT_EXPIRY_SECONDS,
     )
     return response
+
+
+def handle_microsoft_login(request: Request) -> RedirectResponse:
+    """Redirect to Microsoft OAuth2 consent screen."""
+    callback = _base_url(request) + "/api/auth/microsoft/callback"
+    params = {
+        "client_id": MICROSOFT_CLIENT_ID,
+        "redirect_uri": callback,
+        "response_type": "code",
+        "scope": "openid email profile User.Read",
+        "response_mode": "query",
+        "prompt": "select_account",
+    }
+    return RedirectResponse(f"{MICROSOFT_AUTH_URL}?{urlencode(params)}")
+
+
+def handle_microsoft_callback(request: Request, code: str) -> RedirectResponse:
+    """Exchange Microsoft auth code for user info, create/update user, set cookie."""
+    callback = _base_url(request) + "/api/auth/microsoft/callback"
+
+    token_resp = requests.post(MICROSOFT_TOKEN_URL, data={
+        "code": code,
+        "client_id": MICROSOFT_CLIENT_ID,
+        "client_secret": MICROSOFT_CLIENT_SECRET,
+        "redirect_uri": callback,
+        "grant_type": "authorization_code",
+        "scope": "openid email profile User.Read",
+    }, timeout=10)
+
+    if token_resp.status_code != 200:
+        raise HTTPException(status_code=400, detail="Microsoft auth failed")
+
+    access_token = token_resp.json()["access_token"]
+
+    info_resp = requests.get(
+        MICROSOFT_USERINFO_URL,
+        headers={"Authorization": f"Bearer {access_token}"},
+        timeout=10,
+    )
+    info = info_resp.json()
+    email = info.get("mail") or info.get("userPrincipalName", "")
+    nombre = info.get("displayName", "")
+    ms_id = info.get("id", "")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="No email from Microsoft account")
+
+    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn.row_factory = sqlite3.Row
+    existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
+
+    if not existing:
+        conn.execute(
+            "INSERT INTO users (email, nombre, google_id, activo) VALUES (?, ?, ?, 1)",
+            (email, nombre, f"ms:{ms_id}"),
+        )
+        user_id = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()["id"]
+    else:
+        user_id = existing["id"]
+        conn.execute(
+            "UPDATE users SET nombre = ? WHERE id = ? AND (nombre IS NULL OR nombre = '')",
+            (nombre, user_id),
+        )
+
+    from datetime import date
+    acceso_hasta = existing["acceso_hasta"] if existing else None
+    if acceso_hasta and date.fromisoformat(acceso_hasta) < date.today():
+        conn.commit()
+        conn.close()
+        return HTMLResponse(
+            '<html><body style="background:#000;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column">'
+            f'<h2>Acceso expirado</h2>'
+            f'<p style="color:#999;margin-top:12px">Tu acceso venció el {acceso_hasta}.</p>'
+            '<p style="color:#999;margin-top:8px">Contacto: <a href="mailto:karendmarini@gmail.com" style="color:#e8c547">karendmarini@gmail.com</a></p>'
+            '</body></html>',
+            status_code=403,
+        )
+
+    conn.commit()
+    conn.close()
+
+    token = _create_token(user_id, email)
+    base = _base_url(request)
+    response = RedirectResponse(base + "/", status_code=302)
+    response.set_cookie(
+        "session", token,
+        httponly=True,
+        secure=True,
+        samesite="lax",
+        max_age=JWT_EXPIRY_SECONDS,
+    )
+    return response
+
+
+def login_page(request: Request) -> HTMLResponse:
+    """Render a login page with Google and Microsoft options."""
+    base = _base_url(request)
+    has_google = bool(GOOGLE_CLIENT_ID)
+    has_microsoft = bool(MICROSOFT_CLIENT_ID)
+
+    buttons = ""
+    if has_google:
+        buttons += f'''
+        <a href="{base}/api/auth/google" style="display:flex;align-items:center;gap:12px;
+          padding:14px 28px;border-radius:100px;background:#fff;color:#000;text-decoration:none;
+          font-size:14px;font-weight:500;letter-spacing:.3px;transition:opacity .2s;width:100%;
+          justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+          Continuar con Google
+        </a>'''
+    if has_microsoft:
+        buttons += f'''
+        <a href="{base}/api/auth/microsoft" style="display:flex;align-items:center;gap:12px;
+          padding:14px 28px;border-radius:100px;background:#2f2f2f;color:#fff;text-decoration:none;
+          font-size:14px;font-weight:500;letter-spacing:.3px;border:1px solid rgba(255,255,255,.15);
+          transition:opacity .2s;width:100%;justify-content:center">
+          <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          Continuar con Microsoft
+        </a>'''
+
+    html = f'''<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EdificIA · Iniciar sesión</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
+</head>
+<body style="margin:0;background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh">
+  <div style="width:92%;max-width:400px;text-align:center">
+    <div style="font-size:11px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px">
+      E D I F I C <span style="color:rgba(255,255,255,.15)">I A</span>
+    </div>
+    <h1 style="font-size:24px;font-weight:300;margin:0 0 8px;letter-spacing:-.5px">Pre-factibilidad urbanística</h1>
+    <p style="font-size:13px;color:rgba(255,255,255,.35);margin:0 0 40px">CABA · Código Urbanístico · Ley 6099/2018</p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      {buttons}
+    </div>
+    <p style="font-size:10px;color:rgba(255,255,255,.15);margin-top:40px;letter-spacing:1px">
+      Karen Marini · karendmarini@gmail.com
+    </p>
+  </div>
+</body>
+</html>'''
+    return HTMLResponse(html)
 
 
 def handle_register(email: str, password: str, nombre: str = "") -> JSONResponse:

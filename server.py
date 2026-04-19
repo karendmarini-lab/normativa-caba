@@ -44,8 +44,11 @@ from auth import (
     handle_login,
     handle_logout,
     handle_me,
+    handle_microsoft_callback,
+    handle_microsoft_login,
     handle_register,
     init_users_table,
+    login_page,
     require_active_user,
     track_usage,
     upsert_user,
@@ -80,8 +83,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         # Check session cookie
         user = get_current_user(request)
         if not user:
-            login_url = str(request.base_url).rstrip("/") + "/api/auth/google"
-            return RedirectResponse(login_url, status_code=302)
+            return login_page(request)
         if not user.get("activo"):
             from starlette.responses import HTMLResponse
             msg = "Tu acceso expiró." if user.get("expired") else "Tu cuenta no está activa."
@@ -189,6 +191,16 @@ def auth_google(request: Request):
 @app.get("/api/auth/callback")
 def auth_callback(request: Request, code: str = Query(...)):
     return handle_google_callback(request, code)
+
+
+@app.get("/api/auth/microsoft")
+def auth_microsoft(request: Request):
+    return handle_microsoft_login(request)
+
+
+@app.get("/api/auth/microsoft/callback")
+def auth_microsoft_callback(request: Request, code: str = Query(...)):
+    return handle_microsoft_callback(request, code)
 
 
 class RegisterRequest(BaseModel):
