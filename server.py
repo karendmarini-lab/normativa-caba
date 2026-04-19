@@ -141,10 +141,19 @@ async def _session_cleanup_loop() -> None:
 async def startup_background_tasks():
     global _cleanup_task
     _cleanup_task = asyncio.create_task(_session_cleanup_loop())
-    asyncio.create_task(sessions.warmup())
+    # Warmup in background thread to avoid blocking the event loop
+    asyncio.get_event_loop().run_in_executor(None, _warmup_sync)
 
 
 _cleanup_task: asyncio.Task[None] | None = None
+
+
+def _warmup_sync() -> None:
+    """Run SDK warmup in a thread so it doesn't block the event loop."""
+    import asyncio as _aio
+    loop = _aio.new_event_loop()
+    loop.run_until_complete(sessions.warmup())
+    loop.close()
 
 
 # --- Auth routes ---
