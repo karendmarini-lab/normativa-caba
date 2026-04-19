@@ -121,8 +121,7 @@ export function renderCircles() {
       fillOpacity: opacity,
       color: 'rgba(255,255,255,0.1)',
       weight: 0.5,
-    }).on('click', () => {
-      if (_callbacks.onBarrioClick) _callbacks.onBarrioClick(mz.b);
+      interactive: false,
     }).addTo(_circleLayer);
 
     count++;
@@ -131,6 +130,19 @@ export function renderCircles() {
   }
 
   _circleLayer.addTo(_map);
+
+  // Single click handler on map for barrio selection (instead of per-marker)
+  _map.off('click.heatmap');
+  _map.on('click.heatmap', (e) => {
+    if (_activeBarrio || !_callbacks.onBarrioClick) return;
+    let best = null, bestD = Infinity;
+    for (const mz of _manzanasData) {
+      const d = (mz.lt - e.latlng.lat) ** 2 + (mz.ln - e.latlng.lng) ** 2;
+      if (d < bestD) { bestD = d; best = mz; }
+    }
+    if (best) _callbacks.onBarrioClick(best.b);
+  });
+
   return { count, totalVol, avgDelta: dCount ? totalDelta / dCount : 0 };
 }
 
