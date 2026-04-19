@@ -654,78 +654,75 @@ function openFullReport() {
   const modal = document.getElementById('full-report-modal');
   if (!modal) return;
 
-  // Lee valores ya renderizados — NO recalcula nada
-  const getEl  = id => document.getElementById(id);
-  const getText = id => (getEl(id)?.textContent || '').trim();
-  const getVal  = id => (getEl(id)?.value || '').trim();
-
-  // Limpia "m²" y caracteres extraños antes de pasar al informe
-  const clean  = str => str.replace(/m²|m2/gi, '').replace(/[^\d.,\s\-+PB]/g, '').trim() || '—';
-
-  // Setter con innerText para evitar encimados
+  // Setter limpio con innerText
   const set = (id, val) => {
-    const el = getEl(id);
-    if (el) el.innerText = (val && val.trim()) ? val.trim() : '—';
+    const el = document.getElementById(id);
+    if (!el) return;
+    const v = (val || '').toString().trim();
+    el.innerText = v || 'No disponible';
   };
+  const getText = id => (document.getElementById(id)?.textContent || '').trim();
+  const getVal  = id => (document.getElementById(id)?.value || '').trim();
+  const stripM2 = s => s.replace(/m²|m2/gi,'').trim();
 
-  // A: Header
+  // ── A: Cabecera ───────────────────────────────────────────
   set('full-address',        getText('res-addr'));
   set('full-district-badge', getText('res-badge'));
   set('full-coordinates',    getText('res-coords'));
+  set('full-dis',            getText('res-dis') || getText('res-badge'));
 
-  // B: Vendibles — leer los data-frm spans de c-vend
-  const cvendEl = getEl('c-vend');
-  let valCub = '—', valBalc = '—', valTotal = '—', valEf = '—';
+  // ── B: Vendibles — leer data-frm spans ───────────────────
+  const cvendEl = document.getElementById('c-vend');
   if (cvendEl) {
-    const cubEl  = cvendEl.querySelector('[data-frm="cub"]');
-    const balcEl = cvendEl.querySelector('[data-frm="balc"]');
-    const totEl  = cvendEl.querySelector('[data-frm="total"]');
-    const efEl   = cvendEl.querySelector('[data-frm="ef"]');
-    valCub   = cubEl  ? cubEl.innerText.trim()  : '—';
-    valBalc  = balcEl ? balcEl.innerText.trim() : '—';
-    valTotal = totEl  ? totEl.innerText.trim()  : '—';
-    valEf    = efEl   ? 'Eficiencia: ' + efEl.innerText.trim() : '—';
+    const q   = sel => cvendEl.querySelector(`[data-frm="${sel}"]`)?.innerText?.trim() || '';
+    const cub  = q('cub');
+    const balc = q('balc');
+    const tot  = q('total');
+    const ef   = q('ef');
+    set('full-total',      tot  || stripM2(getText('c-vend').split('\n')[0]));
+    set('full-cubierto',   cub  || 'No disponible');
+    set('full-balcones',   balc || 'No disponible');
+    set('full-efficiency', ef   ? 'Eficiencia: ' + ef : '');
   }
-  set('full-total',      valTotal);
-  set('full-cubierto',   valCub);
-  set('full-balcones',   valBalc);
-  set('full-efficiency', valEf);
-  set('full-volumen',    clean(getText('c-edif')));
+  set('full-volumen', stripM2(getText('c-edif')));
 
-  // C: Parámetros normativos
-  set('full-h',      getText('res-alt')   || '—');
-  set('full-plano',  getText('res-plano') || '—');
-  set('full-pisos',  getText('res-pis')   || '—');
-  set('full-fot',    getText('res-fot')   || '—');
-  set('full-lote',   getVal('c-sup')      || '—');
-  set('full-pisada', getVal('c-pb')       || '—');
+  // ── C: Parámetros normativos ──────────────────────────────
+  set('full-h',      getText('res-alt'));
+  set('full-plano',  getText('res-plano'));
+  set('full-pisos',  getText('res-pis'));
+  set('full-fot',    getText('res-fot'));
+  set('full-lote',   getVal('c-sup') + ' m²');
+  set('full-pisada', getVal('c-pb')  + ' m²');
 
-  // D: Afectaciones y plusvalía desde _currentParcelData
+  // Frente y fondo desde globales
+  const fr = window._frente;
+  const fo = window._fondo;
+  set('full-frente', fr ? fr + ' m' : 'No disponible');
+  set('full-fondo',  fo ? fo + ' m' : 'No disponible');
+
+  // ── D: Plusvalía y afectaciones desde _currentParcelData ──
   const pd = window._currentParcelData;
   if (pd) {
-    const afecs = [];
-    if (pd.edif_enrase)  afecs.push('Enrase');
-    if (pd.edif_riesgo_hidrico) afecs.push('Riesgo hídrico');
-    if (pd.edif_catalogacion_proteccion && pd.edif_catalogacion_proteccion !== 'DESESTIMADO')
-      afecs.push('Catalogación: ' + pd.edif_catalogacion_proteccion);
-    set('full-afectaciones', afecs.length
-      ? afecs.join(' · ')
-      : 'Consulta de afectaciones: Sin registros especiales detectados');
-
+    // Plusvalía
     const inc = pd.edif_plusvalia_incidencia_uva;
     const al  = pd.edif_plusvalia_alicuota;
-    set('full-plusvalia', inc
-      ? Math.round(inc).toLocaleString('es-AR') + ' UVA' + (al ? ' · Alícuota ' + al + '%' : '')
-      : 'Pendiente de verificación');
+    set('full-plusvalia-incidencia', inc ? Math.round(inc).toLocaleString('es-AR') + ' UVA' : 'No disponible');
+    set('full-plusvalia-alicuota',   al  ? al + '%' : 'No disponible');
+
+    // Afectaciones
+    const cat = pd.edif_catalogacion_proteccion;
+    set('full-catalogacion', (cat && cat !== 'DESESTIMADO') ? cat : 'Sin registro especial');
+    set('full-riesgo',  pd.edif_riesgo_hidrico ? 'Sí — verificar' : 'No presenta');
+    set('full-enrase',  pd.edif_enrase          ? 'Sí — aplica'   : 'No presenta');
 
     // Croquis
-    const cContainer = getEl('croquis-container');
-    const cInner     = getEl('croquis-links-inner');
+    const cContainer = document.getElementById('croquis-container');
+    const cInner     = document.getElementById('croquis-links-inner');
     if (cContainer && cInner) {
       const links = [];
       if (pd.edif_croquis_url)      links.push(['Descargar croquis oficial', pd.edif_croquis_url]);
-      if (pd.edif_perimetro_url)    links.push(['Perímetro', pd.edif_perimetro_url]);
-      if (pd.edif_plano_indice_url) links.push(['Plano índice', pd.edif_plano_indice_url]);
+      if (pd.edif_perimetro_url)    links.push(['Perímetro',                 pd.edif_perimetro_url]);
+      if (pd.edif_plano_indice_url) links.push(['Plano índice',              pd.edif_plano_indice_url]);
       if (links.length) {
         cInner.innerHTML = links.map(([lbl, url]) =>
           `<a class="croquis-link" href="${url}" target="_blank">${lbl} ↗</a>`
@@ -737,13 +734,14 @@ function openFullReport() {
     }
   }
 
-  // E: Mapa secundario Leaflet
+  // ── E: Mapa Leaflet secundario ────────────────────────────
   const lat = window._currentLat;
   const lng = window._currentLng;
-  const mapEl = getEl('report-location-map');
-  if (mapEl && lat && lng && typeof L !== 'undefined') {
+  if (lat && lng && typeof L !== 'undefined') {
     if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
     setTimeout(() => {
+      const mapEl = document.getElementById('report-location-map');
+      if (!mapEl) return;
       const rmap = L.map('report-location-map', {
         zoomControl: false, attributionControl: false, scrollWheelZoom: false
       }).setView([lat, lng], 17);
@@ -752,11 +750,11 @@ function openFullReport() {
       }).addTo(rmap);
       const goldIcon = L.divIcon({
         html: '<div style="width:14px;height:14px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px rgba(200,169,110,.9)"></div>',
-        className: '', iconAnchor: [7, 7]
+        className:'', iconAnchor:[7,7]
       });
       L.marker([lat, lng], { icon: goldIcon }).addTo(rmap);
       window._reportMap = rmap;
-    }, 120);
+    }, 150);
   }
 
   modal.classList.remove('hidden');
