@@ -641,3 +641,84 @@ function debounce(fn, ms) {
 
 window.recalculate = recalculate;
 window.recalcFinancials = recalcFinancials;
+
+
+// ── FULL REPORT MODAL ────────────────────────────────────────────
+
+function openFullReport() {
+  const modal = document.getElementById('full-report-modal');
+  if (!modal) return;
+
+  // Leer valores ya renderizados en el panel lateral (no recalcula)
+  const get = id => document.getElementById(id)?.textContent?.trim() || '—';
+  const getVal = id => document.getElementById(id)?.value?.trim() || '—';
+
+  // Dirección y badge
+  document.getElementById('frm-address').textContent = get('res-addr');
+  document.getElementById('frm-badge').textContent    = get('res-badge');
+
+  // Normativa
+  document.getElementById('frm-altura').textContent   = get('res-alt');
+  document.getElementById('frm-plano').textContent    = get('res-plano');
+  document.getElementById('frm-pisos').textContent    = get('res-pis');
+  document.getElementById('frm-distrito').textContent = get('res-dis');
+
+  // Calculadora
+  document.getElementById('frm-lote').textContent     = getVal('c-sup');
+  document.getElementById('frm-pisada').textContent   = getVal('c-pb');
+  document.getElementById('frm-volumen').textContent  = get('c-edif');
+
+  // Vendibles — parsear el desglose del c-vend
+  const cvendEl = document.getElementById('c-vend');
+  if (cvendEl) {
+    const cubEl  = cvendEl.querySelector('[data-frm="cub"]');
+    const balcEl = cvendEl.querySelector('[data-frm="balc"]');
+    const totEl  = cvendEl.querySelector('[data-frm="total"]');
+    const efEl   = cvendEl.querySelector('[data-frm="ef"]');
+    document.getElementById('frm-vend-cub').textContent    = cubEl  ? cubEl.textContent  : get('c-vend');
+    document.getElementById('frm-balcones').textContent    = balcEl ? balcEl.textContent : '—';
+    document.getElementById('frm-total-vend').textContent  = totEl  ? totEl.textContent  : get('c-vend');
+    document.getElementById('frm-eficiencia').textContent  = efEl   ? 'Eficiencia: ' + efEl.textContent : 'm²';
+  }
+
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeFullReport() {
+  const modal = document.getElementById('full-report-modal');
+  if (modal) modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Mostrar/ocultar botón junto con el panel de resultados
+const _origShow = typeof showParcelDetail === 'function' ? showParcelDetail : null;
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Botón abrir
+  document.getElementById('open-full-report')
+    ?.addEventListener('click', openFullReport);
+  // Botón cerrar
+  document.getElementById('close-full-report')
+    ?.addEventListener('click', closeFullReport);
+  // Cerrar con Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeFullReport();
+  });
+});
+
+// Mostrar el botón cuando los resultados estén visibles
+const _resultsObserver = new MutationObserver(() => {
+  const res = document.getElementById('results');
+  const btn = document.getElementById('open-full-report');
+  if (!res || !btn) return;
+  if (res.classList.contains('on')) {
+    btn.classList.add('visible');
+  } else {
+    btn.classList.remove('visible');
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+  const res = document.getElementById('results');
+  if (res) _resultsObserver.observe(res, { attributes: true, attributeFilter: ['class'] });
+});
