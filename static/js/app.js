@@ -183,6 +183,12 @@ async function findParcel(lat, lng) {
     edif_riesgo_hidrico: data.edif_riesgo_hidrico,
     edif_enrase: data.edif_enrase,
     edif_catalogacion_proteccion: data.edif_catalogacion_proteccion,
+    edif_croquis_url: data.edif_croquis_url,
+    edif_plano_indice_url: data.edif_plano_indice_url,
+    edif_perimetro_url: data.edif_perimetro_url,
+    edif_sup_edificable_planta: data.edif_sup_edificable_planta,
+    edif_plano_limite: data.edif_plano_limite,
+    edif_altura_max_1: data.edif_altura_max_1,
     source: 'server',
   };
 }
@@ -299,11 +305,29 @@ function showParcelFromMap(props) {
   // Send parcel card to chat (0 LLM tokens)
   const chatCard = addParcelCard(props);
 
-  // Fetch extra doc links and add to both panels
+  // Fetch full parcel data for report + doc links
   fetch(`/api/parcela/${encodeURIComponent(props.smp)}`)
     .then(r => r.ok ? r.json() : null)
     .then(data => {
       if (!data) return;
+
+      // Store full data for the report modal
+      window._currentParcelData = {
+        ...props,
+        edif_croquis_url: data.edif_croquis_url,
+        edif_plano_indice_url: data.edif_plano_indice_url,
+        edif_perimetro_url: data.edif_perimetro_url,
+        edif_plusvalia_incidencia_uva: data.edif_plusvalia_incidencia_uva,
+        edif_plusvalia_alicuota: data.edif_plusvalia_alicuota,
+        edif_catalogacion_proteccion: data.edif_catalogacion_proteccion,
+        edif_riesgo_hidrico: data.edif_riesgo_hidrico,
+        edif_enrase: data.edif_enrase,
+        edif_sup_edificable_planta: data.edif_sup_edificable_planta,
+        edif_plano_limite: data.edif_plano_limite,
+      };
+      window._currentLat = data.lat;
+      window._currentLng = data.lng;
+
       const links = [];
       if (data.edif_croquis_url) links.push(['Croquis', data.edif_croquis_url]);
       if (data.edif_plano_indice_url) links.push(['Plano índice', data.edif_plano_indice_url]);
