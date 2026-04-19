@@ -78,6 +78,7 @@ export function initMap(containerId, callbacks = {}) {
   _map = L.map(containerId, {
     zoomControl: false,
     attributionControl: false,
+    preferCanvas: true,
   }).setView(CABA_CENTER, CABA_ZOOM);
 
   L.control.zoom({ position: 'topright' }).addTo(_map);
