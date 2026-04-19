@@ -437,13 +437,13 @@ export function recalculate() {
   if (cvendEl) {
     cvendEl.innerHTML =
       '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">Vendible cubierto</div>' +
-      `<div style="font-size:20px;font-weight:400">${fmt(vendibleCubierto)} <span style="font-size:10px">m²</span></div>` +
-      `<div style="font-size:10px;color:var(--muted);margin-bottom:8px">Eficiencia: ${Math.round(eficiencia * 100)}%</div>` +
+      `<div style="font-size:20px;font-weight:400"><span data-frm="cub">${fmt(vendibleCubierto)}</span> <span style="font-size:10px">m²</span></div>` +
+      `<div style="font-size:10px;color:var(--muted);margin-bottom:8px"><span data-frm="ef">${Math.round(eficiencia * 100)}%</span></div>` +
       '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">Balcones (semicubierto)</div>' +
-      `<div style="font-size:20px;font-weight:400">${fmt(totalBalcones)} <span style="font-size:10px">m²</span></div>` +
+      `<div style="font-size:20px;font-weight:400"><span data-frm="balc">${fmt(totalBalcones)}</span> <span style="font-size:10px">m²</span></div>` +
       '<div style="border-top:1px solid var(--border);margin:8px 0"></div>' +
       '<div style="font-size:11px;color:var(--muted);margin-bottom:2px">Total vendible</div>' +
-      `<div style="font-size:24px;font-weight:500">${fmt(vendibleTotal)} <span style="font-size:11px">m²</span></div>`;
+      `<div style="font-size:24px;font-weight:500"><span data-frm="total">${fmt(vendibleTotal)}</span> <span style="font-size:11px">m²</span></div>`;
   }
 
   _finMetrosTotales = volumen;
@@ -654,49 +654,76 @@ function openFullReport() {
   const modal = document.getElementById('full-report-modal');
   if (!modal) return;
 
-  // Lee valores ya renderizados — NO recalcula nada
-  const get    = id => document.getElementById(id)?.textContent?.trim() || '—';
-  const getVal = id => document.getElementById(id)?.value?.trim() || '—';
-  const set    = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  // Helpers — NO recalcula, solo lee el DOM
+  const get    = id => document.getElementById(id)?.textContent?.trim() || '';
+  const getVal = id => document.getElementById(id)?.value?.trim() || '';
+  const set    = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val || '';
+  };
+  const empty  = v => !v || v === '—' || v === '-';
 
-  // Header
-  set('full-address',       get('res-addr'));
+  // ── A: Cabecera ───────────────────────────────────────────────
+  set('full-address',        get('res-addr'));
   set('full-district-badge', get('res-badge'));
-  set('full-coordinates',   get('res-coords'));
+  set('full-coordinates',    get('res-coords'));
 
-  // Normativa
-  set('full-h',      get('res-alt'));
-  set('full-plano',  get('res-plano'));
-  set('full-pisos',  get('res-pis'));
-  set('full-fot',    get('res-fot'));
-  set('full-lote',   getVal('c-sup'));
-  set('full-pisada', getVal('c-pb'));
-
-  // Vendibles — parsear el c-vend con sub-elementos
+  // ── B: Vendibles — leer data-frm attrs en c-vend ─────────────
   const cvendEl = document.getElementById('c-vend');
+  let valCub = '', valBalc = '', valTotal = '', valEf = '';
   if (cvendEl) {
-    const cubEl  = cvendEl.querySelector('[data-frm="cub"]');
-    const balcEl = cvendEl.querySelector('[data-frm="balc"]');
-    const totEl  = cvendEl.querySelector('[data-frm="total"]');
-    const efEl   = cvendEl.querySelector('[data-frm="ef"]');
-    const clean  = str => (str || '').replace(/m²|m2/gi,'').trim() || '—';
-    set('full-total',    clean(totEl  ? totEl.textContent  : cvendEl.textContent));
-    set('full-cubierto', clean(cubEl  ? cubEl.textContent  : '—'));
-    set('full-balcones', clean(balcEl ? balcEl.textContent : '—'));
-    set('full-efficiency', efEl ? 'Eficiencia: ' + efEl.textContent : '');
+    const cubEl   = cvendEl.querySelector('[data-frm="cub"]');
+    const balcEl  = cvendEl.querySelector('[data-frm="balc"]');
+    const totEl   = cvendEl.querySelector('[data-frm="total"]');
+    const efEl    = cvendEl.querySelector('[data-frm="ef"]');
+    valCub   = cubEl  ? cubEl.textContent.trim()  : '';
+    valBalc  = balcEl ? balcEl.textContent.trim() : '';
+    valTotal = totEl  ? totEl.textContent.trim()  : cvendEl.textContent.replace(/Vendible cubierto|Balcones.*|Total vendible|Eficiencia.*|m²/gi,'').trim().split('\n')[0].trim();
+    valEf    = efEl   ? 'Eficiencia ' + efEl.textContent.trim() : '';
   }
-  set('full-volumen', get('c-edif').replace(/m²|m2/gi,'').trim());
+  set('full-total',      valTotal || '—');
+  set('full-cubierto',   valCub   || '—');
+  set('full-balcones',   valBalc  || '—');
+  set('full-efficiency', valEf);
+  set('full-volumen',    get('c-edif').replace(/m²|m2/gi,'').trim() || '—');
 
-  // Croquis (si el backend los provee via _currentParcelData)
+  // ── C: Parámetros normativos ──────────────────────────────────
+  set('full-h',      get('res-alt')   || '—');
+  set('full-plano',  get('res-plano') || '—');
+  set('full-pisos',  get('res-pis')   || '—');
+  set('full-fot',    get('res-fot')   || '—');
+  set('full-lote',   getVal('c-sup')  || '—');
+  set('full-pisada', getVal('c-pb')   || '—');
+
+  // ── D: Plusvalía y afectaciones (de _currentParcelData) ───────
   const pd = window._currentParcelData;
+  const plusEl   = document.getElementById('full-plusvalia');
+  const afecEl   = document.getElementById('full-afectaciones');
+  if (pd && plusEl) {
+    const incid  = pd.edif_plusvalia_incidencia_uva;
+    const alic   = pd.edif_plusvalia_alicuota;
+    plusEl.textContent = incid
+      ? `${Math.round(incid).toLocaleString('es-AR')} UVA${alic ? ' · Alícuota ' + alic + '%' : ''}`
+      : 'Pendiente de verificación';
+  }
+  if (pd && afecEl) {
+    const items = [];
+    if (pd.edif_enrase)              items.push('Enrase');
+    if (pd.edif_riesgo_hidrico)      items.push('Riesgo hídrico');
+    if (pd.edif_catalogacion_proteccion && pd.edif_catalogacion_proteccion !== 'DESESTIMADO')
+      items.push('Catalogación: ' + pd.edif_catalogacion_proteccion);
+    afecEl.textContent = items.length ? items.join(' · ') : 'No presenta afectaciones registradas';
+  }
+
+  // ── E: Croquis ────────────────────────────────────────────────
   const cContainer = document.getElementById('croquis-container');
   const cInner     = document.getElementById('croquis-links-inner');
   if (pd && cContainer && cInner) {
     const links = [];
-    if (pd.edif_croquis_url)      links.push(['Croquis',     pd.edif_croquis_url]);
-    if (pd.edif_perimetro_url)    links.push(['Perímetro',   pd.edif_perimetro_url]);
-    if (pd.edif_plano_indice_url) links.push(['Plano índice',pd.edif_plano_indice_url]);
-    if (links.length > 0) {
+    if (pd.edif_croquis_url)      links.push(['Descargar croquis oficial', pd.edif_croquis_url]);
+    if (pd.edif_perimetro_url)    links.push(['Perímetro',                 pd.edif_perimetro_url]);
+    if (pd.edif_plano_indice_url) links.push(['Plano índice',              pd.edif_plano_indice_url]);
+    if (links.length) {
       cInner.innerHTML = links.map(([label, url]) =>
         `<a class="croquis-link" href="${url}" target="_blank">${label} ↗</a>`
       ).join('');
@@ -706,33 +733,26 @@ function openFullReport() {
     }
   }
 
-  // Mapa secundario con pin dorado
+  // ── F: Mapa secundario Leaflet ────────────────────────────────
   const lat = window._currentLat;
   const lng = window._currentLng;
   const mapEl = document.getElementById('report-location-map');
-  if (mapEl && lat && lng) {
-    // Destruir instancia previa si existe
-    if (window._reportMap) {
-      window._reportMap.remove();
-      window._reportMap = null;
-    }
-    // Crear nuevo mapa Leaflet en el modal (instancia separada del mapa principal)
+  if (mapEl && lat && lng && typeof L !== 'undefined') {
+    if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
     setTimeout(() => {
       const rmap = L.map('report-location-map', {
-        zoomControl: false, attributionControl: false
+        zoomControl: false, attributionControl: false, scrollWheelZoom: false
       }).setView([lat, lng], 17);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         maxZoom: 20
       }).addTo(rmap);
-      // Pin dorado personalizado
       const goldIcon = L.divIcon({
-        html: `<div style="width:16px;height:16px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px rgba(200,169,110,.8)"></div>`,
-        className: '',
-        iconAnchor: [8, 8]
+        html: '<div style="width:14px;height:14px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px rgba(200,169,110,.9)"></div>',
+        className: '', iconAnchor: [7, 7]
       });
       L.marker([lat, lng], { icon: goldIcon }).addTo(rmap);
       window._reportMap = rmap;
-    }, 100); // esperar a que el modal esté visible
+    }, 120);
   }
 
   modal.classList.remove('hidden');
