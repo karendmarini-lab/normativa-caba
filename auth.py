@@ -287,6 +287,7 @@ def require_active_user(request: Request) -> dict[str, Any]:
 def handle_google_login(request: Request) -> RedirectResponse:
     """Redirect to Google OAuth2 consent screen."""
     callback = _base_url(request) + "/api/auth/callback"
+    popup = request.query_params.get("popup") == "1"
     params = {
         "client_id": GOOGLE_CLIENT_ID,
         "redirect_uri": callback,
@@ -294,6 +295,7 @@ def handle_google_login(request: Request) -> RedirectResponse:
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "select_account",
+        "state": "popup" if popup else "",
     }
     return RedirectResponse(f"{GOOGLE_AUTH_URL}?{urlencode(params)}")
 
@@ -364,23 +366,28 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     conn.commit()
     conn.close()
 
-    # Set JWT cookie and redirect
+    # Set JWT cookie — popup mode closes window, regular mode redirects
     token = _create_token(user_id, email)
-    base = _base_url(request)
-    response = RedirectResponse(base + "/", status_code=302)
-    response.set_cookie(
-        "session", token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=JWT_EXPIRY_SECONDS,
-    )
+    popup = request.query_params.get("state") == "popup"
+    if popup:
+        response = _popup_close_response(token)
+    else:
+        base = _base_url(request)
+        response = RedirectResponse(base + "/", status_code=302)
+        response.set_cookie(
+            "session", token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=JWT_EXPIRY_SECONDS,
+        )
     return response
 
 
 def handle_microsoft_login(request: Request) -> RedirectResponse:
     """Redirect to Microsoft OAuth2 consent screen."""
     callback = _base_url(request) + "/api/auth/microsoft/callback"
+    popup = request.query_params.get("popup") == "1"
     params = {
         "client_id": MICROSOFT_CLIENT_ID,
         "redirect_uri": callback,
@@ -388,6 +395,7 @@ def handle_microsoft_login(request: Request) -> RedirectResponse:
         "scope": "openid email profile User.Read",
         "response_mode": "query",
         "prompt": "select_account",
+        "state": "popup" if popup else "",
     }
     return RedirectResponse(f"{MICROSOFT_AUTH_URL}?{urlencode(params)}")
 
@@ -458,8 +466,31 @@ def handle_microsoft_callback(request: Request, code: str) -> RedirectResponse:
     conn.close()
 
     token = _create_token(user_id, email)
-    base = _base_url(request)
-    response = RedirectResponse(base + "/", status_code=302)
+    popup = request.query_params.get("state") == "popup"
+    if popup:
+        response = _popup_close_response(token)
+    else:
+        base = _base_url(request)
+        response = RedirectResponse(base + "/", status_code=302)
+        response.set_cookie(
+            "session", token,
+            httponly=True,
+            secure=True,
+            samesite="lax",
+            max_age=JWT_EXPIRY_SECONDS,
+        )
+    return response
+
+
+def _popup_close_response(token: str) -> HTMLResponse:
+    """Return HTML that sets the session cookie and closes the popup window."""
+    response = HTMLResponse(
+        '<!DOCTYPE html><html><head><script>'
+        'document.cookie = "session=' + token + ';path=/;secure;samesite=lax;max-age=' + str(JWT_EXPIRY_SECONDS) + '";'
+        'if (window.opener) { window.opener.location.reload(); window.close(); }'
+        'else { window.location = "/"; }'
+        '</script></head><body></body></html>'
+    )
     response.set_cookie(
         "session", token,
         httponly=True,
@@ -471,57 +502,74 @@ def handle_microsoft_callback(request: Request, code: str) -> RedirectResponse:
 
 
 def login_page(request: Request) -> HTMLResponse:
-    """Render a login page with Google and Microsoft options."""
+    """Inject a login overlay into the actual app page.
+
+    The app (index.html) loads normally behind a frosted-glass modal.
+    Login buttons open popups. On success the popup closes and the
+    overlay disappears — the user never leaves the page.
+    """
     base = _base_url(request)
     has_google = bool(GOOGLE_CLIENT_ID)
     has_microsoft = bool(MICROSOFT_CLIENT_ID)
 
-    buttons = ""
-    if has_google:
-        buttons += f'''
-        <a href="{base}/api/auth/google" style="display:flex;align-items:center;gap:12px;
-          padding:14px 28px;border-radius:100px;background:#fff;color:#000;text-decoration:none;
-          font-size:14px;font-weight:500;letter-spacing:.3px;transition:opacity .2s;width:100%;
-          justify-content:center">
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
-          Continuar con Google
-        </a>'''
-    if has_microsoft:
-        buttons += f'''
-        <a href="{base}/api/auth/microsoft" style="display:flex;align-items:center;gap:12px;
-          padding:14px 28px;border-radius:100px;background:#2f2f2f;color:#fff;text-decoration:none;
-          font-size:14px;font-weight:500;letter-spacing:.3px;border:1px solid rgba(255,255,255,.15);
-          transition:opacity .2s;width:100%;justify-content:center">
-          <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
-          Continuar con Microsoft
-        </a>'''
+    google_btn = f'''<button onclick="authPopup('{base}/api/auth/google?popup=1')" style="display:flex;align-items:center;gap:12px;
+      padding:14px 28px;border-radius:100px;background:#fff;color:#000;border:none;
+      font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:500;letter-spacing:.3px;
+      cursor:pointer;transition:opacity .2s;width:100%;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#34A853" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#FBBC05" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continuar con Google
+    </button>''' if has_google else ""
 
-    html = f'''<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>EdificIA · Iniciar sesión</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap">
-</head>
-<body style="margin:0;background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;
-  display:flex;align-items:center;justify-content:center;min-height:100vh">
-  <div style="width:92%;max-width:400px;text-align:center">
-    <div style="font-size:11px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:8px">
-      E D I F I C <span style="color:rgba(255,255,255,.15)">I A</span>
+    microsoft_btn = f'''<button onclick="authPopup('{base}/api/auth/microsoft?popup=1')" style="display:flex;align-items:center;gap:12px;
+      padding:14px 28px;border-radius:100px;background:#1a1a1a;color:#fff;border:1px solid rgba(255,255,255,.12);
+      font-family:'Inter',system-ui,sans-serif;font-size:14px;font-weight:500;letter-spacing:.3px;
+      cursor:pointer;transition:opacity .2s;width:100%;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      Continuar con Microsoft
+    </button>''' if has_microsoft else ""
+
+    # Read the actual index.html and inject the overlay before </body>
+    index_path = Path(__file__).resolve().parent / "index.html"
+    try:
+        app_html = index_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        app_html = "<html><body></body></html>"
+
+    overlay = f'''
+<div id="login-overlay" style="position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.85);backdrop-filter:blur(20px);
+  display:flex;align-items:center;justify-content:center">
+  <div style="width:92%;max-width:380px;text-align:center">
+    <div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:6px">
+      E D I F I C <span style="color:rgba(255,215,0,.4)">I A</span>
     </div>
-    <h1 style="font-size:24px;font-weight:300;margin:0 0 8px;letter-spacing:-.5px">Pre-factibilidad urbanística</h1>
-    <p style="font-size:13px;color:rgba(255,255,255,.35);margin:0 0 40px">CABA · Código Urbanístico · Ley 6099/2018</p>
-    <div style="display:flex;flex-direction:column;gap:12px">
-      {buttons}
-    </div>
-    <p style="font-size:10px;color:rgba(255,255,255,.15);margin-top:40px;letter-spacing:1px">
-      Karen Marini · karendmarini@gmail.com
+    <h1 style="font-size:22px;font-weight:300;margin:0 0 6px;letter-spacing:-.3px;color:#fff;font-family:'Inter',system-ui,sans-serif">
+      Pre-factibilidad urbanística
+    </h1>
+    <p style="font-size:12px;color:rgba(255,255,255,.3);margin:0 0 36px;font-family:'Inter',system-ui,sans-serif">
+      CABA · Código Urbanístico · Ley 6099/2018
     </p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      {google_btn}
+      {microsoft_btn}
+    </div>
   </div>
-</body>
-</html>'''
-    return HTMLResponse(html)
+</div>
+<script>
+function authPopup(url) {{
+  var w = 480, h = 640;
+  var left = (screen.width - w) / 2, top = (screen.height - h) / 2;
+  window.open(url, 'auth', 'width='+w+',height='+h+',left='+left+',top='+top);
+}}
+</script>
+'''
+    # Inject overlay before </body>
+    if "</body>" in app_html:
+        app_html = app_html.replace("</body>", overlay + "</body>")
+    else:
+        app_html += overlay
+
+    return HTMLResponse(app_html)
 
 
 def handle_register(email: str, password: str, nombre: str = "") -> JSONResponse:
