@@ -516,7 +516,7 @@ def login_page(request: Request) -> HTMLResponse:
       {buttons}
     </div>
     <p style="font-size:10px;color:rgba(255,255,255,.15);margin-top:40px;letter-spacing:1px">
-      Karen Marini · karendmarini@gmail.com
+      EdificIA · Pre-factibilidad urbanística
     </p>
   </div>
 </body>
