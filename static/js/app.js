@@ -155,14 +155,34 @@ async function findParcel(lat, lng) {
   const resp = await fetch(`/api/parcela_nearest?lat=${lat}&lng=${lng}`);
   if (!resp.ok) return null;
   const data = await resp.json();
+  // Map DB column names to the field names showParcelDetail expects
   return {
     smp: data.smp, cpu: data.cpu, cur_distrito: data.cur_distrito,
-    h: data.h, fot: data.fot, plano_san: data.plano_san,
-    pisos: data.pisos, area: data.area, fr: data.frente || data.epok_frente,
-    fo: data.fondo || data.epok_fondo, barrio: data.barrio,
-    epok_direccion: data.epok_direccion, es_aph: data.es_aph,
-    vol_edificable: data.vol_edificable, sup_vendible: data.sup_vendible,
-    tejido_altura_max: data.tejido_altura_max, delta_altura: data.delta_altura,
+    h: data.h, fot: data.fot,
+    plano: data.plano_san, plano_san: data.plano_san,
+    pisos: data.pisos, area: data.area,
+    fr: data.frente || data.epok_frente,
+    fo: data.fondo || data.epok_fondo,
+    frente: data.frente || data.epok_frente,
+    fondo: data.fondo || data.epok_fondo,
+    barrio: data.barrio, comuna: data.comuna,
+    epok_direccion: data.epok_direccion,
+    es_aph: data.es_aph,
+    vol_edificable: data.vol_edificable,
+    sup_vendible: data.sup_vendible,
+    pisada: data.pisada, pisada_pct: data.pisada_pct,
+    tejido_altura_max: data.tejido_altura_max,
+    tejido_altura_avg: data.tejido_altura_avg,
+    delta_altura: data.delta_altura,
+    uso_tipo1: data.uso_tipo1, uso_tipo2: data.uso_tipo2,
+    epok_pisos_sobre: data.epok_pisos_sobre,
+    epok_sup_cubierta: data.epok_sup_cubierta,
+    epok_sup_total: data.epok_sup_total,
+    edif_plusvalia_incidencia_uva: data.edif_plusvalia_incidencia_uva,
+    edif_plusvalia_alicuota: data.edif_plusvalia_alicuota,
+    edif_riesgo_hidrico: data.edif_riesgo_hidrico,
+    edif_enrase: data.edif_enrase,
+    edif_catalogacion_proteccion: data.edif_catalogacion_proteccion,
     source: 'server',
   };
 }
