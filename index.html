@@ -231,6 +231,31 @@
         .lb{fill:rgba(255,255,255,.3);font-family:'Inter',sans-serif;font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase}
         .lb2{fill:rgba(255,255,255,.18);font-family:'Inter',sans-serif;font-size:5.5px;letter-spacing:1.5px}
   
+
+    .leaflet-tile-container img {
+      outline: 1px solid transparent;
+      border: none !important;
+      margin: -1px;
+    }
+    .leaflet-container { background: #000 !important; }
+    #open-full-report {
+      background: #FFF !important;
+      color: #000 !important;
+      border: none !important;
+      border-radius: 50px !important;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 12px 24px;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      display: none;
+      transition: all 0.3s ease;
+    }
+    #open-full-report:hover { transform: scale(1.02); opacity: 0.9; }
+    #open-full-report.visible { display: block; }
     /* ── FORMAL REPORT MODAL ─────────────────────────────────── */
     .btn-full-report{
       display:none;width:100%;margin-top:10px;
@@ -314,9 +339,9 @@
     }
 
     /* Hero number */
-    .hero-data .main-number{
+    .hero-number{
       display:flex;align-items:baseline;gap:10px;
-      font-size:clamp(2.8rem,5vw,5rem);font-weight:200;
+      font-size:clamp(2.5rem,4vw,4rem);font-weight:200;color:#C8A96E;
       color:#fff;letter-spacing:-.02em;line-height:1;
     }
     .hero-data .main-number small{
@@ -406,15 +431,7 @@
       .report-header{flex-direction:column;gap:16px}
       .formality-block{text-align:left}
       .breakdown-grid{flex-direction:column;gap:20px}
-    }
-
-
-    /* Fix Leaflet tile gap lines */
-    .leaflet-tile { border: none !important; outline: none !important; }
-    .leaflet-tile-container { transform: translateZ(0); }
-    .leaflet-layer { will-change: transform; }
-
-    </style></defs>
+    }    </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
       <path class="av" d="M80,50 L55,130 L45,260 L50,380 L80,500 L140,580"/>
@@ -662,6 +679,7 @@
   <div id="full-report-modal" class="formal-report hidden">
     <span id="close-full-report">&times;</span>
 
+    <!-- HEADER -->
     <header class="report-header">
       <div class="title-block">
         <h1 id="full-address">—</h1>
@@ -673,63 +691,62 @@
       </div>
     </header>
 
+    <!-- GRID PRINCIPAL: 2 columnas -->
     <main class="report-main-grid">
 
+      <!-- IZQUIERDA: datos de edificabilidad -->
       <section class="technical-data">
 
+        <!-- Total vendible destacado -->
         <div class="data-group hero-data">
           <label>Total Vendible Estimado</label>
-          <div class="main-number">
+          <div class="hero-number">
             <span id="full-total">—</span>
             <small>m²</small>
           </div>
         </div>
 
-        <div class="data-group breakdown-grid">
-          <div class="data-item">
+        <!-- Tabla limpia: cubierto / balcones / eficiencia -->
+        <div class="data-group">
+          <label class="group-label">Desglose de Superficie</label>
+          <div class="sub-item">
             <label>Vendible Cubierto</label>
             <p><span id="full-cubierto">—</span> m²</p>
-            <small id="full-efficiency"></small>
           </div>
-          <div class="data-item">
+          <div class="sub-item">
             <label>Balcones (Semicubierto)</label>
             <p><span id="full-balcones">—</span> m²</p>
           </div>
-          <div class="data-item">
+          <div class="sub-item">
+            <label>Eficiencia Aplicada</label>
+            <p id="full-efficiency">—</p>
+          </div>
+          <div class="sub-item">
             <label>Volumen Edificable</label>
             <p><span id="full-volumen">—</span> m²</p>
           </div>
         </div>
 
+        <!-- Parámetros normativos -->
         <div class="data-group normative-grid">
           <label class="group-label">Parámetros del Lote y Normativa</label>
           <div class="sub-item"><label>Altura Máx.</label><p id="full-h">—</p></div>
           <div class="sub-item"><label>Plano Límite</label><p id="full-plano">—</p></div>
           <div class="sub-item"><label>Pisos Est.</label><p id="full-pisos">—</p></div>
           <div class="sub-item"><label>Superficie Lote</label><p id="full-lote">—</p></div>
-          <div class="sub-item"><label>Pisada</label><p id="full-pisada">—</p></div>
+          <div class="sub-item"><label>Pisada Edificable</label><p id="full-pisada">—</p></div>
           <div class="sub-item"><label>F.O.T.</label><p id="full-fot">—</p></div>
         </div>
 
-        <div class="data-group">
-          <label class="group-label">Análisis Económico y Afectaciones</label>
-          <div class="sub-item">
-            <label>Plusvalía (DDHUS)</label>
-            <p id="full-plusvalia">Pendiente de verificación</p>
-          </div>
-          <div class="sub-item">
-            <label>Afectaciones</label>
-            <p id="full-afectaciones">No presenta afectaciones registradas</p>
-          </div>
-        </div>
-
-                <div id="croquis-container" class="data-group croquis-grid hidden">
-          <label class="group-label">Croquis y Planos de Parcela (Ciudad 3D)</label>
-          <div class="croquis-links" id="croquis-links-inner"></div>
+        <!-- Croquis -->
+        <div id="croquis-container" class="data-group hidden">
+          <label class="group-label">Croquis y Planos Oficiales (Ciudad 3D)</label>
+          <div id="croquis-links-inner" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"></div>
         </div>
 
       </section>
 
+      <!-- DERECHA: mapa de ubicación -->
       <section class="location-data">
         <label>Ubicación Exacta de la Parcela</label>
         <div id="report-location-map"></div>
@@ -738,8 +755,22 @@
 
     </main>
 
+    <!-- FOOTER: afectaciones y plusvalía -->
     <footer class="report-footer">
-      <p>Este informe es de carácter preliminar y no constituye una autorización de obra. Datos sujetos a verificación profesional.</p>
+      <div class="data-group" style="border-top:1px solid #222;padding-top:1.5rem;margin-bottom:1rem">
+        <label class="group-label">Afectaciones y Análisis Económico</label>
+        <div class="sub-item">
+          <label>Afectaciones</label>
+          <p id="full-afectaciones">Consulta de afectaciones: Sin registros especiales detectados</p>
+        </div>
+        <div class="sub-item">
+          <label>Plusvalía (DDHUS)</label>
+          <p id="full-plusvalia">Pendiente de verificación</p>
+        </div>
+      </div>
+      <p style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.15)">
+        Este informe es de carácter preliminar y no constituye una autorización de obra. Datos sujetos a verificación profesional.
+      </p>
     </footer>
   </div>
 
