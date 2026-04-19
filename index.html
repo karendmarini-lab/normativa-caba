@@ -916,16 +916,16 @@
         </div>
         <div class="rc-messages" id="rc-messages"></div>
         <div class="rc-chips" id="rc-chips">
-          <button class="rc-chip" onclick="rcSendChip(this)">¿Qué se puede construir?</button>
-          <button class="rc-chip" onclick="rcSendChip(this)">¿Cuál es la plusvalía?</button>
-          <button class="rc-chip" onclick="rcSendChip(this)">Restricciones del distrito</button>
-          <button class="rc-chip" onclick="rcSendChip(this)">¿Conviene desarrollar?</button>
+          <button class="rc-chip" data-question="¿Qué se puede construir?">¿Qué se puede construir?</button>
+          <button class="rc-chip" data-question="¿Cuál es la plusvalía?">¿Cuál es la plusvalía?</button>
+          <button class="rc-chip" data-question="Restricciones del distrito">Restricciones del distrito</button>
+          <button class="rc-chip" data-question="¿Conviene desarrollar?">¿Conviene desarrollar?</button>
         </div>
         <div class="rc-input-row">
           <textarea id="rc-input" class="rc-input" rows="1"
             placeholder="Preguntá sobre la parcela..." 
-            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();rcSend()}"></textarea>
-          <button class="rc-send" id="rc-send-btn" onclick="rcSend()">↑</button>
+            ></textarea>
+          <button class="rc-send" id="rc-send-btn">↑</button>
         </div>
       </div>
 
