@@ -144,12 +144,16 @@ async function chooseFree() {
   if (r.ok) window.location.href = '/';
 }
 async function subscribePro() {
-  const r = await fetch('/api/payments/subscribe', { method: 'POST' });
-  if (r.ok) {
+  const btn = document.querySelector('.btn-pro');
+  btn.textContent = 'Procesando...';
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/payments/subscribe', { method: 'POST' });
     const data = await r.json();
     if (data.url) window.location.href = data.url;
     else if (data.already_subscribed) window.location.href = '/';
-  }
+    else { btn.textContent = 'Error — intentá de nuevo'; btn.disabled = false; }
+  } catch { btn.textContent = 'Error — intentá de nuevo'; btn.disabled = false; }
 }
 </script>
 </body>
