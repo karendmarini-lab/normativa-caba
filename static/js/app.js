@@ -848,7 +848,7 @@ function rcInit(parcelContext) {
   if (!messagesEl) return;
   messagesEl.innerHTML = '';
 
-  // Mensaje de bienvenida con contexto
+  // Mensaje de bienvenida
   const info = document.createElement('div');
   info.className = 'rc-msg info';
   info.textContent = parcelContext
@@ -856,8 +856,36 @@ function rcInit(parcelContext) {
     : 'Informe cargado. Podés preguntar sobre esta parcela.';
   messagesEl.appendChild(info);
 
-  // Guardar el contexto para el primer mensaje
+  // Contexto para el primer mensaje
   window._rcPendingContext = parcelContext || '';
+
+  // ── Bindear eventos (módulo ES — no se pueden usar onclick inline) ──
+  const sendBtn = document.getElementById('rc-send-btn');
+  const inputEl = document.getElementById('rc-input');
+
+  // Clonar para quitar listeners anteriores
+  if (sendBtn) {
+    const fresh = sendBtn.cloneNode(true);
+    sendBtn.parentNode.replaceChild(fresh, sendBtn);
+    fresh.addEventListener('click', () => rcSend());
+  }
+  if (inputEl) {
+    const fresh = inputEl.cloneNode(true);
+    inputEl.parentNode.replaceChild(fresh, inputEl);
+    fresh.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        rcSend();
+      }
+    });
+  }
+
+  // Bindear chips
+  document.querySelectorAll('#rc-chips .rc-chip').forEach(chip => {
+    const fresh = chip.cloneNode(true);
+    chip.parentNode.replaceChild(fresh, chip);
+    fresh.addEventListener('click', () => rcSend(fresh.dataset.question));
+  });
 }
 
 function rcScrollBottom() {
@@ -867,7 +895,8 @@ function rcScrollBottom() {
 
 async function rcSend(textOverride) {
   if (_rcStreaming) return;
-  const inputEl = document.getElementById('rc-input');
+  // Buscar el input fresco (puede haber sido clonado en rcInit)
+  const inputEl = document.getElementById('rc-input') || document.querySelector('#report-chat-container textarea');
   const sendBtn = document.getElementById('rc-send-btn');
   const messagesEl = document.getElementById('rc-messages');
   if (!messagesEl) return;
@@ -974,6 +1003,3 @@ async function rcSend(textOverride) {
   }
 }
 
-function rcSendChip(btn) {
-  rcSend(btn.textContent.trim());
-}
