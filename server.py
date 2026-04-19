@@ -621,15 +621,22 @@ def parcelas_geo(
     return {"type": "FeatureCollection", "features": features}
 
 
+_barrios_cache: list[dict[str, Any]] | None = None
+
+
 @app.get("/api/barrios")
 def list_barrios() -> list[dict[str, Any]]:
+    global _barrios_cache
+    if _barrios_cache is not None:
+        return _barrios_cache
     with db_connect() as conn:
         rows = conn.execute("""
             SELECT barrio, COUNT(*) as n, ROUND(AVG(plano_san - COALESCE(tejido_altura_max,0)),1) as avg_delta
             FROM parcelas WHERE barrio IS NOT NULL AND barrio != ''
             GROUP BY barrio ORDER BY barrio
         """).fetchall()
-    return [{"name": r["barrio"], "count": r["n"], "avg_delta": r["avg_delta"]} for r in rows]
+    _barrios_cache = [{"name": r["barrio"], "count": r["n"], "avg_delta": r["avg_delta"]} for r in rows]
+    return _barrios_cache
 
 
 @app.get("/api/envelope/{parcel_smp}")
