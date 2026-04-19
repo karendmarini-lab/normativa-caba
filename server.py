@@ -67,7 +67,7 @@ from chat import (
 class AuthMiddleware(BaseHTTPMiddleware):
     """Redirect to Google SSO if not authenticated."""
 
-    OPEN_PATHS = ("/api/auth/", "/api/health")
+    OPEN_PATHS = ("/api/auth/", "/api/health", "/api/payments/webhook")
 
     async def dispatch(self, request: Request, call_next) -> StarletteResponse:
         # Skip auth entirely if no Google credentials configured (local dev)
@@ -263,6 +263,110 @@ def admin_upsert_user(body: UpsertUserRequest, request: Request) -> dict[str, An
         mb_mes_max=body.mb_mes_max,
         usd_mes_max=body.usd_mes_max,
     )
+
+
+# ── MercadoPago Suscripciones ─────────────────────────────────────
+
+MP_ACCESS_TOKEN = os.environ.get("MP_ACCESS_TOKEN", "")
+MP_PLAN_PRICE = 10000  # ARS/mes (100k con 90% off beta)
+MP_PLAN_ID: str | None = None  # Set on first subscribe call
+
+
+async def _get_or_create_mp_plan() -> str:
+    """Get or create the EdificIA Pro subscription plan in MercadoPago."""
+    global MP_PLAN_ID
+    if MP_PLAN_ID:
+        return MP_PLAN_ID
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.mercadopago.com/preapproval_plan",
+            headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
+            json={
+                "reason": "EdificIA Pro — Beta",
+                "auto_recurring": {
+                    "frequency": 1,
+                    "frequency_type": "months",
+                    "transaction_amount": MP_PLAN_PRICE,
+                    "currency_id": "ARS",
+                },
+                "back_url": "https://edificia.website",
+            },
+        )
+        data = resp.json()
+        MP_PLAN_ID = data.get("id")
+        return MP_PLAN_ID
+
+
+@app.post("/api/payments/subscribe")
+async def subscribe(request: Request) -> dict[str, Any]:
+    """Create a subscription for the current user. Returns MP payment URL."""
+    user = require_active_user(request)
+    if user.get("plan") in ("pro", "enterprise"):
+        return {"already_subscribed": True}
+
+    plan_id = await _get_or_create_mp_plan()
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            "https://api.mercadopago.com/preapproval",
+            headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
+            json={
+                "preapproval_plan_id": plan_id,
+                "payer_email": user["email"],
+                "back_url": "https://edificia.website",
+                "status": "pending",
+            },
+        )
+        data = resp.json()
+
+    if "init_point" not in data:
+        raise HTTPException(500, f"MercadoPago error: {data.get('message', 'unknown')}")
+
+    # Store subscription ID
+    conn = db_connect()
+    try:
+        conn.execute(
+            "UPDATE users SET mp_payment_id = ? WHERE id = ?",
+            (data["id"], user["id"]),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {"url": data["init_point"], "subscription_id": data["id"]}
+
+
+@app.post("/api/payments/webhook")
+async def mp_webhook(request: Request) -> dict[str, str]:
+    """MercadoPago IPN webhook. Activates pro plan on confirmed payment."""
+    body = await request.json()
+    action = body.get("action", "")
+    data_id = body.get("data", {}).get("id")
+
+    if action == "payment.created" and data_id:
+        # Fetch payment details from MP
+        async with httpx.AsyncClient() as client:
+            resp = await client.get(
+                f"https://api.mercadopago.com/v1/payments/{data_id}",
+                headers={"Authorization": f"Bearer {MP_ACCESS_TOKEN}"},
+            )
+            payment = resp.json()
+
+        if payment.get("status") == "approved":
+            payer_email = payment.get("payer", {}).get("email", "")
+            if payer_email:
+                from auth import upsert_user, PLAN_DEFAULTS
+                from datetime import date, timedelta
+                expiry = (date.today() + timedelta(days=30)).isoformat()
+                upsert_user(
+                    email=payer_email,
+                    acceso_hasta=expiry,
+                    plan="pro",
+                )
+                logging.getLogger("edificia.payments").info(
+                    "subscription activated: %s plan=pro until=%s", payer_email, expiry,
+                )
+
+    return {"status": "ok"}
 
 
 class SearchResult(BaseModel):
