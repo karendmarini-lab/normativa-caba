@@ -339,9 +339,9 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
             (google_id, nombre, user_id),
         )
 
-    # Check expiry
+    # Check expiry (only for existing users)
     from datetime import date
-    acceso_hasta = existing["acceso_hasta"]
+    acceso_hasta = existing["acceso_hasta"] if existing else None
     if acceso_hasta and date.fromisoformat(acceso_hasta) < date.today():
         conn.commit()
         conn.close()
