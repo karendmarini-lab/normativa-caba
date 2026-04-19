@@ -141,11 +141,29 @@ async def _session_cleanup_loop() -> None:
 async def startup_background_tasks():
     global _cleanup_task
     _cleanup_task = asyncio.create_task(_session_cleanup_loop())
-    # Warmup in background thread to avoid blocking the event loop
+    # Warmup agent + precache parcelas in background thread
     asyncio.get_event_loop().run_in_executor(None, _warmup_sync)
+    asyncio.get_event_loop().run_in_executor(None, _precache_parcelas)
 
 
 _cleanup_task: asyncio.Task[None] | None = None
+
+
+def _precache_parcelas() -> None:
+    """Precache parcelas_geo for all barrios so first load is instant."""
+    import logging
+    log = logging.getLogger("edificia.cache")
+    log.info("precache: starting")
+    # Trigger barrios cache
+    list_barrios()
+    barrios = _barrios_cache or []
+    for b in barrios:
+        name = b["name"]
+        try:
+            parcelas_geo(barrio=name, metric="delta", limit=3000)
+        except Exception:
+            pass
+    log.info("precache: done (%d barrios)", len(barrios))
 
 
 def _warmup_sync() -> None:
@@ -525,6 +543,13 @@ def parcelas_geo(
     enrase: str | None = Query(None),
 ) -> dict[str, Any]:
     """Return GeoJSON of top parcels by metric, with optional filters."""
+    # Cache for common case: barrio + metric, no extra filters
+    has_filters = any(v is not None for v in [pisos_min, pisos_max, area_min, area_max, fot_min, pl_min, uso, aph, riesgo_hidrico, enrase])
+    if barrio and not has_filters:
+        cache_key = f"{barrio}:{metric}:{limit}"
+        if cache_key in _parcelas_geo_cache:
+            return _parcelas_geo_cache[cache_key]
+
     metric_col = {
         "delta": "CASE WHEN tejido_altura_max IS NOT NULL THEN plano_san - tejido_altura_max ELSE 0 END",
         "vol": "COALESCE(vol_edificable, 0)",
@@ -618,10 +643,17 @@ def parcelas_geo(
             },
         })
 
-    return {"type": "FeatureCollection", "features": features}
+    result = {"type": "FeatureCollection", "features": features}
+
+    # Cache default queries
+    if barrio and not has_filters:
+        _parcelas_geo_cache[f"{barrio}:{metric}:{limit}"] = result
+
+    return result
 
 
 _barrios_cache: list[dict[str, Any]] | None = None
+_parcelas_geo_cache: dict[str, dict[str, Any]] = {}  # barrio -> geojson
 
 
 @app.get("/api/barrios")
