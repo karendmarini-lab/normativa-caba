@@ -256,13 +256,14 @@
     }
     #open-full-report:hover { transform: scale(1.02); opacity: 0.9; }
     #open-full-report.visible { display: block; }
-    /* ── FORMAL REPORT MODAL ─────────────────────────────────── */
+
+    /* ── INFORME TÉCNICO MODAL v4 ────────────────────────── */
     .btn-full-report{
       display:none;width:100%;margin-top:10px;
-      background:#fff;color:#000;border:none;border-radius:100px;
-      padding:12px 20px;
-      font-family:'Inter',inherit;font-size:10px;font-weight:500;letter-spacing:2px;
-      text-transform:uppercase;cursor:pointer;transition:opacity .2s,transform .1s;
+      background:#fff;color:#000;border:none;border-radius:50px;
+      padding:12px 20px;font-family:'Inter',inherit;font-size:10px;
+      font-weight:600;letter-spacing:2px;text-transform:uppercase;
+      cursor:pointer;transition:opacity .2s,transform .1s;
     }
     .btn-full-report:hover{opacity:.85}
     .btn-full-report:active{transform:scale(.98)}
@@ -270,168 +271,159 @@
 
     .formal-report{
       display:none;position:fixed;inset:0;
-      width:100vw;height:100vh;background:#000;
-      z-index:9999;overflow-y:auto;
+      background:#000;z-index:9999;overflow-y:auto;
       font-family:'Inter',system-ui,sans-serif;
       -webkit-font-smoothing:antialiased;
-      padding:5vw;box-sizing:border-box;
-      flex-direction:column;
     }
-    .formal-report:not(.hidden){display:flex}
+    .formal-report:not(.hidden){display:block}
 
+    /* Botón cierre */
     #close-full-report{
-      position:fixed;top:28px;right:32px;
-      font-size:22px;font-weight:200;color:#C8A96E;
+      position:fixed;top:24px;right:28px;z-index:10001;
+      font-size:24px;font-weight:200;color:rgba(255,255,255,.5);
       background:none;border:none;cursor:pointer;
-      line-height:1;z-index:10000;
-      transition:opacity .2s;opacity:.65;
+      transition:color .2s;line-height:1;
     }
-    #close-full-report:hover{opacity:1}
+    #close-full-report:hover{color:#fff}
 
-    /* Header */
-    .report-header{
-      display:flex;justify-content:space-between;align-items:flex-start;gap:32px;
-      border-bottom:1px solid #222;padding-bottom:2rem;margin-bottom:0;
+    /* Contenedor interno con padding */
+    .frm-body{padding:40px 5vw 60px;max-width:1400px;margin:0 auto}
+
+    /* ── MÓDULO HERO: dirección izq + mapa der ─────────────── */
+    .frm-hero-row{
+      display:grid;grid-template-columns:1fr 1fr;
+      gap:2rem;align-items:stretch;
+      min-height:320px;margin-bottom:2rem;
     }
-    .title-block{}
-    .report-header h1{
-      font-size:clamp(1.4rem,3vw,2.8rem);font-weight:200;
-      color:#fff;letter-spacing:.06em;text-transform:uppercase;
-      line-height:1.1;margin:0 0 12px 0;
+    .frm-hero-left{
+      background:#0a0a0a;border:1px solid #222;border-radius:8px;
+      padding:28px 32px;display:flex;flex-direction:column;justify-content:flex-end;
     }
-    .badge{
+    .frm-eyebrow{
+      font-size:9px;letter-spacing:4px;text-transform:uppercase;
+      color:rgba(255,255,255,.28);margin-bottom:12px;
+    }
+    .frm-hero-address{
+      font-size:clamp(1.4rem,2.5vw,2.5rem);font-weight:300;
+      color:#fff;letter-spacing:.03em;line-height:1.15;margin:0 0 16px 0;
+    }
+    .frm-hero-badge{
       display:inline-block;font-size:9px;font-weight:600;letter-spacing:2.5px;
       text-transform:uppercase;padding:6px 16px;border-radius:100px;
       background:rgba(200,169,110,.1);color:#C8A96E;
-      border:1px solid rgba(200,169,110,.28);
+      border:1px solid rgba(200,169,110,.3);
     }
-    .formality-block{text-align:right;flex-shrink:0}
-    .formality-block p{
+    .frm-hero-right{
+      background:#0a0a0a;border:1px solid #222;border-radius:8px;
+      overflow:hidden;min-height:320px;
+    }
+    #report-location-map{width:100%;height:100%;min-height:320px}
+    .frm-coords{
+      font-size:10px;color:rgba(255,255,255,.25);letter-spacing:1px;
+      padding:8px 12px;background:#0a0a0a;
+    }
+
+    /* ── MÓDULO SUPERFICIES: 4 cards en fila ──────────────── */
+    .frm-cards-row{
+      display:grid;grid-template-columns:repeat(4,1fr);
+      gap:1px;background:#222;border:1px solid #222;
+      border-radius:8px;overflow:hidden;margin-bottom:2rem;
+    }
+    .frm-card{
+      background:#0a0a0a;padding:24px 20px;
+      display:flex;flex-direction:column;gap:8px;
+    }
+    .frm-card-label{
+      font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      color:#C8A96E;font-weight:400;
+    }
+    .frm-card-val{
+      font-size:clamp(1.8rem,3vw,2.8rem);font-weight:200;
+      color:#fff;line-height:1;
+    }
+    .frm-card-unit{font-size:11px;color:rgba(255,255,255,.4)}
+    .frm-card-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+
+    /* Card total — destacado */
+    .frm-card.total{background:#0f0a00}
+    .frm-card.total .frm-card-val{color:#C8A96E}
+
+    /* ── MÓDULO NORMATIVO: tabla formal ─────────────────────── */
+    .frm-table-card{
+      background:#0a0a0a;border:1px solid #222;border-radius:8px;
+      padding:24px 28px;margin-bottom:2rem;
+    }
+    .frm-table-title{
       font-size:9px;letter-spacing:3px;text-transform:uppercase;
-      color:rgba(255,255,255,.3);margin:0 0 4px 0;
+      color:rgba(255,255,255,.28);margin-bottom:16px;
     }
-    .formality-block small{
-      font-size:8px;letter-spacing:2px;text-transform:uppercase;
-      color:rgba(255,255,255,.18);
+    .frm-table-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+      gap:0;border-top:1px solid #222;
     }
-
-    /* Main grid */
-    .report-main-grid{
-      display:grid;
-      grid-template-columns:1fr 380px;
-      gap:4rem;
-      margin-top:3rem;
-      flex:1;
+    .frm-table-item{
+      padding:14px 16px;border-bottom:1px solid #1a1a1a;
+      border-right:1px solid #1a1a1a;
     }
-    .technical-data{}
-    .location-data{}
-
-    /* Data groups */
-    .data-group{
-      border-top:1px solid #222;
-      padding-top:2rem;
-      margin-bottom:3rem;
+    .frm-table-item:nth-child(3n){border-right:none}
+    .frm-table-item label{
+      display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      color:#C8A96E;font-weight:400;margin-bottom:6px;
     }
-    .data-group>label,.group-label{
-      display:block;
-      font-size:8px;letter-spacing:.2em;text-transform:uppercase;
-      color:#C8A96E;font-weight:300;margin-bottom:1.2rem;
+    .frm-table-item p{
+      font-size:16px;font-weight:300;color:#fff;margin:0;
     }
 
-    /* Hero number */
-    .hero-number{
-      display:flex;align-items:baseline;gap:10px;
-      font-size:clamp(2.5rem,4vw,4rem);font-weight:200;color:#C8A96E;
-      color:#fff;letter-spacing:-.02em;line-height:1;
+    /* ── MÓDULO ANÁLISIS ECONÓMICO ──────────────────────────── */
+    .frm-analysis{
+      display:grid;grid-template-columns:1fr 1fr;
+      gap:1rem;margin-bottom:2rem;
     }
-    .hero-data .main-number small{
-      font-size:clamp(.9rem,1.5vw,1.4rem);font-weight:300;
-      color:rgba(255,255,255,.4);
+    .frm-analysis-card{
+      background:#0a0a0a;border:1px solid #222;border-radius:8px;padding:20px 24px;
     }
-
-    /* Breakdown grid */
-    .breakdown-grid{
-      display:flex;gap:4vw;flex-wrap:wrap;
-    }
-    .breakdown-grid .data-item{flex:1;min-width:140px}
-    .data-item>label{
-      display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;
-      color:#C8A96E;font-weight:300;margin-bottom:.5rem;
-    }
-    .data-item>p{
-      font-size:clamp(1.4rem,2.5vw,2rem);font-weight:200;
-      color:#fff;margin:0 0 4px 0;
-    }
-    .data-item>small{
-      font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;
-    }
-
-    /* Normative grid — tabla de specs */
-    .normative-grid .group-label{margin-bottom:0}
-    .sub-item{
+    .frm-analysis-card .frm-table-title{margin-bottom:12px}
+    .frm-analysis-item{
       display:flex;justify-content:space-between;align-items:baseline;
-      padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.05);
+      padding:8px 0;border-bottom:1px solid #1a1a1a;font-size:14px;
     }
-    .sub-item:last-child{border-bottom:none}
-    .sub-item>label{
-      font-size:8px;letter-spacing:.18em;text-transform:uppercase;
-      color:#C8A96E;font-weight:300;
-    }
-    .sub-item>p{
-      font-size:14px;font-weight:300;color:#fff;
-      margin:0;text-align:right;
-    }
+    .frm-analysis-item:last-child{border-bottom:none}
+    .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:11px;letter-spacing:1px}
+    .frm-analysis-item span:last-child{color:#fff;font-weight:300;text-align:right}
 
     /* Croquis */
-    .croquis-grid .croquis-links{
-      display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;
+    .frm-croquis{
+      background:#0a0a0a;border:1px solid #222;border-radius:8px;
+      padding:20px 24px;margin-bottom:2rem;
     }
+    .frm-croquis-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .croquis-link{
-      font-size:9px;letter-spacing:2px;text-transform:uppercase;
+      font-size:10px;letter-spacing:2px;text-transform:uppercase;
       color:#C8A96E;text-decoration:none;
-      border:1px solid rgba(200,169,110,.3);
-      padding:6px 14px;border-radius:100px;
+      border:1px solid rgba(200,169,110,.3);padding:8px 16px;border-radius:100px;
       transition:background .2s,color .2s;
     }
     .croquis-link:hover{background:#C8A96E;color:#000}
 
-    /* Location */
-    .location-data>label{
-      display:block;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
-      color:#C8A96E;font-weight:300;margin-bottom:1rem;
-    }
-    #report-location-map{
-      width:100%;height:380px;
-      background:#111;border:1px solid #222;border-radius:4px;
-      overflow:hidden;
-    }
-    .coordinates-label{
-      font-size:10px;color:rgba(255,255,255,.28);
-      letter-spacing:1px;margin-top:8px;
-    }
-
     /* Footer */
-    .report-footer{
-      border-top:1px solid #222;
-      padding-top:1.5rem;margin-top:2rem;
-    }
-    .report-footer p{
-      font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
-      color:rgba(255,255,255,.2);margin:0;
+    .frm-footer-note{
+      font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+      color:rgba(255,255,255,.15);padding-top:16px;border-top:1px solid #1a1a1a;
     }
 
     @media(max-width:900px){
-      .report-main-grid{grid-template-columns:1fr}
-      .location-data{order:-1}
-      #report-location-map{height:260px}
+      .frm-hero-row{grid-template-columns:1fr}
+      .frm-cards-row{grid-template-columns:repeat(2,1fr)}
+      .frm-analysis{grid-template-columns:1fr}
     }
     @media(max-width:600px){
-      .formal-report{padding:24px 20px 40px}
-      #close-full-report{top:16px;right:20px}
-      .report-header{flex-direction:column;gap:16px}
-      .formality-block{text-align:left}
-      .breakdown-grid{flex-direction:column;gap:20px}
-    }    </style></defs>
+      .frm-body{padding:24px 16px 48px}
+      #close-full-report{top:14px;right:16px}
+      .frm-cards-row{grid-template-columns:1fr 1fr}
+      .frm-hero-address{font-size:1.4rem}
+    }
+
+    </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
       <path class="av" d="M80,50 L55,130 L45,260 L50,380 L80,500 L140,580"/>
@@ -677,101 +669,106 @@
 
   <!-- FULL REPORT MODAL -->
   <div id="full-report-modal" class="formal-report hidden">
-    <span id="close-full-report">&times;</span>
+    <button id="close-full-report" title="Cerrar">&times;</button>
 
-    <!-- HEADER -->
-    <header class="report-header">
-      <div class="title-block">
-        <h1 id="full-address">—</h1>
-        <span id="full-district-badge" class="badge">—</span>
-      </div>
-      <div class="formality-block">
-        <p>Estudio de Factibilidad Técnica y Normativa Preliminar</p>
-        <small>EdificIA · CABA · CUR Ley 6099/2018</small>
-      </div>
-    </header>
+    <div class="frm-body">
 
-    <!-- GRID PRINCIPAL: 2 columnas -->
-    <main class="report-main-grid">
-
-      <!-- IZQUIERDA: datos de edificabilidad -->
-      <section class="technical-data">
-
-        <!-- Total vendible destacado -->
-        <div class="data-group hero-data">
-          <label>Total Vendible Estimado</label>
-          <div class="hero-number">
-            <span id="full-total">—</span>
-            <small>m²</small>
-          </div>
+      <!-- MÓDULO HERO: dirección + mapa -->
+      <div class="frm-hero-row">
+        <div class="frm-hero-left">
+          <div class="frm-eyebrow">EdificIA · Estudio de Factibilidad Preliminar · CUR Ley 6099/2018</div>
+          <h1 class="frm-hero-address" id="full-address">—</h1>
+          <span class="frm-hero-badge" id="full-district-badge">—</span>
         </div>
-
-        <!-- Tabla limpia: cubierto / balcones / eficiencia -->
-        <div class="data-group">
-          <label class="group-label">Desglose de Superficie</label>
-          <div class="sub-item">
-            <label>Vendible Cubierto</label>
-            <p><span id="full-cubierto">—</span> m²</p>
-          </div>
-          <div class="sub-item">
-            <label>Balcones (Semicubierto)</label>
-            <p><span id="full-balcones">—</span> m²</p>
-          </div>
-          <div class="sub-item">
-            <label>Eficiencia Aplicada</label>
-            <p id="full-efficiency">—</p>
-          </div>
-          <div class="sub-item">
-            <label>Volumen Edificable</label>
-            <p><span id="full-volumen">—</span> m²</p>
-          </div>
-        </div>
-
-        <!-- Parámetros normativos -->
-        <div class="data-group normative-grid">
-          <label class="group-label">Parámetros del Lote y Normativa</label>
-          <div class="sub-item"><label>Altura Máx.</label><p id="full-h">—</p></div>
-          <div class="sub-item"><label>Plano Límite</label><p id="full-plano">—</p></div>
-          <div class="sub-item"><label>Pisos Est.</label><p id="full-pisos">—</p></div>
-          <div class="sub-item"><label>Superficie Lote</label><p id="full-lote">—</p></div>
-          <div class="sub-item"><label>Pisada Edificable</label><p id="full-pisada">—</p></div>
-          <div class="sub-item"><label>F.O.T.</label><p id="full-fot">—</p></div>
-        </div>
-
-        <!-- Croquis -->
-        <div id="croquis-container" class="data-group hidden">
-          <label class="group-label">Croquis y Planos Oficiales (Ciudad 3D)</label>
-          <div id="croquis-links-inner" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:8px"></div>
-        </div>
-
-      </section>
-
-      <!-- DERECHA: mapa de ubicación -->
-      <section class="location-data">
-        <label>Ubicación Exacta de la Parcela</label>
-        <div id="report-location-map"></div>
-        <p id="full-coordinates" class="coordinates-label"></p>
-      </section>
-
-    </main>
-
-    <!-- FOOTER: afectaciones y plusvalía -->
-    <footer class="report-footer">
-      <div class="data-group" style="border-top:1px solid #222;padding-top:1.5rem;margin-bottom:1rem">
-        <label class="group-label">Afectaciones y Análisis Económico</label>
-        <div class="sub-item">
-          <label>Afectaciones</label>
-          <p id="full-afectaciones">Consulta de afectaciones: Sin registros especiales detectados</p>
-        </div>
-        <div class="sub-item">
-          <label>Plusvalía (DDHUS)</label>
-          <p id="full-plusvalia">Pendiente de verificación</p>
+        <div class="frm-hero-right">
+          <div id="report-location-map"></div>
+          <div class="frm-coords" id="full-coordinates"></div>
         </div>
       </div>
-      <p style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.15)">
-        Este informe es de carácter preliminar y no constituye una autorización de obra. Datos sujetos a verificación profesional.
-      </p>
-    </footer>
+
+      <!-- MÓDULO SUPERFICIES: 4 cards -->
+      <div class="frm-cards-row">
+        <div class="frm-card total">
+          <div class="frm-card-label">Total Vendible Est.</div>
+          <div class="frm-card-val" id="full-total">—</div>
+          <div class="frm-card-unit">m²</div>
+        </div>
+        <div class="frm-card">
+          <div class="frm-card-label">Vendible Cubierto</div>
+          <div class="frm-card-val" id="full-cubierto">—</div>
+          <div class="frm-card-unit">m²</div>
+          <div class="frm-card-sub" id="full-efficiency"></div>
+        </div>
+        <div class="frm-card">
+          <div class="frm-card-label">Balcones (Semicub.)</div>
+          <div class="frm-card-val" id="full-balcones">—</div>
+          <div class="frm-card-unit">m²</div>
+        </div>
+        <div class="frm-card">
+          <div class="frm-card-label">Volumen Edificable</div>
+          <div class="frm-card-val" id="full-volumen">—</div>
+          <div class="frm-card-unit">m²</div>
+        </div>
+      </div>
+
+      <!-- MÓDULO NORMATIVO: tabla formal -->
+      <div class="frm-table-card">
+        <div class="frm-table-title">Parámetros del Lote y Normativa CUR</div>
+        <div class="frm-table-grid">
+          <div class="frm-table-item"><label>Altura Máx.</label><p id="full-h">—</p></div>
+          <div class="frm-table-item"><label>Plano Límite</label><p id="full-plano">—</p></div>
+          <div class="frm-table-item"><label>Pisos Est.</label><p id="full-pisos">—</p></div>
+          <div class="frm-table-item"><label>Superficie Lote</label><p id="full-lote">— m²</p></div>
+          <div class="frm-table-item"><label>Pisada Edificable</label><p id="full-pisada">— m²</p></div>
+          <div class="frm-table-item"><label>F.O.T.</label><p id="full-fot">—</p></div>
+          <div class="frm-table-item"><label>Frente</label><p id="full-frente">—</p></div>
+          <div class="frm-table-item"><label>Fondo</label><p id="full-fondo">—</p></div>
+          <div class="frm-table-item"><label>Distrito CUR</label><p id="full-dis">—</p></div>
+        </div>
+      </div>
+
+      <!-- MÓDULO ANÁLISIS ECONÓMICO + AFECTACIONES -->
+      <div class="frm-analysis">
+        <div class="frm-analysis-card">
+          <div class="frm-table-title">Plusvalía y Análisis Económico (DDHUS)</div>
+          <div class="frm-analysis-item">
+            <span>Incidencia UVA</span>
+            <span id="full-plusvalia-incidencia">No disponible</span>
+          </div>
+          <div class="frm-analysis-item">
+            <span>Alícuota</span>
+            <span id="full-plusvalia-alicuota">No disponible</span>
+          </div>
+        </div>
+        <div class="frm-analysis-card">
+          <div class="frm-table-title">Afectaciones y Condicionantes</div>
+          <div class="frm-analysis-item">
+            <span>Catalogación APH</span>
+            <span id="full-catalogacion">Sin registro especial</span>
+          </div>
+          <div class="frm-analysis-item">
+            <span>Riesgo Hídrico</span>
+            <span id="full-riesgo">No presenta</span>
+          </div>
+          <div class="frm-analysis-item">
+            <span>Enrase</span>
+            <span id="full-enrase">No presenta</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CROQUIS (visible si el backend provee links) -->
+      <div id="croquis-container" class="frm-croquis hidden">
+        <div class="frm-table-title">Croquis y Planos Oficiales — Ciudad 3D</div>
+        <div class="frm-croquis-links" id="croquis-links-inner"></div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="frm-footer-note">
+        Informe de carácter preliminar. No constituye autorización de obra ni verificación jurídica. Datos sujetos a verificación profesional ante el GCBA.
+      </div>
+
+    </div>
   </div>
 
 </body>
