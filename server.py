@@ -383,6 +383,24 @@ def search(
     return results
 
 
+@app.get("/api/parcela_nearest")
+def get_nearest_parcel(
+    lat: float = Query(...), lng: float = Query(...),
+) -> dict[str, Any]:
+    """Find the nearest parcel to a lat/lng coordinate."""
+    with db_connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM parcelas WHERE lat IS NOT NULL "
+            "ORDER BY (lat-?)*(lat-?)+(lng-?)*(lng-?) LIMIT 1",
+            (lat, lat, lng, lng),
+        ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="No parcels found")
+    data = serialize_row(row)
+    data["polygon"] = get_polygon(data)
+    return data
+
+
 @app.get("/api/parcela/{parcel_smp}")
 def get_parcel(parcel_smp: str) -> dict[str, Any]:
     with db_connect() as conn:
