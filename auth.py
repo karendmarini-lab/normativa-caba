@@ -72,7 +72,7 @@ PLAN_DEFAULTS: dict[str, dict[str, Any]] = {
 
 def init_users_table() -> None:
     """Create users table, migrate columns, seed users."""
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -162,7 +162,7 @@ def upsert_user(
     mb_max = mb_mes_max if mb_mes_max is not None else defaults["mb_mes_max"]
     cred = creditos_usd if creditos_usd is not None else usd_max
 
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.row_factory = sqlite3.Row
     existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     if existing:
@@ -188,7 +188,7 @@ def track_usage(
 ) -> None:
     """Record token usage for the current month and decrement credits."""
     month = time.strftime("%Y-%m")
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.execute(
         "INSERT INTO user_usage (user_id, month, tokens_in, tokens_out, usd_used) "
         "VALUES (?, ?, ?, ?, ?) "
@@ -241,7 +241,7 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
     payload = _decode_token(token)
     if not payload:
         return None
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.row_factory = sqlite3.Row
     row = conn.execute(
         "SELECT id, email, nombre, activo, plan, acceso_hasta, "
@@ -330,7 +330,7 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     google_id = info["id"]
 
     # Check whitelist
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.row_factory = sqlite3.Row
     existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
 
@@ -431,7 +431,7 @@ def handle_microsoft_callback(request: Request, code: str) -> RedirectResponse:
     if not email:
         raise HTTPException(status_code=400, detail="No email from Microsoft account")
 
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.row_factory = sqlite3.Row
     existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
 
@@ -579,7 +579,7 @@ def handle_register(email: str, password: str, nombre: str = "") -> JSONResponse
     if len(password) < 8:
         raise HTTPException(status_code=400, detail="Password must be 8+ chars")
 
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     existing = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
     if existing:
         conn.close()
@@ -608,7 +608,7 @@ def handle_register(email: str, password: str, nombre: str = "") -> JSONResponse
 
 def handle_login(email: str, password: str) -> JSONResponse:
     """Login with email/password."""
-    conn = sqlite3.connect(str(DB_PATH), timeout=20)
+    conn = sqlite3.connect(str(DB_PATH), timeout=60)
     conn.row_factory = sqlite3.Row
     row = conn.execute("SELECT id, email, hash_password FROM users WHERE email = ?", (email,)).fetchone()
     conn.close()
