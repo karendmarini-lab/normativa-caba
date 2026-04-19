@@ -22,9 +22,6 @@ const fmt = n => Math.round(n).toLocaleString('es-AR');
 
 // ── Preloaded data ───────────────────────────────────────────────
 
-let _curData = null;
-let _curPoints = null;
-let _smpIndex = null;
 let _centroids = null;
 let _gridArr = null;
 
@@ -81,7 +78,6 @@ export async function initApp() {
 
   // Preload spatial data in background
   setTimeout(() => {
-    loadCurData().catch(e => console.warn('CUR preload:', e));
     loadCentroids().catch(e => console.warn('Centroids preload:', e));
   }, 500);
 }
@@ -156,103 +152,19 @@ async function geocodeAddress(dir) {
 // ── Parcel lookup ────────────────────────────────────────────────
 
 async function findParcel(lat, lng) {
-  await loadCurData();
-
-  // Step 1: USIG reverse geocoding for exact SMP
-  let epokSmp = null;
-  try {
-    const GK_OX = 107253.769166, GK_OY = 102807.160072;
-    const LNG_O = -58.384222, LAT_O = -34.603939;
-    const M_LNG = 91724.6547, M_LAT = 111003.9032;
-    const gkx = GK_OX + (lng - LNG_O) * M_LNG;
-    const gky = GK_OY + (lat - LAT_O) * M_LAT;
-
-    const revR = await fetch(
-      `https://ws.usig.buenosaires.gob.ar/geocoder/2.2/reversegeocoding?x=${gkx.toFixed(3)}&y=${gky.toFixed(3)}`,
-      { signal: AbortSignal.timeout(4000) }
-    );
-    if (revR.ok) {
-      const raw = (await revR.text()).trim().replace(/^\(|\)$/g, '');
-      const parsed = JSON.parse(raw);
-      if (parsed.parcela) epokSmp = parsed.parcela;
-    }
-  } catch (e) { console.warn('Reverse geocoding:', e.message); }
-
-  // Step 2: Exact SMP lookup in preloaded CUR data
-  let base = null;
-  let source = '';
-  const smpKey = smpNorm(epokSmp);
-  if (smpKey && _smpIndex?.[smpKey] !== undefined) {
-    base = { ..._curData[_smpIndex[smpKey]], dist: 0 };
-    source = 'Exacto por SMP';
-  } else {
-    // KD-tree fallback
-    const { idx, dist } = nearestNeighbor(lat, lng);
-    if (idx < 0) return null;
-    base = { ..._curData[idx], dist: Math.round(dist) };
-    source = `KD-Tree (${Math.round(dist)}m)`;
-  }
-
-  // Step 3: CUR sanitization
-  base = sanitizeCUR(base);
-
-  // Step 4: EPOK enrichment (frente, fondo, area)
-  const smpFetch = epokSmp || base.smp;
-  if (smpFetch) {
-    try {
-      const epR = await fetch(
-        `https://epok.buenosaires.gob.ar/catastro/parcela/?smp=${smpFetch}`,
-        { signal: AbortSignal.timeout(4000), headers: { Referer: 'https://ciudad3d.buenosaires.gob.ar/' } }
-      );
-      if (epR.ok) {
-        const ed = await epR.json();
-        if (parseFloat(ed.superficie_total) > 0) base.area = Math.round(parseFloat(ed.superficie_total));
-        if (parseFloat(ed.frente) > 0) base.fr = parseFloat(ed.frente);
-        if (parseFloat(ed.fondo) > 0) base.fo = parseFloat(ed.fondo);
-        base.smp = ed.smp || smpFetch;
-        source += ' · EPOK';
-      }
-    } catch (e) { console.warn('EPOK:', e.message); }
-  }
-
-  base.source = source;
-  return base;
-}
-
-// ── CUR sanitization ─────────────────────────────────────────────
-
-function sanitizeCUR(p) {
-  const r = { ...p };
-  if (r.h > 0 && r.h <= 14.6) r.plano = r.h;
-  if (r.plano > 38 && r.plano < 40) r.plano = 38.2;
-  if (r.plano > 31 && r.plano < 32) r.plano = 31.2;
-  if (r.plano > 29 && r.plano < 30) r.plano = 29.8;
-  if (!r.plano || r.plano <= 0) r.plano = r.h || 0;
-  return r;
-}
-
-// ── SMP normalization ────────────────────────────────────────────
-
-function smpNorm(smp) {
-  if (!smp) return null;
-  return smp.replace(/\s+/g, '').split('-').map(p => {
-    const digits = p.replace(/\D/g, '');
-    const letters = p.replace(/\d/g, '');
-    return (digits ? String(parseInt(digits, 10)) : '') + letters;
-  }).join('-');
-}
-
-// ── Spatial search ───────────────────────────────────────────────
-
-function nearestNeighbor(lat, lng) {
-  let bestD2 = Infinity, bestIdx = -1;
-  for (let i = 0; i < _curPoints.length; i++) {
-    const dlat = _curPoints[i][0] - lat;
-    const dlng = _curPoints[i][1] - lng;
-    const d2 = dlat * dlat + dlng * dlng;
-    if (d2 < bestD2) { bestD2 = d2; bestIdx = i; }
-  }
-  return { idx: bestIdx, dist: Math.sqrt(bestD2) * 111000 };
+  const resp = await fetch(`/api/parcela_nearest?lat=${lat}&lng=${lng}`);
+  if (!resp.ok) return null;
+  const data = await resp.json();
+  return {
+    smp: data.smp, cpu: data.cpu, cur_distrito: data.cur_distrito,
+    h: data.h, fot: data.fot, plano_san: data.plano_san,
+    pisos: data.pisos, area: data.area, fr: data.frente || data.epok_frente,
+    fo: data.fondo || data.epok_fondo, barrio: data.barrio,
+    epok_direccion: data.epok_direccion, es_aph: data.es_aph,
+    vol_edificable: data.vol_edificable, sup_vendible: data.sup_vendible,
+    tejido_altura_max: data.tejido_altura_max, delta_altura: data.delta_altura,
+    source: 'server',
+  };
 }
 
 // ── Display ──────────────────────────────────────────────────────
@@ -671,19 +583,7 @@ function updateMetricDesc() {
 
 // ── Data loading ─────────────────────────────────────────────────
 
-async function loadCurData() {
-  if (_curData) return;
-  const r = await fetch('./cur_optimizado.json', { signal: AbortSignal.timeout(20000) });
-  if (!r.ok) throw new Error('Failed to load CUR data');
-  const d = await r.json();
-  _curPoints = d.points;
-  _curData = d.data;
-  _smpIndex = {};
-  for (let i = 0; i < _curData.length; i++) {
-    const norm = smpNorm(_curData[i].smp);
-    if (norm) _smpIndex[norm] = i;
-  }
-}
+// loadCurData removed — parcel lookup is now server-side via /api/parcela_nearest
 
 async function loadCentroids() {
   if (_centroids) return;
