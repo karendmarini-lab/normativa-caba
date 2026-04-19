@@ -649,37 +649,42 @@ function openFullReport() {
   const modal = document.getElementById('full-report-modal');
   if (!modal) return;
 
-  // Leer valores ya renderizados en el panel lateral (no recalcula)
-  const get = id => document.getElementById(id)?.textContent?.trim() || '—';
+  // Lee valores ya renderizados — NO recalcula nada
+  const get    = id => document.getElementById(id)?.textContent?.trim() || '—';
   const getVal = id => document.getElementById(id)?.value?.trim() || '—';
+  const set    = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-  // Dirección y badge
-  document.getElementById('frm-address').textContent = get('res-addr');
-  document.getElementById('frm-badge').textContent    = get('res-badge');
+  // A: Dirección + badge
+  set('frm-address', get('res-addr'));
+  set('frm-badge',   get('res-badge'));
 
-  // Normativa
-  document.getElementById('frm-altura').textContent   = get('res-alt');
-  document.getElementById('frm-plano').textContent    = get('res-plano');
-  document.getElementById('frm-pisos').textContent    = get('res-pis');
-  document.getElementById('frm-distrito').textContent = get('res-dis');
-
-  // Calculadora
-  document.getElementById('frm-lote').textContent     = getVal('c-sup');
-  document.getElementById('frm-pisada').textContent   = getVal('c-pb');
-  document.getElementById('frm-volumen').textContent  = get('c-edif');
-
-  // Vendibles — parsear el desglose del c-vend
+  // B: Total vendible — parsear el c-vend que tiene sub-divs
   const cvendEl = document.getElementById('c-vend');
   if (cvendEl) {
     const cubEl  = cvendEl.querySelector('[data-frm="cub"]');
     const balcEl = cvendEl.querySelector('[data-frm="balc"]');
     const totEl  = cvendEl.querySelector('[data-frm="total"]');
     const efEl   = cvendEl.querySelector('[data-frm="ef"]');
-    document.getElementById('frm-vend-cub').textContent    = cubEl  ? cubEl.textContent  : get('c-vend');
-    document.getElementById('frm-balcones').textContent    = balcEl ? balcEl.textContent : '—';
-    document.getElementById('frm-total-vend').textContent  = totEl  ? totEl.textContent  : get('c-vend');
-    document.getElementById('frm-eficiencia').textContent  = efEl   ? 'Eficiencia: ' + efEl.textContent : 'm²';
+    // Números limpios (sin "m²")
+    const clean  = str => str?.replace(/m²|m2/gi,'').trim() || '—';
+    set('frm-total-vend', clean(totEl  ? totEl.textContent  : cvendEl.textContent));
+    set('frm-vend-cub',   clean(cubEl  ? cubEl.textContent  : '—'));
+    set('frm-balcones',   clean(balcEl ? balcEl.textContent : '—'));
+    set('frm-eficiencia', efEl ? 'Eficiencia ' + efEl.textContent : '');
+  } else {
+    set('frm-total-vend', get('c-vend').replace(/m²|m2/gi,'').trim());
   }
+
+  // B: Volumen
+  set('frm-volumen', get('c-edif').replace(/m²|m2/gi,'').trim());
+
+  // C: Parámetros normativos
+  set('frm-altura',   get('res-alt'));
+  set('frm-plano',    get('res-plano'));
+  set('frm-pisos',    get('res-pis'));
+  set('frm-distrito', get('res-dis') || get('res-badge'));
+  set('frm-lote',     getVal('c-sup'));
+  set('frm-pisada',   getVal('c-pb'));
 
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
