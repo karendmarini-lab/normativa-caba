@@ -233,6 +233,11 @@ function showParcelDetail(addr, parcel, lat, lng) {
   // Calculator
   setupCalculator(parcel, planoSan);
 
+  // Guardar estado para el Full Report
+  window._currentParcelData = parcel;
+  window._currentLat = lat;
+  window._currentLng = lng;
+
   // Map
   if (lat && lng) {
     Map.flyTo(lat, lng);
@@ -654,46 +659,92 @@ function openFullReport() {
   const getVal = id => document.getElementById(id)?.value?.trim() || '—';
   const set    = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
 
-  // A: Dirección + badge
-  set('frm-address', get('res-addr'));
-  set('frm-badge',   get('res-badge'));
+  // Header
+  set('full-address',       get('res-addr'));
+  set('full-district-badge', get('res-badge'));
+  set('full-coordinates',   get('res-coords'));
 
-  // B: Total vendible — parsear el c-vend que tiene sub-divs
+  // Normativa
+  set('full-h',      get('res-alt'));
+  set('full-plano',  get('res-plano'));
+  set('full-pisos',  get('res-pis'));
+  set('full-fot',    get('res-fot'));
+  set('full-lote',   getVal('c-sup'));
+  set('full-pisada', getVal('c-pb'));
+
+  // Vendibles — parsear el c-vend con sub-elementos
   const cvendEl = document.getElementById('c-vend');
   if (cvendEl) {
     const cubEl  = cvendEl.querySelector('[data-frm="cub"]');
     const balcEl = cvendEl.querySelector('[data-frm="balc"]');
     const totEl  = cvendEl.querySelector('[data-frm="total"]');
     const efEl   = cvendEl.querySelector('[data-frm="ef"]');
-    // Números limpios (sin "m²")
-    const clean  = str => str?.replace(/m²|m2/gi,'').trim() || '—';
-    set('frm-total-vend', clean(totEl  ? totEl.textContent  : cvendEl.textContent));
-    set('frm-vend-cub',   clean(cubEl  ? cubEl.textContent  : '—'));
-    set('frm-balcones',   clean(balcEl ? balcEl.textContent : '—'));
-    set('frm-eficiencia', efEl ? 'Eficiencia ' + efEl.textContent : '');
-  } else {
-    set('frm-total-vend', get('c-vend').replace(/m²|m2/gi,'').trim());
+    const clean  = str => (str || '').replace(/m²|m2/gi,'').trim() || '—';
+    set('full-total',    clean(totEl  ? totEl.textContent  : cvendEl.textContent));
+    set('full-cubierto', clean(cubEl  ? cubEl.textContent  : '—'));
+    set('full-balcones', clean(balcEl ? balcEl.textContent : '—'));
+    set('full-efficiency', efEl ? 'Eficiencia: ' + efEl.textContent : '');
+  }
+  set('full-volumen', get('c-edif').replace(/m²|m2/gi,'').trim());
+
+  // Croquis (si el backend los provee via _currentParcelData)
+  const pd = window._currentParcelData;
+  const cContainer = document.getElementById('croquis-container');
+  const cInner     = document.getElementById('croquis-links-inner');
+  if (pd && cContainer && cInner) {
+    const links = [];
+    if (pd.edif_croquis_url)      links.push(['Croquis',     pd.edif_croquis_url]);
+    if (pd.edif_perimetro_url)    links.push(['Perímetro',   pd.edif_perimetro_url]);
+    if (pd.edif_plano_indice_url) links.push(['Plano índice',pd.edif_plano_indice_url]);
+    if (links.length > 0) {
+      cInner.innerHTML = links.map(([label, url]) =>
+        `<a class="croquis-link" href="${url}" target="_blank">${label} ↗</a>`
+      ).join('');
+      cContainer.classList.remove('hidden');
+    } else {
+      cContainer.classList.add('hidden');
+    }
   }
 
-  // B: Volumen
-  set('frm-volumen', get('c-edif').replace(/m²|m2/gi,'').trim());
+  // Mapa secundario con pin dorado
+  const lat = window._currentLat;
+  const lng = window._currentLng;
+  const mapEl = document.getElementById('report-location-map');
+  if (mapEl && lat && lng) {
+    // Destruir instancia previa si existe
+    if (window._reportMap) {
+      window._reportMap.remove();
+      window._reportMap = null;
+    }
+    // Crear nuevo mapa Leaflet en el modal (instancia separada del mapa principal)
+    setTimeout(() => {
+      const rmap = L.map('report-location-map', {
+        zoomControl: false, attributionControl: false
+      }).setView([lat, lng], 17);
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20
+      }).addTo(rmap);
+      // Pin dorado personalizado
+      const goldIcon = L.divIcon({
+        html: `<div style="width:16px;height:16px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 8px rgba(200,169,110,.8)"></div>`,
+        className: '',
+        iconAnchor: [8, 8]
+      });
+      L.marker([lat, lng], { icon: goldIcon }).addTo(rmap);
+      window._reportMap = rmap;
+    }, 100); // esperar a que el modal esté visible
+  }
 
-  // C: Parámetros normativos
-  set('frm-altura',   get('res-alt'));
-  set('frm-plano',    get('res-plano'));
-  set('frm-pisos',    get('res-pis'));
-  set('frm-distrito', get('res-dis') || get('res-badge'));
-  set('frm-lote',     getVal('c-sup'));
-  set('frm-pisada',   getVal('c-pb'));
-
-  modal.classList.add('open');
+  modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
 
 function closeFullReport() {
   const modal = document.getElementById('full-report-modal');
-  if (modal) modal.classList.remove('open');
+  if (modal) modal.classList.add('hidden');
   document.body.style.overflow = '';
+  // Destruir mapa del reporte para liberar memoria
+  if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
 }
 
 // Mostrar/ocultar botón junto con el panel de resultados

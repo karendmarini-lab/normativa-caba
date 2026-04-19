@@ -231,143 +231,182 @@
         .lb{fill:rgba(255,255,255,.3);font-family:'Inter',sans-serif;font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase}
         .lb2{fill:rgba(255,255,255,.18);font-family:'Inter',sans-serif;font-size:5.5px;letter-spacing:1.5px}
   
-    /* ── FULL REPORT MODAL ─────────────────────────────────── */
+    /* ── FORMAL REPORT MODAL ─────────────────────────────────── */
     .btn-full-report{
       display:none;width:100%;margin-top:10px;padding:12px;
-      background:transparent;color:var(--accent);
-      border:1px solid var(--accent);border-radius:var(--r);
+      background:transparent;color:#C8A96E;
+      border:1px solid #C8A96E;border-radius:var(--r);
       font:inherit;font-size:10px;font-weight:500;letter-spacing:2.5px;
       text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s;
     }
-    .btn-full-report:hover{background:var(--accent);color:#000}
+    .btn-full-report:hover{background:#C8A96E;color:#000}
     .btn-full-report.visible{display:block}
 
-    #full-report-modal{
+    .formal-report{
       display:none;position:fixed;inset:0;
       width:100vw;height:100vh;background:#000;
       z-index:9999;overflow-y:auto;
       font-family:'Inter',system-ui,sans-serif;
       -webkit-font-smoothing:antialiased;
+      padding:5vw;box-sizing:border-box;
+      flex-direction:column;
     }
-    #full-report-modal.open{display:flex;flex-direction:column}
+    .formal-report:not(.hidden){display:flex}
 
-    /* Botón cierre */
-    .frm-close{
+    #close-full-report{
       position:fixed;top:28px;right:32px;
-      font-size:20px;font-weight:200;color:#C8A96E;
+      font-size:22px;font-weight:200;color:#C8A96E;
       background:none;border:none;cursor:pointer;
-      letter-spacing:0;line-height:1;z-index:10000;
-      transition:opacity .2s;opacity:.7;
+      line-height:1;z-index:10000;
+      transition:opacity .2s;opacity:.65;
     }
-    .frm-close:hover{opacity:1}
+    #close-full-report:hover{opacity:1}
 
-    /* Layout principal: 5vw de padding, 3 secciones */
-    .frm-layout{
-      flex:1;
-      display:grid;
-      grid-template-rows:auto 1fr auto;
-      padding:5vw;
-      gap:4vw;
-      min-height:100vh;
+    /* Header */
+    .report-header{
+      display:flex;justify-content:space-between;align-items:flex-start;gap:32px;
+      border-bottom:1px solid #222;padding-bottom:2rem;margin-bottom:0;
     }
-
-    /* SECCIÓN A: Dirección + Badge */
-    .frm-section-a{
-      display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
-      border-bottom:1px solid rgba(255,255,255,.08);
-      padding-bottom:4vw;
+    .title-block{}
+    .report-header h1{
+      font-size:clamp(1.4rem,3vw,2.8rem);font-weight:200;
+      color:#fff;letter-spacing:.06em;text-transform:uppercase;
+      line-height:1.1;margin:0 0 12px 0;
     }
-    .frm-eyebrow{
-      font-size:9px;letter-spacing:4px;text-transform:uppercase;
-      color:rgba(255,255,255,.28);margin-bottom:12px;
-    }
-    #frm-address{
-      font-size:clamp(1.8rem,3.5vw,3.5rem);font-weight:200;
-      color:#fff;letter-spacing:.05em;text-transform:uppercase;
-      line-height:1.1;
-    }
-    #frm-badge{
-      flex-shrink:0;margin-top:4px;
-      font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;
-      padding:7px 18px;border-radius:100px;
+    .badge{
+      display:inline-block;font-size:9px;font-weight:600;letter-spacing:2.5px;
+      text-transform:uppercase;padding:6px 16px;border-radius:100px;
       background:rgba(200,169,110,.1);color:#C8A96E;
-      border:1px solid rgba(200,169,110,.3);white-space:nowrap;
+      border:1px solid rgba(200,169,110,.28);
+    }
+    .formality-block{text-align:right;flex-shrink:0}
+    .formality-block p{
+      font-size:9px;letter-spacing:3px;text-transform:uppercase;
+      color:rgba(255,255,255,.3);margin:0 0 4px 0;
+    }
+    .formality-block small{
+      font-size:8px;letter-spacing:2px;text-transform:uppercase;
+      color:rgba(255,255,255,.18);
     }
 
-    /* SECCIÓN B: Total vendible — número principal */
-    .frm-section-b{
-      display:flex;flex-direction:column;justify-content:center;
-      gap:8px;
+    /* Main grid */
+    .report-main-grid{
+      display:grid;
+      grid-template-columns:1fr 380px;
+      gap:4rem;
+      margin-top:3rem;
+      flex:1;
     }
-    .frm-main-label{
-      font-size:9px;letter-spacing:4px;text-transform:uppercase;
-      color:#C8A96E;
+    .technical-data{}
+    .location-data{}
+
+    /* Data groups */
+    .data-group{
+      border-top:1px solid #222;
+      padding-top:2rem;
+      margin-bottom:3rem;
     }
-    .frm-main-val{
-      display:flex;align-items:baseline;gap:12px;
-      font-size:clamp(4rem,8vw,7rem);font-weight:200;
+    .data-group>label,.group-label{
+      display:block;
+      font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+      color:#C8A96E;font-weight:300;margin-bottom:1.2rem;
+    }
+
+    /* Hero number */
+    .hero-data .main-number{
+      display:flex;align-items:baseline;gap:10px;
+      font-size:clamp(4rem,8vw,8rem);font-weight:200;
       color:#fff;letter-spacing:-.02em;line-height:1;
     }
-    .frm-main-val .unit{
-      font-size:clamp(1rem,1.8vw,1.6rem);font-weight:300;
-      color:rgba(255,255,255,.5);
+    .hero-data .main-number small{
+      font-size:clamp(.9rem,1.5vw,1.4rem);font-weight:300;
+      color:rgba(255,255,255,.4);
     }
 
-    /* Desglose: cubierto + balcones */
-    .frm-desglose{
-      display:flex;gap:5vw;margin-top:16px;
-      padding-top:16px;border-top:1px solid rgba(255,255,255,.06);
+    /* Breakdown grid */
+    .breakdown-grid{
+      display:flex;gap:4vw;flex-wrap:wrap;
     }
-    .frm-des-item{}
-    .frm-des-label{
-      font-size:8px;letter-spacing:3px;text-transform:uppercase;
-      color:#C8A96E;margin-bottom:6px;
+    .breakdown-grid .data-item{flex:1;min-width:140px}
+    .data-item>label{
+      display:block;font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+      color:#C8A96E;font-weight:300;margin-bottom:.5rem;
     }
-    .frm-des-val{
-      display:flex;align-items:baseline;gap:6px;
-      font-size:clamp(1.4rem,2.5vw,2.2rem);font-weight:200;color:#fff;
+    .data-item>p{
+      font-size:clamp(1.4rem,2.5vw,2rem);font-weight:200;
+      color:#fff;margin:0 0 4px 0;
     }
-    .frm-des-val .unit{font-size:.75rem;color:rgba(255,255,255,.4)}
-    .frm-des-sub{font-size:10px;color:rgba(255,255,255,.3);margin-top:3px}
+    .data-item>small{
+      font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.5px;
+    }
 
-    /* SECCIÓN C: Grid parámetros */
-    .frm-section-c{
-      border-top:1px solid rgba(255,255,255,.08);
-      padding-top:4vw;
+    /* Normative grid — tabla de specs */
+    .normative-grid .group-label{margin-bottom:0}
+    .sub-item{
+      display:flex;justify-content:space-between;align-items:baseline;
+      padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.05);
     }
-    .frm-grid-label{
-      font-size:9px;letter-spacing:4px;text-transform:uppercase;
-      color:rgba(255,255,255,.28);margin-bottom:24px;
+    .sub-item:last-child{border-bottom:none}
+    .sub-item>label{
+      font-size:8px;letter-spacing:.18em;text-transform:uppercase;
+      color:#C8A96E;font-weight:300;
     }
-    .frm-params-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-      gap:3vw 4vw;
+    .sub-item>p{
+      font-size:14px;font-weight:300;color:#fff;
+      margin:0;text-align:right;
     }
-    .frm-param{}
-    .frm-param-label{
-      font-size:8px;letter-spacing:3px;text-transform:uppercase;
-      color:#C8A96E;margin-bottom:8px;
+
+    /* Croquis */
+    .croquis-grid .croquis-links{
+      display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;
     }
-    .frm-param-val{
-      display:flex;align-items:baseline;gap:6px;
-      font-size:clamp(1.6rem,2.8vw,2.4rem);font-weight:200;color:#fff;line-height:1;
+    .croquis-link{
+      font-size:9px;letter-spacing:2px;text-transform:uppercase;
+      color:#C8A96E;text-decoration:none;
+      border:1px solid rgba(200,169,110,.3);
+      padding:6px 14px;border-radius:100px;
+      transition:background .2s,color .2s;
     }
-    .frm-param-val .unit{font-size:.75rem;color:rgba(255,255,255,.35);font-weight:300}
+    .croquis-link:hover{background:#C8A96E;color:#000}
+
+    /* Location */
+    .location-data>label{
+      display:block;font-size:8px;letter-spacing:.2em;text-transform:uppercase;
+      color:#C8A96E;font-weight:300;margin-bottom:1rem;
+    }
+    #report-location-map{
+      width:100%;height:380px;
+      background:#111;border:1px solid #222;border-radius:4px;
+      overflow:hidden;
+    }
+    .coordinates-label{
+      font-size:10px;color:rgba(255,255,255,.28);
+      letter-spacing:1px;margin-top:8px;
+    }
 
     /* Footer */
-    .frm-footer-note{
-      font-size:8px;letter-spacing:2.5px;text-transform:uppercase;
-      color:rgba(255,255,255,.15);text-align:right;
-      margin-top:4vw;padding-top:16px;
-      border-top:1px solid rgba(255,255,255,.05);
+    .report-footer{
+      border-top:1px solid #222;
+      padding-top:1.5rem;margin-top:2rem;
+    }
+    .report-footer p{
+      font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+      color:rgba(255,255,255,.2);margin:0;
     }
 
-    @media(max-width:600px){
-      .frm-section-a{flex-direction:column;gap:12px}
-      .frm-desglose{flex-direction:column;gap:20px}
-      .frm-params-grid{grid-template-columns:repeat(2,1fr)}
+    @media(max-width:900px){
+      .report-main-grid{grid-template-columns:1fr}
+      .location-data{order:-1}
+      #report-location-map{height:260px}
     }
+    @media(max-width:600px){
+      .formal-report{padding:24px 20px 40px}
+      #close-full-report{top:16px;right:20px}
+      .report-header{flex-direction:column;gap:16px}
+      .formality-block{text-align:left}
+      .breakdown-grid{flex-direction:column;gap:20px}
+    }
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -613,105 +652,77 @@
 </script>
 
   <!-- FULL REPORT MODAL -->
-  <div id="full-report-modal">
-    <button class="frm-close" id="close-full-report" title="Cerrar">&times;</button>
+  <div id="full-report-modal" class="formal-report hidden">
+    <span id="close-full-report">&times;</span>
 
-    <div class="frm-layout">
-
-      <!-- A: DIRECCIÓN + BADGE -->
-      <div class="frm-section-a">
-        <div>
-          <div class="frm-eyebrow">EdificIA · Estudio de Factibilidad Preliminar</div>
-          <div id="frm-address">—</div>
-        </div>
-        <div id="frm-badge">—</div>
+    <header class="report-header">
+      <div class="title-block">
+        <h1 id="full-address">—</h1>
+        <span id="full-district-badge" class="badge">—</span>
       </div>
-
-      <!-- B: TOTAL VENDIBLE -->
-      <div class="frm-section-b">
-        <div class="frm-main-label">Total Vendible Estimado</div>
-        <div class="frm-main-val">
-          <span id="frm-total-vend">—</span>
-          <span class="unit">m²</span>
-        </div>
-
-        <div class="frm-desglose">
-          <div class="frm-des-item">
-            <div class="frm-des-label">Vendible Cubierto</div>
-            <div class="frm-des-val">
-              <span id="frm-vend-cub">—</span>
-              <span class="unit">m²</span>
-            </div>
-            <div class="frm-des-sub" id="frm-eficiencia">Eficiencia</div>
-          </div>
-          <div class="frm-des-item">
-            <div class="frm-des-label">Balcones (Semicubierto)</div>
-            <div class="frm-des-val">
-              <span id="frm-balcones">—</span>
-              <span class="unit">m²</span>
-            </div>
-          </div>
-          <div class="frm-des-item">
-            <div class="frm-des-label">Volumen Edificable</div>
-            <div class="frm-des-val">
-              <span id="frm-volumen">—</span>
-              <span class="unit">m²</span>
-            </div>
-          </div>
-        </div>
+      <div class="formality-block">
+        <p>Estudio de Factibilidad Técnica y Normativa Preliminar</p>
+        <small>EdificIA · CABA · CUR Ley 6099/2018</small>
       </div>
+    </header>
 
-      <!-- C: GRID PARÁMETROS NORMATIVOS -->
-      <div class="frm-section-c">
-        <div class="frm-grid-label">Parámetros Normativos · CUR Ley 6099/2018</div>
-        <div class="frm-params-grid">
-          <div class="frm-param">
-            <div class="frm-param-label">Distrito CUR</div>
-            <div class="frm-param-val"><span id="frm-distrito">—</span></div>
-          </div>
-          <div class="frm-param">
-            <div class="frm-param-label">Altura Dominante</div>
-            <div class="frm-param-val">
-              <span id="frm-altura">—</span>
-              <span class="unit">m</span>
-            </div>
-          </div>
-          <div class="frm-param">
-            <div class="frm-param-label">Plano Límite</div>
-            <div class="frm-param-val">
-              <span id="frm-plano">—</span>
-              <span class="unit">m</span>
-            </div>
-          </div>
-          <div class="frm-param">
-            <div class="frm-param-label">Pisos Estimados</div>
-            <div class="frm-param-val"><span id="frm-pisos">—</span></div>
-          </div>
-          <div class="frm-param">
-            <div class="frm-param-label">Superficie Lote</div>
-            <div class="frm-param-val">
-              <span id="frm-lote">—</span>
-              <span class="unit">m²</span>
-            </div>
-          </div>
-          <div class="frm-param">
-            <div class="frm-param-label">Pisada Edificable</div>
-            <div class="frm-param-val">
-              <span id="frm-pisada">—</span>
-              <span class="unit">m²</span>
-            </div>
+    <main class="report-main-grid">
+
+      <section class="technical-data">
+
+        <div class="data-group hero-data">
+          <label>Total Vendible Estimado</label>
+          <div class="main-number">
+            <span id="full-total">—</span>
+            <small>m²</small>
           </div>
         </div>
 
-        <div class="frm-footer-note">
-          Estudio de factibilidad preliminar · EdificIA · CUR Ley 6099/2018 · Datos orientativos
+        <div class="data-group breakdown-grid">
+          <div class="data-item">
+            <label>Vendible Cubierto</label>
+            <p><span id="full-cubierto">—</span> m²</p>
+            <small id="full-efficiency"></small>
+          </div>
+          <div class="data-item">
+            <label>Balcones (Semicubierto)</label>
+            <p><span id="full-balcones">—</span> m²</p>
+          </div>
+          <div class="data-item">
+            <label>Volumen Edificable</label>
+            <p><span id="full-volumen">—</span> m²</p>
+          </div>
         </div>
-      </div>
 
-    </div>
+        <div class="data-group normative-grid">
+          <label class="group-label">Parámetros del Lote y Normativa</label>
+          <div class="sub-item"><label>Altura Máx.</label><p id="full-h">—</p></div>
+          <div class="sub-item"><label>Plano Límite</label><p id="full-plano">—</p></div>
+          <div class="sub-item"><label>Pisos Est.</label><p id="full-pisos">—</p></div>
+          <div class="sub-item"><label>Superficie Lote</label><p id="full-lote">—</p></div>
+          <div class="sub-item"><label>Pisada</label><p id="full-pisada">—</p></div>
+          <div class="sub-item"><label>F.O.T.</label><p id="full-fot">—</p></div>
+        </div>
+
+        <div id="croquis-container" class="data-group croquis-grid hidden">
+          <label class="group-label">Croquis y Planos de Parcela (Ciudad 3D)</label>
+          <div class="croquis-links" id="croquis-links-inner"></div>
+        </div>
+
+      </section>
+
+      <section class="location-data">
+        <label>Ubicación Exacta de la Parcela</label>
+        <div id="report-location-map"></div>
+        <p id="full-coordinates" class="coordinates-label"></p>
+      </section>
+
+    </main>
+
+    <footer class="report-footer">
+      <p>Este informe es de carácter preliminar y no constituye una autorización de obra. Datos sujetos a verificación profesional.</p>
+    </footer>
   </div>
-
-
 
 </body>
 </html>
