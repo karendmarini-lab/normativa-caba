@@ -233,13 +233,14 @@
   
     /* ── FORMAL REPORT MODAL ─────────────────────────────────── */
     .btn-full-report{
-      display:none;width:100%;margin-top:10px;padding:12px;
-      background:transparent;color:#C8A96E;
-      border:1px solid #C8A96E;border-radius:var(--r);
-      font:inherit;font-size:10px;font-weight:500;letter-spacing:2.5px;
-      text-transform:uppercase;cursor:pointer;transition:background .2s,color .2s;
+      display:none;width:100%;margin-top:10px;
+      background:#fff;color:#000;border:none;border-radius:100px;
+      padding:12px 20px;
+      font-family:'Inter',inherit;font-size:10px;font-weight:500;letter-spacing:2px;
+      text-transform:uppercase;cursor:pointer;transition:opacity .2s,transform .1s;
     }
-    .btn-full-report:hover{background:#C8A96E;color:#000}
+    .btn-full-report:hover{opacity:.85}
+    .btn-full-report:active{transform:scale(.98)}
     .btn-full-report.visible{display:block}
 
     .formal-report{
@@ -315,7 +316,7 @@
     /* Hero number */
     .hero-data .main-number{
       display:flex;align-items:baseline;gap:10px;
-      font-size:clamp(4rem,8vw,8rem);font-weight:200;
+      font-size:clamp(2.8rem,5vw,5rem);font-weight:200;
       color:#fff;letter-spacing:-.02em;line-height:1;
     }
     .hero-data .main-number small{
@@ -406,6 +407,12 @@
       .formality-block{text-align:left}
       .breakdown-grid{flex-direction:column;gap:20px}
     }
+
+
+    /* Fix Leaflet tile gap lines */
+    .leaflet-tile { border: none !important; outline: none !important; }
+    .leaflet-tile-container { transform: translateZ(0); }
+    .leaflet-layer { will-change: transform; }
 
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
@@ -704,7 +711,19 @@
           <div class="sub-item"><label>F.O.T.</label><p id="full-fot">—</p></div>
         </div>
 
-        <div id="croquis-container" class="data-group croquis-grid hidden">
+        <div class="data-group">
+          <label class="group-label">Análisis Económico y Afectaciones</label>
+          <div class="sub-item">
+            <label>Plusvalía (DDHUS)</label>
+            <p id="full-plusvalia">Pendiente de verificación</p>
+          </div>
+          <div class="sub-item">
+            <label>Afectaciones</label>
+            <p id="full-afectaciones">No presenta afectaciones registradas</p>
+          </div>
+        </div>
+
+                <div id="croquis-container" class="data-group croquis-grid hidden">
           <label class="group-label">Croquis y Planos de Parcela (Ciudad 3D)</label>
           <div class="croquis-links" id="croquis-links-inner"></div>
         </div>
