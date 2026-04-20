@@ -544,50 +544,37 @@ def login_page(request: Request) -> HTMLResponse:
       Continuar con Microsoft
     </button>''' if has_microsoft else ""
 
-    # Read the actual index.html and strip module scripts to avoid double execution
-    index_path = Path(__file__).resolve().parent / "index.html"
-    try:
-        app_html = index_path.read_text(encoding="utf-8")
-        import re
-        app_html = re.sub(r'<script[^>]*type=["\']module["\'][^>]*>.*?</script>', '', app_html, flags=re.DOTALL)
-    except FileNotFoundError:
-        app_html = "<html><body></body></html>"
-
-    overlay = f'''
-<div id="login-overlay" style="position:fixed;inset:0;z-index:9999;
-  background:rgba(0,0,0,.85);backdrop-filter:blur(20px);
-  display:flex;align-items:center;justify-content:center">
+    html = f'''<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EdificIA · Iniciar sesión</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap">
+</head>
+<body style="margin:0;background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;
+  display:flex;align-items:center;justify-content:center;min-height:100vh">
   <div style="width:92%;max-width:380px;text-align:center">
     <div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:6px">
       E D I F I C <span style="color:rgba(255,215,0,.4)">I A</span>
     </div>
-    <h1 style="font-size:22px;font-weight:300;margin:0 0 6px;letter-spacing:-.3px;color:#fff;font-family:'Inter',system-ui,sans-serif">
-      Pre-factibilidad urbanística
-    </h1>
-    <p style="font-size:12px;color:rgba(255,255,255,.3);margin:0 0 36px;font-family:'Inter',system-ui,sans-serif">
-      CABA · Código Urbanístico · Ley 6099/2018
-    </p>
+    <h1 style="font-size:22px;font-weight:300;margin:0 0 6px;letter-spacing:-.3px">Pre-factibilidad urbanística</h1>
+    <p style="font-size:12px;color:rgba(255,255,255,.3);margin:0 0 36px">CABA · Código Urbanístico · Ley 6099/2018</p>
     <div style="display:flex;flex-direction:column;gap:12px">
       {google_btn}
       {microsoft_btn}
     </div>
   </div>
-</div>
-<script>
-function authPopup(url) {{
-  var w = 480, h = 640;
-  var left = (screen.width - w) / 2, top = (screen.height - h) / 2;
-  window.open(url, 'auth', 'width='+w+',height='+h+',left='+left+',top='+top);
-}}
-</script>
-'''
-    # Inject overlay before </body>
-    if "</body>" in app_html:
-        app_html = app_html.replace("</body>", overlay + "</body>")
-    else:
-        app_html += overlay
-
-    return HTMLResponse(app_html)
+  <script>
+  function authPopup(url) {{
+    var w = 480, h = 640;
+    var left = (screen.width - w) / 2, top = (screen.height - h) / 2;
+    window.open(url, 'auth', 'width='+w+',height='+h+',left='+left+',top='+top);
+  }}
+  </script>
+</body>
+</html>'''
+    return HTMLResponse(html)
 
 
 def handle_register(email: str, password: str, nombre: str = "") -> JSONResponse:
