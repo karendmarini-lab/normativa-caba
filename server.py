@@ -91,13 +91,19 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return login_page(request)
         if not user.get("activo"):
             from starlette.responses import HTMLResponse
-            msg = "Tu acceso expiró." if user.get("expired") else "Tu cuenta no está activa."
             return HTMLResponse(
-                f'<html><body style="background:#000;color:#fff;font-family:system-ui;display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column">'
-                f'<h2>{msg}</h2>'
-                f'<p style="color:#999;margin-top:12px">Contacto: <a href="mailto:karendmarini@gmail.com" style="color:#e8c547">karendmarini@gmail.com</a></p>'
-                f'<a href="/api/auth/logout" style="color:#666;margin-top:20px;font-size:12px">Cerrar sesión</a>'
-                f'</body></html>', status_code=403,
+                '<html><head><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap"></head>'
+                '<body style="background:#000;color:#fff;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh">'
+                '<div style="text-align:center;max-width:420px">'
+                '<div style="font-size:10px;letter-spacing:5px;text-transform:uppercase;color:rgba(255,255,255,.25);margin-bottom:8px">E D I F I C <span style="color:rgba(255,215,0,.4)">I A</span></div>'
+                '<h2 style="font-weight:300;margin:0 0 12px">Tu período de prueba terminó</h2>'
+                '<p style="color:rgba(255,255,255,.4);font-size:14px;line-height:1.6;margin:0 0 32px">'
+                'Contactá al equipo de EdificIA para continuar usando la plataforma.</p>'
+                '<a href="mailto:karendmarini@gmail.com" style="display:inline-block;padding:14px 32px;border-radius:100px;'
+                'background:#E8C547;color:#000;text-decoration:none;font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase">'
+                'Contactar equipo</a>'
+                '<div style="margin-top:24px"><a href="/api/auth/logout" style="color:rgba(255,255,255,.2);font-size:11px;text-decoration:none">Cerrar sesión</a></div>'
+                '</div></body></html>', status_code=403,
             )
         # Redirect users without a plan to pricing page
         if not user.get("plan") and path != "/pricing.html":
@@ -252,6 +258,8 @@ def auth_plan(request: Request) -> dict[str, Any]:
         "mb_mes_max": user.get("mb_mes_max", 1),
         "mb_used": user.get("mb_used_this_month", 0),
         "acceso_hasta": user.get("acceso_hasta"),
+        "days_remaining": user.get("days_remaining"),
+        "trial": user.get("trial", False),
     }
 
 

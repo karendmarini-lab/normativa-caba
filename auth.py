@@ -269,12 +269,17 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
         conn.close()
         return None
     user = dict(row)
-    # Check expiry
+    # Check expiry and trial days
     if user.get("acceso_hasta"):
         from datetime import date
-        if date.fromisoformat(user["acceso_hasta"]) < date.today():
+        acceso = date.fromisoformat(user["acceso_hasta"])
+        remaining = (acceso - date.today()).days
+        user["days_remaining"] = remaining
+        if remaining < 0:
             user["activo"] = 0
             user["expired"] = True
+        elif remaining <= 5 and user.get("plan") == "free":
+            user["trial"] = True
     # Fetch current month usage
     month = time.strftime("%Y-%m")
     usage = conn.execute(
@@ -351,10 +356,17 @@ def handle_google_callback(request: Request, code: str) -> RedirectResponse:
     existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
 
     if not existing:
-        # New user — create with no plan, redirect to pricing
+        # New user — free trial 5 days
+        from datetime import date, timedelta
+        trial_end = (date.today() + timedelta(days=5)).isoformat()
+        defaults = PLAN_DEFAULTS["free"]
         conn.execute(
-            "INSERT INTO users (email, nombre, google_id, activo) VALUES (?, ?, ?, 1)",
-            (email, nombre, google_id),
+            "INSERT INTO users (email, nombre, google_id, activo, plan, acceso_hasta, "
+            "creditos_usd, modelos_habilitados, usd_mes_max, mb_mes_max) "
+            "VALUES (?, ?, ?, 1, 'free', ?, ?, ?, ?, ?)",
+            (email, nombre, google_id, trial_end,
+             defaults["usd_mes_max"], defaults["modelos_habilitados"],
+             defaults["usd_mes_max"], defaults["mb_mes_max"]),
         )
         user_id = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()["id"]
     else:
@@ -452,9 +464,16 @@ def handle_microsoft_callback(request: Request, code: str) -> RedirectResponse:
     existing = conn.execute("SELECT id, activo, acceso_hasta FROM users WHERE email = ?", (email,)).fetchone()
 
     if not existing:
+        from datetime import date, timedelta
+        trial_end = (date.today() + timedelta(days=5)).isoformat()
+        defaults = PLAN_DEFAULTS["free"]
         conn.execute(
-            "INSERT INTO users (email, nombre, google_id, activo) VALUES (?, ?, ?, 1)",
-            (email, nombre, f"ms:{ms_id}"),
+            "INSERT INTO users (email, nombre, google_id, activo, plan, acceso_hasta, "
+            "creditos_usd, modelos_habilitados, usd_mes_max, mb_mes_max) "
+            "VALUES (?, ?, ?, 1, 'free', ?, ?, ?, ?, ?)",
+            (email, nombre, f"ms:{ms_id}", trial_end,
+             defaults["usd_mes_max"], defaults["modelos_habilitados"],
+             defaults["usd_mes_max"], defaults["mb_mes_max"]),
         )
         user_id = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()["id"]
     else:
