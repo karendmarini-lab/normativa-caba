@@ -70,7 +70,12 @@ from chat import (
 class AuthMiddleware(BaseHTTPMiddleware):
     """Redirect to Google SSO if not authenticated."""
 
-    OPEN_PATHS = ("/api/auth/", "/api/health", "/api/payments/", "/pricing.html")
+    OPEN_PATHS = (
+        "/api/auth/", "/api/health", "/api/payments/", "/pricing.html",
+        "/static/", "/manzanas_heatmap.json", "/cur_centroids.json",
+        "/cur_optimizado.json", "/api/barrios", "/api/parcelas_geo",
+        "/api/search", "/api/parcela", "/favicon.ico",
+    )
 
     async def dispatch(self, request: Request, call_next) -> StarletteResponse:
         # Skip auth entirely if no Google credentials configured (local dev)
