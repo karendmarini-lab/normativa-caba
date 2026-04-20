@@ -270,8 +270,8 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
         return None
     user = dict(row)
     # Check expiry and trial days
+    from datetime import date
     if user.get("acceso_hasta"):
-        from datetime import date
         acceso = date.fromisoformat(user["acceso_hasta"])
         remaining = (acceso - date.today()).days
         user["days_remaining"] = remaining
@@ -280,6 +280,11 @@ def get_current_user(request: Request) -> dict[str, Any] | None:
             user["expired"] = True
         elif remaining <= 5 and user.get("plan") == "free":
             user["trial"] = True
+    elif user.get("plan") == "free":
+        # Free user without acceso_hasta — treat as expired trial
+        user["activo"] = 0
+        user["expired"] = True
+        user["days_remaining"] = 0
     # Fetch current month usage
     month = time.strftime("%Y-%m")
     usage = conn.execute(
