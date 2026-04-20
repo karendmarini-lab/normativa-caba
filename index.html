@@ -146,6 +146,13 @@
     #chat-toggle:hover{transform:translateY(-2px);box-shadow:0 0 40px rgba(255,215,0,.45),0 6px 20px rgba(0,0,0,.5)}
     #chat-toggle.hidden{opacity:0;pointer-events:none;transform:translateY(8px)}
 
+    /* Claude icon wobble */
+    @keyframes patitas-move {
+      0%,100%{transform:rotate(-8deg)}
+      50%{transform:rotate(8deg)}
+    }
+    .icono-claude{animation:patitas-move 1.8s ease-in-out infinite;transform-origin:center;flex-shrink:0}
+
     /* ── RESULTS (scrollable detail below map) ── */
     #results{display:none;position:absolute;top:0;right:0;bottom:0;width:420px;z-index:100;
       background:rgba(0,0,0,.95);backdrop-filter:blur(20px);border-left:1px solid var(--border);
@@ -805,21 +812,23 @@
 </div>
 
 <button id="chat-toggle" title="Agente EdificIA (Ctrl+K)">
-  <!-- Claude starburst logo -->
-  <svg width="16" height="16" viewBox="0 0 30 30" fill="currentColor" style="flex-shrink:0">
-    <g transform="translate(15,15)">
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(0)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(30)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(60)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(90)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(120)"/>
+  <!-- Claude logo — 12 rayos de largo variable (como el original de Anthropic) -->
+  <svg class="icono-claude" width="17" height="17" viewBox="0 0 32 32" fill="currentColor">
+    <g transform="translate(16,16)">
+      <!-- Rayos con alturas variables para replicar la asimetría del logo Claude -->
+      <!-- Los valores y/height mantienen el extremo interno en -3 -->
+      <rect x="-1.4" y="-14" width="2.8" height="11" rx="1.4"/>
+      <rect x="-1.4" y="-16" width="2.8" height="13" rx="1.4" transform="rotate(30)"/>
+      <rect x="-1.2" y="-12" width="2.4" height="9"  rx="1.2" transform="rotate(60)"/>
+      <rect x="-1.5" y="-15" width="3.0" height="12" rx="1.5" transform="rotate(90)"/>
+      <rect x="-1.2" y="-11" width="2.4" height="8"  rx="1.2" transform="rotate(120)"/>
       <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(150)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(180)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(210)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(240)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(270)"/>
+      <rect x="-1.4" y="-15" width="2.8" height="12" rx="1.4" transform="rotate(180)"/>
+      <rect x="-1.2" y="-10" width="2.4" height="7"  rx="1.2" transform="rotate(210)"/>
+      <rect x="-1.3" y="-14" width="2.6" height="11" rx="1.3" transform="rotate(240)"/>
+      <rect x="-1.2" y="-9"  width="2.4" height="6"  rx="1.2" transform="rotate(270)"/>
       <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(300)"/>
-      <rect x="-1.3" y="-13" width="2.6" height="10" rx="1.3" transform="rotate(330)"/>
+      <rect x="-1.4" y="-15" width="2.8" height="12" rx="1.4" transform="rotate(330)"/>
     </g>
   </svg>
   AGENTE EDIFICIA
