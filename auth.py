@@ -544,10 +544,12 @@ def login_page(request: Request) -> HTMLResponse:
       Continuar con Microsoft
     </button>''' if has_microsoft else ""
 
-    # Read the actual index.html and inject the overlay before </body>
+    # Read the actual index.html and strip module scripts to avoid double execution
     index_path = Path(__file__).resolve().parent / "index.html"
     try:
         app_html = index_path.read_text(encoding="utf-8")
+        import re
+        app_html = re.sub(r'<script[^>]*type=["\']module["\'][^>]*>.*?</script>', '', app_html, flags=re.DOTALL)
     except FileNotFoundError:
         app_html = "<html><body></body></html>"
 
