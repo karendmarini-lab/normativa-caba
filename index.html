@@ -605,6 +605,38 @@
       }
     }
 
+
+    /* ── MÓDULO ENRASE ──────────────────────────────────────── */
+    #enrase-bloque{
+      border:1px solid rgba(255,255,255,.08);border-radius:var(--r);
+      padding:14px 16px;margin-bottom:12px;display:none;
+    }
+    #enrase-bloque.visible{display:block}
+    .enrase-titulo{
+      font-size:9px;letter-spacing:3px;text-transform:uppercase;
+      color:#E8C547;margin-bottom:10px;
+    }
+    .enrase-si,.enrase-no{display:flex;flex-direction:column;gap:4px}
+    .enrase-row{
+      display:flex;justify-content:space-between;
+      font-size:12px;padding:4px 0;
+      border-bottom:1px solid rgba(255,255,255,.04);
+    }
+    .enrase-row:last-child{border-bottom:none}
+    .enrase-row.highlight{margin-top:4px;padding-top:8px}
+    .enrase-label{color:rgba(255,255,255,.45)}
+    .enrase-val{color:#fff;font-weight:300}
+    .enrase-val.accent{color:#E8C547;font-weight:500}
+    .enrase-nota{
+      font-size:10px;color:rgba(255,255,255,.25);
+      margin-top:8px;font-style:italic;line-height:1.4;
+    }
+    .enrase-no{
+      font-size:11px;color:rgba(255,255,255,.35);
+      display:flex;align-items:center;gap:8px;
+    }
+    .enrase-icon{font-size:16px;color:rgba(255,255,255,.2)}
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -831,6 +863,12 @@
       </div>
     </div>
 
+    <div id="enrase-bloque" class="visible">
+      <div class="enrase-titulo">⬡ Análisis de Enrase</div>
+      <div id="enrase-resultado">
+        <div class="enrase-no"><span class="enrase-icon">—</span><span>Calculando linderos...</span></div>
+      </div>
+    </div>
     <div class="nnote" id="norm-note">Datos orientativos basados en el CUR CABA (Ley 6099/2018).</div>
   </div>
 
@@ -971,6 +1009,14 @@
             <span>Enrase</span>
             <span id="full-enrase">No presenta</span>
           </div>
+        </div>
+      </div>
+
+      <!-- ENRASE -->
+      <div id="frm-enrase-bloque" class="frm-analysis" style="display:none">
+        <div class="frm-analysis-card" style="grid-column:span 2">
+          <div class="frm-table-title">⬡ Análisis de Enrase (Completamiento de Tejido)</div>
+          <div id="frm-enrase-contenido"></div>
         </div>
       </div>
 

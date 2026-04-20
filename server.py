@@ -817,6 +817,53 @@ def list_barrios() -> list[dict[str, Any]]:
     return _barrios_cache
 
 
+
+@app.get("/api/linderos/{parcel_smp}")
+def get_linderos(parcel_smp: str) -> dict:
+    """Devuelve las alturas reales (tejido) de las parcelas linderas."""
+    with db_connect() as conn:
+        row = fetch_parcel_by_smp(conn, parcel_smp)
+        if not row:
+            raise HTTPException(404, "Parcela no encontrada")
+        data = serialize_row(row)
+        linderas_raw = data.get("edif_linderas") or []
+        if isinstance(linderas_raw, str):
+            try:
+                linderas_raw = json.loads(linderas_raw)
+            except Exception:
+                linderas_raw = []
+        # Puede ser una lista de SMPs o un dict con smp_linderas
+        if isinstance(linderas_raw, dict):
+            smps = linderas_raw.get("smp_linderas", [])
+        elif isinstance(linderas_raw, list):
+            smps = linderas_raw
+        else:
+            smps = []
+
+        results = []
+        for smp in smps[:6]:  # máximo 6 linderos
+            norm = smp_norm(str(smp))
+            r2 = conn.execute(
+                "SELECT smp, tejido_altura_max, tejido_altura_avg, h, plano_san, cur_distrito FROM parcelas WHERE smp_norm = ? LIMIT 1",
+                (norm,)
+            ).fetchone()
+            if r2:
+                results.append({
+                    "smp": r2["smp"],
+                    "tejido_altura_max": r2["tejido_altura_max"],
+                    "tejido_altura_avg": r2["tejido_altura_avg"],
+                    "h": r2["h"],
+                    "plano_san": r2["plano_san"],
+                    "cur_distrito": r2["cur_distrito"],
+                })
+        return {
+            "smp": parcel_smp,
+            "enrase_flag": bool(data.get("edif_enrase")),
+            "plano_san": data.get("plano_san"),
+            "cur_distrito": data.get("cur_distrito"),
+            "linderos": results,
+        }
+
 @app.get("/api/envelope/{parcel_smp}")
 def get_envelope(parcel_smp: str) -> dict[str, Any]:
     """Return the stepped buildable envelope geometry for a parcel."""
