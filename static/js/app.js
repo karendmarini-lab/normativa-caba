@@ -259,92 +259,87 @@ function showParcelDetail(addr, parcel, lat, lng) {
 }
 
 function showParcelFromMap(props) {
-  // When clicking a parcel on the map (from heatmap view), show its card
-  const card = $('parcelCard');
-  if (!card) return;
+  // Click en parcela del mapa → mismo panel derecho que una búsqueda
 
-  card.classList.add('visible');
-  $('parcelTitle').textContent = props.dir || props.smp;
+  const addr = props.dir || props.smp || 'Parcela';
+  const lat  = props.lat  || null;
+  const lng  = props.lng  || null;
 
-  // Badges
-  const badges = [];
-  if (props.aph || (props.catalogacion && props.catalogacion !== 'DESESTIMADO'))
-    badges.push(['APH ' + (props.catalogacion || ''), 'rgba(239,68,68,.2)', '#ef4444']);
-  if (props.riesgo)
-    badges.push(['Riesgo hídrico', 'rgba(59,130,246,.2)', '#3b82f6']);
-  if (props.enrase)
-    badges.push(['Enrase', 'rgba(168,85,247,.2)', '#a855f7']);
+  // Mapear campos del GeoJSON al formato que espera showParcelDetail
+  const parcel = {
+    cpu:    props.cpu,
+    h:      props.tj  || props.pl || null,   // tejido (altura real) o plano
+    plano:  props.pl  || null,               // plano límite normativo
+    fot:    props.fot || null,
+    fos:    props.fos || null,
+    area:   props.area || props.ta || 0,
+    fr:     props.fr  || 0,
+    fo:     props.fo  || 0,
+    pisos:  props.pisos || null,
+    smp:    props.smp,
+    barrio: props.barrio,
+    // Para el informe completo
+    edif_plusvalia_incidencia_uva: props.plusvalia_uva   || null,
+    edif_plusvalia_alicuota:       props.plusvalia_alic  || null,
+    edif_riesgo_hidrico:           props.riesgo          || null,
+    edif_enrase:                   props.enrase          || null,
+    edif_catalogacion_proteccion:  props.catalogacion    || null,
+  };
 
-  $('parcelSub').innerHTML =
-    [props.smp, props.cpu, props.barrio].filter(Boolean).join(' · ')
-    + badges.map(([t, bg, c]) =>
-      ` <span style="background:${bg};color:${c};padding:1px 6px;border-radius:4px;font-size:10px">${t}</span>`
-    ).join('');
+  // Guardar lat/lng y datos de parcela globalmente
+  window._currentLat        = lat;
+  window._currentLng        = lng;
+  window._currentParcelData = parcel;
 
-  // Metrics grid
-  const fmtM2 = v => v ? Math.round(v).toLocaleString('es-AR') + ' m²' : '-';
-  const items = [
-    ['m² vendibles', fmtM2(props.vendible)],
-    ['Pisos permitidos', props.pisos || '-'],
-    ['FOT', props.fot || '-'],
-    ['PL', props.pl ? props.pl + 'm' : '-'],
-    ['Lote', fmtM2(props.area)],
-    ['Frente', props.fr ? props.fr + 'm' : '-'],
-    ['Fondo', props.fo ? props.fo + 'm' : '-'],
-    ['Uso', props.uso || '-'],
-    ['Delta', props.tj ? (props.pl - props.tj).toFixed(1) + 'm' : '-'],
-    ['Tejido', props.tj ? props.tj + 'm' : '-'],
-  ];
-  $('parcelGrid').innerHTML = items.map(([l, v]) =>
-    `<div class="parcel-metric"><div class="parcel-metric-label">${l}</div><div class="parcel-metric-value">${v}</div></div>`
-  ).join('');
+  // Mostrar panel derecho (mismo que búsqueda por dirección)
+  showParcelDetail(addr, parcel, lat, lng);
 
-  // Links
-  $('parcelLink').href = `https://ciudad3d.buenosaires.gob.ar/?smp=${encodeURIComponent(props.smp)}`;
+  // Chat: mensaje de contexto breve (no la card entera)
+  const { addInfoMessage } = Map._chatImports || {};
+  try {
+    // addInfoMessage está importado en el módulo
+    _rcChatContext(addr, parcel);
+  } catch (_) {}
 
-  // Send parcel card to chat (0 LLM tokens)
-  const chatCard = addParcelCard(props);
-
-  // Fetch full parcel data for report + doc links
+  // Fetch datos enriquecidos del backend (croquis, plusvalía exacta, polygon)
   fetch(`/api/parcela/${encodeURIComponent(props.smp)}`)
     .then(r => r.ok ? r.json() : null)
     .then(data => {
       if (!data) return;
-
-      // Populate _currentParcelData so the report modal has all fields
+      // Enriquecer _currentParcelData con los datos completos
       window._currentParcelData = {
-        ...props,
-        edif_croquis_url: data.edif_croquis_url,
-        edif_plano_indice_url: data.edif_plano_indice_url,
-        edif_perimetro_url: data.edif_perimetro_url,
+        ...parcel,
+        edif_croquis_url:           data.edif_croquis_url,
+        edif_plano_indice_url:      data.edif_plano_indice_url,
+        edif_perimetro_url:         data.edif_perimetro_url,
         edif_plusvalia_incidencia_uva: data.edif_plusvalia_incidencia_uva,
-        edif_plusvalia_alicuota: data.edif_plusvalia_alicuota,
+        edif_plusvalia_alicuota:    data.edif_plusvalia_alicuota,
         edif_catalogacion_proteccion: data.edif_catalogacion_proteccion,
-        edif_riesgo_hidrico: data.edif_riesgo_hidrico,
-        edif_enrase: data.edif_enrase,
+        edif_riesgo_hidrico:        data.edif_riesgo_hidrico,
+        edif_enrase:                data.edif_enrase,
         edif_sup_edificable_planta: data.edif_sup_edificable_planta,
-        edif_plano_limite: data.edif_plano_limite,
+        edif_plano_limite:          data.edif_plano_limite,
+        lat: data.lat || lat,
+        lng: data.lng || lng,
       };
-      window._currentLat = data.lat;
-      window._currentLng = data.lng;
-
-      const links = [];
-      if (data.edif_croquis_url) links.push(['Croquis', data.edif_croquis_url]);
-      if (data.edif_plano_indice_url) links.push(['Plano índice', data.edif_plano_indice_url]);
-      if (data.edif_perimetro_url) links.push(['Perímetro', data.edif_perimetro_url]);
-      links.push(['Ciudad 3D', `https://ciudad3d.buenosaires.gob.ar/?smp=${props.smp}`]);
-      // Add to left panel (when visible)
-      const docsInner = $('parcelDocsInner');
-      if (docsInner) {
-        docsInner.innerHTML = links.map(([label, url]) =>
-          `<a href="${url}" target="_blank" style="color:var(--accent);text-decoration:none;font-size:11px">${label} ↗</a>`
-        ).join('');
-        $('parcelDocs').style.display = 'block';
-      }
-      // Add to chat card (croquis embedded + doc links)
-      addParcelDocs(chatCard, links, data.edif_croquis_url);
+      // Actualizar coordenadas si el backend las tiene
+      if (data.lat) window._currentLat = data.lat;
+      if (data.lng) window._currentLng = data.lng;
     }).catch(() => {});
 }
+
+// Enviar contexto al chat principal cuando se selecciona una parcela del mapa
+function _rcChatContext(addr, parcel) {
+  const fields = [
+    addr && `Dirección: ${addr}`,
+    parcel.cpu && `Distrito: ${parcel.cpu}`,
+    parcel.pl && `Plano límite: ${parcel.pl}m`,
+    parcel.fot && `FOT: ${parcel.fot}`,
+    parcel.area && `Lote: ${Math.round(parcel.area)} m²`,
+  ].filter(Boolean).join(' · ');
+  addInfoMessage(`Parcela seleccionada — ${fields}. Los datos técnicos están cargados en el panel derecho.`);
+}
+
 
 // ── Calculator ───────────────────────────────────────────────────
 
