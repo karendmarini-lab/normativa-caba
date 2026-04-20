@@ -306,15 +306,22 @@
     }
     #close-full-report:hover{color:#fff}
 
-    /* Botón descarga PDF — fijo en esquina superior del modal, junto a la X */
+    /* Wrapper sticky — dentro de frm-main-col, nunca superpone el panel de chat */
+    #pdf-btn-wrap{
+      position:sticky;top:0;z-index:200;
+      display:flex;justify-content:flex-end;
+      padding:14px 20px 0;
+      background:linear-gradient(to bottom,#000 80%,transparent);
+      pointer-events:none;          /* el fondo gradiente no bloquea clics */
+    }
     #btn-download-pdf{
+      pointer-events:auto;
       display:none;align-items:center;gap:7px;
-      position:fixed;top:18px;right:72px;z-index:10001;
       padding:9px 18px;border-radius:100px;
       background:var(--accent);color:#000;border:none;cursor:pointer;
       font-family:'Inter',system-ui,sans-serif;font-size:9px;font-weight:700;
       letter-spacing:2px;text-transform:uppercase;white-space:nowrap;
-      box-shadow:0 2px 14px rgba(0,0,0,.5);
+      box-shadow:0 2px 14px rgba(0,0,0,.4);
       transition:opacity .2s,transform .1s;
     }
     #btn-download-pdf:hover{opacity:.85}
@@ -865,14 +872,16 @@
   <!-- FULL REPORT MODAL -->
   <div id="full-report-modal" class="formal-report hidden">
     <button id="close-full-report" title="Cerrar">&times;</button>
-    <!-- Botón PDF fijo junto a la X — fuera del área scrollable, no aparece en el informe -->
-    <button id="btn-download-pdf" title="Descargar informe PDF">
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      DESCARGAR PDF
-    </button>
 
     <div class="frm-with-chat">
     <div class="frm-main-col">
+      <!-- Botón PDF sticky dentro del panel principal — nunca superpone el chat -->
+      <div id="pdf-btn-wrap">
+        <button id="btn-download-pdf" title="Descargar informe PDF">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          DESCARGAR PDF
+        </button>
+      </div>
     <div class="frm-body">
 
       <!-- LOGO INSTITUCIONAL -->
