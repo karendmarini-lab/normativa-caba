@@ -1132,3 +1132,146 @@ async function rcSend(textOverride) {
 }
 // ── FIN REPORT CHAT
 
+
+
+// ── MÓDULO ENRASE (Completamiento de Tejido CUR) ─────────────────
+// Consulta los linderos vía /api/linderos/{smp} y calcula si hay
+// oportunidad de ganar pisos por enrase.
+
+// Distritos donde el enrase aplica según CUR
+const ENRASE_DISTRITOS = new Set([
+  'USAA','USAA1','USAA2','USAM','USAM1','USAM2',
+  'CM','CA','C1','C2','C3','R1','R2','R2A','R2B',
+]);
+
+// Distritos USAB donde NO aplica
+const USAB_DISTRITOS = new Set([
+  'USAB','USAB1','USAB2','USAB1I','USAB2I','R2BI','R2AI',
+]);
+
+async function calcularEnrase(parcel) {
+  const resultado = {
+    aplica: false,
+    altura_lindero_max: null,
+    plano_san: null,
+    pisos_extra: 0,
+    m2_extra: 0,
+    distrito: null,
+    mensaje: '',
+    linderos: [],
+  };
+
+  if (!parcel?.smp) return resultado;
+
+  // Verificar flag de enrase en los datos de la parcela
+  const enraseFlag = parcel.edif_enrase || window._currentParcelData?.edif_enrase;
+
+  const smp     = parcel.smp;
+  const cpu     = parcel.cpu || '';
+  const planoSan = _planoSanitizado || parcel.plano || parcel.h || 0;
+  const frente  = _frente || parcel.fr || 0;
+  const fondo   = _fondo  || parcel.fo || 0;
+  resultado.plano_san = planoSan;
+  resultado.distrito  = cpu;
+
+  // Verificar si el distrito permite enrase
+  const cpuLimpio = cpu.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  const esUSAB = Array.from(USAB_DISTRITOS).some(d => cpuLimpio.includes(d.replace(/[^A-Z0-9]/g,'')));
+
+  if (esUSAB) {
+    resultado.mensaje = 'No aplica enrase: distrito USAB (altura libre limitada).';
+    return resultado;
+  }
+
+  // Consultar alturas de linderos
+  let data;
+  try {
+    const resp = await fetch(\`/api/linderos/\${encodeURIComponent(smp)}\`);
+    if (!resp.ok) throw new Error('Error ' + resp.status);
+    data = await resp.json();
+  } catch(e) {
+    resultado.mensaje = 'No se pudieron consultar los linderos.';
+    return resultado;
+  }
+
+  resultado.linderos = data.linderos || [];
+
+  // Altura máxima de los linderos
+  const alturas = resultado.linderos
+    .map(l => l.tejido_altura_max || l.h || 0)
+    .filter(a => a > 0);
+
+  if (!alturas.length) {
+    resultado.mensaje = 'Sin datos de altura en linderos disponibles.';
+    return resultado;
+  }
+
+  const alturaLinderoPMax = Math.max(...alturas);
+  resultado.altura_lindero_max = alturaLinderoPMax;
+
+  // ¿El lindero supera el plano límite de la parcela?
+  if (alturaLinderoPMax <= planoSan) {
+    resultado.mensaje = \`No aplica enrase: altura lindero (\${alturaLinderoPMax}m) ≤ plano límite (\${planoSan}m).\`;
+    return resultado;
+  }
+
+  // ── Cálculo de pisos y metros extra ──────────────────────────
+  const deltaMts   = alturaLinderoPMax - planoSan;
+  const pisosExtra = Math.floor(deltaMts / 2.8);
+
+  if (pisosExtra <= 0) {
+    resultado.mensaje = \`Delta insuficiente (\${deltaMts.toFixed(1)}m) para un piso completo.\`;
+    return resultado;
+  }
+
+  // Superficie de enrase: frente × min(fondo, 22m)
+  const profEnrase  = Math.min(fondo > 0 ? fondo : 22, 22);
+  const supEnrase   = frente > 0 ? frente * profEnrase : (parcel.area || 0) * 0.65;
+  const m2Extra     = Math.round(supEnrase * pisosExtra * 0.82);
+
+  resultado.aplica             = true;
+  resultado.pisos_extra        = pisosExtra;
+  resultado.m2_extra           = m2Extra;
+  resultado.mensaje            = \`Oportunidad de enrase detectada: +\${pisosExtra} piso\${pisosExtra>1?'s':''} para igualar lindero de \${alturaLinderoPMax}m.\`;
+
+  return resultado;
+}
+
+// Mostrar resultado de enrase en la UI
+function mostrarEnrase(res) {
+  const el = document.getElementById('enrase-resultado');
+  if (!el) return;
+
+  if (!res.aplica) {
+    el.innerHTML = \`
+      <div class="enrase-no">
+        <span class="enrase-icon">—</span>
+        <span>\${res.mensaje}</span>
+      </div>\`;
+    return;
+  }
+
+  el.innerHTML = \`
+    <div class="enrase-si">
+      <div class="enrase-row">
+        <span class="enrase-label">Lindero más alto</span>
+        <span class="enrase-val">\${res.altura_lindero_max}m</span>
+      </div>
+      <div class="enrase-row">
+        <span class="enrase-label">Tu plano límite</span>
+        <span class="enrase-val">\${res.plano_san}m</span>
+      </div>
+      <div class="enrase-row highlight">
+        <span class="enrase-label">Pisos extra por enrase</span>
+        <span class="enrase-val">+\${res.pisos_extra} piso\${res.pisos_extra>1?'s':''}</span>
+      </div>
+      <div class="enrase-row highlight">
+        <span class="enrase-label">M² vendibles extra</span>
+        <span class="enrase-val accent">+\${res.m2_extra.toLocaleString('es-AR')} m²</span>
+      </div>
+      <div class="enrase-nota">
+        Estimación basada en tejido fotogramétrico GCBA. Verificar linderos en Ciudad 3D.
+      </div>
+    </div>\`;
+}
+// ── FIN MÓDULO ENRASE ─────────────────────────────────────────────
