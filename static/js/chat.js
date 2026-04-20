@@ -173,6 +173,7 @@ export function setChatMode(mode) {
   const c = _chatContainer;
   const leftPanel = document.getElementById('leftPanel');
   const histBtn = document.getElementById('chat-history-btn');
+  const toggleBtn = document.getElementById('chat-toggle');
 
   c.className = '';
   if (mode === 'hidden') {
@@ -181,6 +182,8 @@ export function setChatMode(mode) {
     histBtn.style.display = 'none';
     _historyPanel.style.display = 'none';
     _historyOpen = false;
+    // Reappear the access button
+    if (toggleBtn) toggleBtn.classList.remove('hidden');
   } else if (mode === 'sidebar') {
     c.style.display = 'flex';
     c.classList.add('chat-sidebar');
@@ -189,12 +192,16 @@ export function setChatMode(mode) {
     _historyPanel.style.display = 'none';
     _historyOpen = false;
     _inputEl.focus();
+    // Hide the access button so it doesn't overlap the input
+    if (toggleBtn) toggleBtn.classList.add('hidden');
   } else if (mode === 'fullscreen') {
     c.style.display = 'flex';
     c.classList.add('chat-fullscreen');
     if (leftPanel) leftPanel.style.display = 'none';
     histBtn.style.display = '';
     _inputEl.focus();
+    // Hide the access button in fullscreen too
+    if (toggleBtn) toggleBtn.classList.add('hidden');
   }
 }
 
