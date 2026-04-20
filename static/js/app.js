@@ -981,7 +981,10 @@ async function rcSend(textOverride) {
               .replace(/\n/g,'<br>');
             rcScrollBottom();
           } else if (ev.type === 'working') {
-            // ya se eliminó workEl
+            if (ev.data && !accumulated) {
+              assistEl.innerHTML = '<span style="color:rgba(255,255,255,.3);font-size:11px">⟳ Consultando datos…</span>';
+              rcScrollBottom();
+            }
           } else if (ev.type === 'error') {
             assistEl.className = 'rc-msg error';
             assistEl.textContent = ev.data;
