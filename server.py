@@ -72,9 +72,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     OPEN_PATHS = (
         "/api/auth/", "/api/health", "/api/payments/", "/pricing.html",
-        "/static/", "/manzanas_heatmap.json", "/cur_centroids.json",
-        "/cur_optimizado.json", "/api/barrios", "/api/parcelas_geo",
-        "/api/search", "/api/parcela", "/favicon.ico",
+        "/static/", "/favicon.ico",
     )
 
     async def dispatch(self, request: Request, call_next) -> StarletteResponse:
