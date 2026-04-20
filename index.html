@@ -479,34 +479,45 @@
       gap: 8px;
     }
     .rc-msg {
-      font-size: 13px; line-height: 1.5;
-      padding: 8px 10px; border-radius: 6px;
-      max-width: 100%;
+      font-size: 13px; line-height: 1.6;
+      max-width: 90%;
     }
     .rc-msg.user {
-      background: rgba(255,255,255,.06);
-      color: rgba(255,255,255,.85);
       align-self: flex-end;
+      background: rgba(255,255,255,.08);
+      padding: 10px 14px;
+      border-radius: 14px 14px 4px 14px;
+      color: rgba(255,255,255,.85);
     }
     .rc-msg.assistant {
+      align-self: flex-start;
       color: rgba(255,255,255,.8);
+      padding: 4px 0;
     }
     .rc-msg.assistant b { color: #E8C547; }
     .rc-msg.assistant code {
-      background: rgba(255,255,255,.08);
-      padding: 1px 4px; border-radius: 3px;
-      font-size: 11px;
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px; border-radius: 4px;
+      font-size: 12px;
+    }
+    .rc-msg.assistant pre {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.06);
+      border-radius: 8px; padding: 12px;
+      overflow-x: auto; font-size: 12px; margin: 8px 0;
     }
     .rc-msg.info {
       font-size: 10px; letter-spacing: .5px;
       color: rgba(255,255,255,.25); font-style: italic;
     }
     .rc-msg.working {
-      color: rgba(255,255,255,.3); font-size: 12px;
-      animation: rc-blink .8s infinite;
+      color: rgba(255,255,255,.3); font-size: 11px;
     }
-    .rc-msg.error { color: #f87171; font-size: 12px; }
-    @keyframes rc-blink { 0%,100%{opacity:.3} 50%{opacity:1} }
+    .rc-msg.error {
+      color: #f87171; font-size: 12px;
+      padding: 8px 12px; background: rgba(220,38,38,.08);
+      border-radius: 8px; border: 1px solid rgba(220,38,38,.15);
+    }
 
     .rc-chips {
       padding: 8px 12px;
@@ -526,29 +537,32 @@
     .rc-chip:hover { border-color: #E8C547; color: #E8C547; }
 
     .rc-input-row {
-      padding: 10px 12px;
-      border-top: 1px solid #1a1a1a;
-      display: flex; gap: 8px; align-items: flex-end;
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,.06);
       flex-shrink: 0;
     }
-    .rc-input {
-      flex: 1; background: rgba(255,255,255,.05);
+    .rc-input-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.04);
       border: 1px solid rgba(255,255,255,.1);
-      border-radius: 8px; padding: 9px 12px;
+      border-radius: 12px; padding: 4px 4px 4px 16px;
+    }
+    .rc-input {
+      flex: 1; background: transparent;
+      border: none; outline: none;
       color: #fff; font: 13px/1.4 'Inter', inherit;
-      resize: none; outline: none; min-height: 36px; max-height: 80px;
-      transition: border-color .2s;
+      resize: none; min-height: 20px; max-height: 80px;
+      padding: 8px 0;
     }
     .rc-input::placeholder { color: rgba(255,255,255,.25); font-size: 12px; }
-    .rc-input:focus { border-color: rgba(232,197,71,.4); }
     .rc-send {
-      width: 34px; height: 34px; flex-shrink: 0;
-      background: #E8C547; color: #000; border: none;
-      border-radius: 8px; cursor: pointer; font-size: 14px;
+      width: 32px; height: 32px; flex-shrink: 0;
+      background: #fff; color: #000; border: none;
+      border-radius: 8px; cursor: pointer; font-size: 16px;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity .2s;
+      transition: opacity .15s;
     }
-    .rc-send:hover { opacity: .85; }
+    .rc-send:hover { opacity: .8; }
     .rc-send:disabled { opacity: .35; cursor: default; }
 
     @media(max-width:900px) {
@@ -946,10 +960,12 @@
           <button class="rc-chip" data-question="¿Conviene desarrollar?">¿Conviene desarrollar?</button>
         </div>
         <div class="rc-input-row">
-          <textarea id="rc-input" class="rc-input" rows="1"
-            placeholder="Preguntá sobre la parcela..." 
-            ></textarea>
-          <button class="rc-send" id="rc-send-btn">↑</button>
+          <div class="rc-input-bar">
+            <textarea id="rc-input" class="rc-input" rows="1"
+              placeholder="Preguntá sobre la parcela..."
+              ></textarea>
+            <button class="rc-send" id="rc-send-btn">↑</button>
+          </div>
         </div>
       </div>
 
