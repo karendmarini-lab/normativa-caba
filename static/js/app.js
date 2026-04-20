@@ -1293,3 +1293,12 @@ function mostrarEnrase(res) {
     </div>\`;
 }
 // ── FIN MÓDULO ENRASE ─────────────────────────────────────────────
+
+  // Calcular enrase asincrónicamente
+  if (parcel?.smp) {
+    calcularEnrase(parcel).then(res => {
+      window._enraseData = res;
+      mostrarEnrase(res);
+    });
+  }
+
