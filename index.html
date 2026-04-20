@@ -466,16 +466,14 @@
       top: 0;
     }
     .rc-header {
-      padding: 18px 16px 14px;
-      border-bottom: 1px solid #1a1a1a;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
       flex-shrink: 0;
+      display: flex; align-items: center; justify-content: space-between;
     }
     .rc-label {
-      font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
-      color: #E8C547; font-weight: 500; display: block; margin-bottom: 4px;
-    }
-    .rc-sublabel {
-      font-size: 10px; color: rgba(255,255,255,.3); letter-spacing: .5px;
+      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+      color: rgba(255,255,255,.4);
     }
     .rc-messages {
       flex: 1;
@@ -571,6 +569,11 @@
     }
     .rc-send:hover { opacity: .8; }
     .rc-send:disabled { opacity: .35; cursor: default; }
+
+    #report-chat-container.rc-fullscreen {
+      position: fixed; inset: 0; width: 100%; height: 100vh;
+      z-index: 9999; border-left: none;
+    }
 
     @media(max-width:900px) {
       .frm-with-chat { flex-direction: column; }
@@ -958,8 +961,19 @@
       <!-- PANEL DE CHAT IA -->
       <div id="report-chat-container">
         <div class="rc-header">
-          <span class="rc-label">Consulta Normativa IA</span>
-          <span class="rc-sublabel">Preguntá sobre esta parcela</span>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span class="rc-label" style="margin-bottom:0">EdificIA Chat</span>
+            <select id="rc-model" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);
+              border-radius:6px;color:#fff;font:inherit;font-size:10px;padding:3px 6px;cursor:pointer;outline:none">
+              <option value="haiku" selected>Haiku</option>
+              <option value="sonnet">Sonnet</option>
+              <option value="opus">Opus</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <button id="rc-expand" title="Pantalla completa" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:13px;cursor:pointer;padding:2px">⛶</button>
+            <button id="rc-close" title="Cerrar" style="background:none;border:none;color:rgba(255,255,255,.3);font-size:16px;cursor:pointer;padding:2px">×</button>
+          </div>
         </div>
         <div class="rc-messages" id="rc-messages"></div>
         <div class="rc-chips" id="rc-chips">

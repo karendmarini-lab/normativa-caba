@@ -875,6 +875,29 @@ function rcInit(parcelContext) {
         const chip = e.target.closest('.rc-chip');
         if (chip && chip.dataset.question) rcSend(chip.dataset.question);
       });
+      // Close button
+      container.addEventListener('click', e => {
+        if (e.target.closest('#rc-close')) {
+          const modal = container.closest('.formal-report') || container.closest('[id*="report"]');
+          if (modal) modal.style.display = 'none';
+        }
+      });
+      // Expand/collapse
+      container.addEventListener('click', e => {
+        if (e.target.closest('#rc-expand')) {
+          container.classList.toggle('rc-fullscreen');
+        }
+      });
+      // Model selector
+      const rcModelEl = document.getElementById('rc-model');
+      if (rcModelEl) {
+        rcModelEl.addEventListener('change', () => {
+          // Sync with main chat model
+          try {
+            const { setModel } = import('./chat.js');
+          } catch(_) {}
+        });
+      }
       _rcBound = true;
     }
   }
@@ -928,12 +951,15 @@ async function rcSend(textOverride) {
   const sendBtn = document.getElementById('rc-send-btn');
   if (sendBtn) sendBtn.disabled = true;
 
-  // Obtener modelo desde la sesión principal si está disponible
-  let model = 'haiku';
-  try {
-    const { getModel } = await import('./chat.js');
-    model = getModel() || 'haiku';
-  } catch(_) {}
+  // Obtener modelo: primero del selector del report chat, sino del principal
+  const rcModelEl = document.getElementById('rc-model');
+  let model = rcModelEl?.value || 'haiku';
+  if (!model || model === 'haiku') {
+    try {
+      const { getModel } = await import('./chat.js');
+      model = getModel() || 'haiku';
+    } catch(_) {}
+  }
 
   let accumulated = '';
 
