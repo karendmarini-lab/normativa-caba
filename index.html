@@ -147,11 +147,11 @@
     #chat-toggle.hidden{opacity:0;pointer-events:none;transform:translateY(8px)}
 
     /* Claude icon wobble */
-    @keyframes patitas-move {
-      0%,100%{transform:rotate(-8deg)}
-      50%{transform:rotate(8deg)}
+    @keyframes claude-wobble {
+      0%,100%{transform:rotate(-8deg) scale(1)}
+      50%{transform:rotate(8deg) scale(1.1)}
     }
-    .icono-claude{animation:patitas-move 1.8s ease-in-out infinite;transform-origin:center;flex-shrink:0}
+    .claude-icon{animation:claude-wobble 2s ease-in-out infinite;transform-origin:center;flex-shrink:0;color:#D97757}
 
     /* ── RESULTS (scrollable detail below map) ── */
     #results{display:none;position:absolute;top:0;right:0;bottom:0;width:420px;z-index:100;
@@ -813,7 +813,7 @@
 
 <button id="chat-toggle" title="Agente EdificIA (Ctrl+K)">
   <!-- Claude logo — 12 rayos de largo variable (como el original de Anthropic) -->
-  <svg class="icono-claude" width="17" height="17" viewBox="0 0 32 32" fill="currentColor">
+  <svg class="claude-icon" width="26" height="26" viewBox="0 0 32 32" fill="#D97757">
     <g transform="translate(16,16)">
       <!-- Rayos con alturas variables para replicar la asimetría del logo Claude -->
       <!-- Los valores y/height mantienen el extremo interno en -3 -->
