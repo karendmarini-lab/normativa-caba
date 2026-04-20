@@ -765,7 +765,8 @@ function openFullReport() {
         zoomControl: false, attributionControl: false, scrollWheelZoom: false
       }).setView([lat, lng], 17);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20
+        maxZoom: 20,
+        crossOrigin: 'anonymous'   // permite capturar el canvas sin CORS bloqueado
       }).addTo(rmap);
       const goldIcon = L.divIcon({
         html: '<div style="width:14px;height:14px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px rgba(200,169,110,.9)"></div>',
@@ -783,11 +784,9 @@ function openFullReport() {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Mostrar barra de descarga PDF
-  const pdfToolbar = document.getElementById('pdf-toolbar');
-  if (pdfToolbar) pdfToolbar.classList.add('visible');
+  // Mostrar botón PDF (fijo en la esquina superior del modal)
   const dlBtn = document.getElementById('btn-download-pdf');
-  if (dlBtn) dlBtn.onclick = downloadPDF;
+  if (dlBtn) { dlBtn.style.display = 'flex'; dlBtn.onclick = downloadPDF; }
 
   // Inicializar chat DESPUÉS de mostrar el modal
   setTimeout(() => rcInit(_rcCtx2), 50);
@@ -799,69 +798,83 @@ function closeFullReport() {
   document.body.style.overflow = '';
   // Destruir mapa del reporte para liberar memoria
   if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
-  // Ocultar barra PDF
-  const pdfToolbar = document.getElementById('pdf-toolbar');
-  if (pdfToolbar) pdfToolbar.classList.remove('visible');
+  // Ocultar botón PDF
+  const dlBtn = document.getElementById('btn-download-pdf');
+  if (dlBtn) dlBtn.style.display = 'none';
 }
 
 async function downloadPDF() {
   const btn = document.getElementById('btn-download-pdf');
-  const toolbar = document.getElementById('pdf-toolbar');
+  const SVG_ICON = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
   const resetBtn = () => {
     if (btn) {
-      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> DESCARGAR PDF';
-      btn.style.opacity = ''; btn.style.pointerEvents = '';
+      btn.innerHTML = `${SVG_ICON} DESCARGAR PDF`;
+      btn.disabled = false;
+      btn.style.opacity = '';
     }
   };
-  if (btn) { btn.textContent = 'GENERANDO…'; btn.style.opacity = '.5'; btn.style.pointerEvents = 'none'; }
+  if (btn) { btn.innerHTML = '⏳ GENERANDO…'; btn.disabled = true; btn.style.opacity = '.6'; }
 
-  // 1. Esperar a que el mapa Leaflet cargue sus tiles
-  await new Promise(r => setTimeout(r, 500));
+  // 1. Esperar a que los tiles del mapa (con crossOrigin) carguen
+  await new Promise(r => setTimeout(r, 1500));
 
-  // 2. Capturar canvas del mapa Leaflet antes de modificar el DOM
+  // 2. Capturar canvas del mapa Leaflet (crossOrigin ya habilitado en el tile layer)
   let mapImgSrc = '';
   try {
     const mapCanvas = document.querySelector('#report-location-map canvas');
     if (mapCanvas) mapImgSrc = mapCanvas.toDataURL('image/png');
-  } catch(e) {}
+  } catch(e) { console.warn('Map canvas capture:', e); }
 
-  // 3. Swapear el div del mapa por una <img> en el DOM real (html2canvas captura mejor así)
+  // 3. Reemplazar el div del mapa por una <img> estática en el DOM real
   const mapDiv = document.getElementById('report-location-map');
   const mapPlaceholder = document.createElement('div');
   if (mapDiv) {
-    mapDiv.parentNode.replaceChild(mapPlaceholder, mapDiv);
     mapPlaceholder.id = 'report-location-map';
-    mapPlaceholder.style.cssText = mapDiv.style.cssText || 'width:100%;height:100%;min-height:320px';
+    mapPlaceholder.style.cssText = 'width:100%;height:100%;min-height:320px;overflow:hidden;border-radius:4px';
     if (mapImgSrc) {
-      mapPlaceholder.innerHTML = `<img src="${mapImgSrc}" style="width:100%;height:100%;min-height:320px;object-fit:cover;display:block">`;
+      mapPlaceholder.innerHTML = `<img src="${mapImgSrc}" style="width:100%;height:100%;min-height:320px;object-fit:cover;display:block;border-radius:4px">`;
     } else {
       mapPlaceholder.style.cssText += ';background:#111;display:flex;align-items:center;justify-content:center';
-      mapPlaceholder.innerHTML = '<span style="color:rgba(255,255,255,.3);font-size:12px">Mapa</span>';
+      mapPlaceholder.innerHTML = '<span style="color:rgba(255,255,255,.3);font-size:11px;letter-spacing:2px">MAPA</span>';
     }
+    mapDiv.parentNode.replaceChild(mapPlaceholder, mapDiv);
   }
 
-  // 4. Ocultar toolbar (no debe aparecer en PDF)
-  if (toolbar) toolbar.style.display = 'none';
+  // 4. Ocultar botón PDF (no aparece en el informe)
+  if (btn) btn.style.display = 'none';
 
-  // 5. Agregar footer al frm-body
+  // 5. Quitar overflow del contenedor scrollable para que html2canvas capture todo
+  const mainCol = document.querySelector('.frm-main-col');
+  const prevOverflow = mainCol ? mainCol.style.overflowY : '';
+  if (mainCol) mainCol.style.overflowY = 'visible';
+
+  // 6. Footer institucional
   const frmBody = document.querySelector('.frm-body');
-  const today = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const today = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'long', year:'numeric' });
   const footer = document.createElement('div');
   footer.id = '_pdf-footer';
-  footer.style.cssText = 'margin-top:40px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);font-size:10px;color:rgba(255,255,255,.3);text-align:center;font-family:Inter,sans-serif;letter-spacing:1px';
-  footer.textContent = `Informe generado por EdificIA · ${today} · www.edificia.website`;
+  footer.style.cssText = 'margin-top:48px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);display:flex;justify-content:space-between;align-items:center;font-family:Inter,sans-serif;font-size:9px;color:rgba(255,255,255,.25);letter-spacing:1.5px;text-transform:uppercase';
+  footer.innerHTML = `<span>Documento generado por Agente EdificIA · Consulta legal requerida</span><span>${today} · www.edificia.website</span>`;
   if (frmBody) frmBody.appendChild(footer);
 
-  // 6. Nombre del archivo
+  // 7. Nombre del archivo
   const addr = (document.getElementById('full-address')?.textContent || 'parcela')
     .replace(/[^\wÀ-ÿ\s]/g,'').replace(/\s+/g,'_').substring(0,50);
 
-  // 7. Generar PDF capturando el .frm-body real (visible en DOM)
+  // 8. Generar PDF — scale:3 para calidad de impresión, sin allowTaint (CORS limpio)
   const opt = {
-    margin: 10,
-    filename: `EdificIA_Informe_${addr}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, backgroundColor: '#000000', useCORS: true, allowTaint: true, logging: false },
+    margin: [10, 10],
+    filename: `Informe_EdificIA_${addr}.pdf`,
+    image: { type: 'jpeg', quality: 1 },
+    html2canvas: {
+      scale: 3,
+      backgroundColor: '#000000',
+      useCORS: true,
+      letterRendering: true,
+      scrollY: -window.scrollY,
+      scrollX: -window.scrollX,
+      logging: false
+    },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
@@ -870,11 +883,11 @@ async function downloadPDF() {
   } catch(err) {
     console.error('PDF error:', err);
   } finally {
-    // Restaurar todo
+    // Restaurar todo el DOM
     if (mapPlaceholder && mapDiv) mapPlaceholder.parentNode?.replaceChild(mapDiv, mapPlaceholder);
-    if (toolbar) toolbar.style.display = '';
+    if (mainCol) mainCol.style.overflowY = prevOverflow;
     footer.remove();
-    resetBtn();
+    if (btn) { btn.style.display = 'flex'; resetBtn(); }
   }
 }
 
