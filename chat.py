@@ -8,6 +8,7 @@ downloadable files. Streams responses as SSE events.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import sqlite3
@@ -385,12 +386,19 @@ class SessionManager:
             await self._close_entry(entry)
 
         options = create_agent(model)
-        client = ClaudeSDKClient(options=options)
-        await client.__aenter__()
-        self._sessions[session_id] = _SessionEntry(
-            client=client, model=model
-        )
-        return client
+        for attempt in range(3):
+            try:
+                client = ClaudeSDKClient(options=options)
+                await client.__aenter__()
+                self._sessions[session_id] = _SessionEntry(
+                    client=client, model=model
+                )
+                return client
+            except Exception as e:
+                if attempt < 2:
+                    await asyncio.sleep(2)
+                    continue
+                raise
 
     async def delete(self, session_id: str) -> None:
         """Close and remove a session."""
