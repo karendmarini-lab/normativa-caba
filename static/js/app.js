@@ -721,6 +721,24 @@ function openFullReport() {
 
   // ── D: Plusvalía y afectaciones desde _currentParcelData ──
   const pd = window._currentParcelData;
+  // ── D bis: Enrase ──────────────────────────────────────
+  const enraseData = window._enraseData;
+  const frmEnr = document.getElementById('frm-enrase-bloque');
+  const frmEnrCont = document.getElementById('frm-enrase-contenido');
+  if (enraseData && frmEnr && frmEnrCont) {
+    frmEnr.style.display = 'block';
+    if (enraseData.aplica) {
+      frmEnrCont.innerHTML =
+        '<div class="frm-analysis-item"><span>Lindero más alto</span><span>' + enraseData.altura_lindero_max + 'm</span></div>' +
+        '<div class="frm-analysis-item"><span>Plano límite parcela</span><span>' + enraseData.plano_san + 'm</span></div>' +
+        '<div class="frm-analysis-item"><span>Pisos extra</span><span style="color:#E8C547;font-weight:500">+' + enraseData.pisos_extra + ' pisos</span></div>' +
+        '<div class="frm-analysis-item"><span>M² extra</span><span style="color:#E8C547;font-weight:500">+' + enraseData.m2_extra.toLocaleString('es-AR') + ' m²</span></div>' +
+        '<div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:8px;font-style:italic">Verificar linderos en Ciudad 3D.</div>';
+    } else {
+      frmEnrCont.innerHTML = '<div class="frm-analysis-item"><span>Estado</span><span>' + enraseData.mensaje + '</span></div>';
+    }
+  }
+
   if (pd) {
     // Plusvalía
     const inc = pd.edif_plusvalia_incidencia_uva;
