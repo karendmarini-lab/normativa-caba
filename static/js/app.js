@@ -785,10 +785,11 @@ function openFullReport() {
   const _rcCtx2 = [getText('res-addr'),getText('res-badge'),
     'Lote: '+getVal('c-sup')+'m²','Vendible: '+getText('full-total')+'m²'
   ].filter(Boolean).join('\n');
-  rcInit(_rcCtx2);
-
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+
+  // Inicializar chat DESPUÉS de mostrar el modal
+  setTimeout(() => rcInit(_rcCtx2), 50);
 }
 
 function closeFullReport() {
@@ -832,66 +833,184 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// ── REPORT CHAT — mini-chat independiente en el modal ────────────
-// NO toca chat.js. Llama a /api/chat directamente con SSE.
+// ── REPORT CHAT ─────────────────────────────────────────────────
+// Mini-chat independiente dentro del modal de informe.
+// NO modifica chat.js. Llama a /api/chat via SSE.
+// Event delegation: listeners en el contenedor, no en elementos clonados.
 
-let _rcSessionId   = null;
-let _rcStreaming    = false;
-let _rcAbortCtrl   = null;
+let _rcSessionId = null;
+let _rcStreaming  = false;
+let _rcAbortCtrl  = null;
+let _rcBound      = false; // prevenir bindings duplicados
 
 function rcInit(parcelContext) {
-  // Nueva sesión por cada apertura del informe
   _rcSessionId = crypto.randomUUID();
   _rcStreaming  = false;
-
-  const messagesEl = document.getElementById('rc-messages');
-  if (!messagesEl) return;
-  messagesEl.innerHTML = '';
-
-  // Mensaje de bienvenida
-  const info = document.createElement('div');
-  info.className = 'rc-msg info';
-  info.textContent = parcelContext
-    ? '📍 ' + parcelContext.split('\n')[0]
-    : 'Informe cargado. Podés preguntar sobre esta parcela.';
-  messagesEl.appendChild(info);
-
-  // Contexto para el primer mensaje
   window._rcPendingContext = parcelContext || '';
 
-  // ── Bindear eventos (módulo ES — no se pueden usar onclick inline) ──
-  const sendBtn = document.getElementById('rc-send-btn');
-  const inputEl = document.getElementById('rc-input');
-
-  // Clonar para quitar listeners anteriores
-  if (sendBtn) {
-    const fresh = sendBtn.cloneNode(true);
-    sendBtn.parentNode.replaceChild(fresh, sendBtn);
-    fresh.addEventListener('click', () => rcSend());
-  }
-  if (inputEl) {
-    const fresh = inputEl.cloneNode(true);
-    inputEl.parentNode.replaceChild(fresh, inputEl);
-    fresh.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        rcSend();
-      }
-    });
+  // Limpiar mensajes anteriores
+  const messagesEl = document.getElementById('rc-messages');
+  if (messagesEl) {
+    messagesEl.innerHTML = '';
+    const info = document.createElement('div');
+    info.className = 'rc-msg info';
+    info.textContent = parcelContext
+      ? '📍 ' + parcelContext.split('\n')[0]
+      : 'Informe cargado. Podés preguntar sobre esta parcela.';
+    messagesEl.appendChild(info);
   }
 
-  // Bindear chips
-  document.querySelectorAll('#rc-chips .rc-chip').forEach(chip => {
-    const fresh = chip.cloneNode(true);
-    chip.parentNode.replaceChild(fresh, chip);
-    fresh.addEventListener('click', () => rcSend(fresh.dataset.question));
-  });
+  // Bindear una sola vez usando el contenedor (event delegation)
+  if (!_rcBound) {
+    const container = document.getElementById('report-chat-container');
+    if (container) {
+      // Enter en el textarea
+      container.addEventListener('keydown', e => {
+        if (e.target.id === 'rc-input' && e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          rcSend();
+        }
+      });
+      // Click en el botón enviar
+      container.addEventListener('click', e => {
+        if (e.target.closest('#rc-send-btn')) rcSend();
+      });
+      // Click en chips
+      container.addEventListener('click', e => {
+        const chip = e.target.closest('.rc-chip');
+        if (chip && chip.dataset.question) rcSend(chip.dataset.question);
+      });
+      _rcBound = true;
+    }
+  }
 }
 
 function rcScrollBottom() {
   const el = document.getElementById('rc-messages');
   if (el) el.scrollTop = el.scrollHeight;
 }
+
+async function rcSend(textOverride) {
+  if (_rcStreaming) return;
+
+  const inputEl   = document.getElementById('rc-input');
+  const messagesEl = document.getElementById('rc-messages');
+  if (!messagesEl) return;
+
+  const text = (textOverride || inputEl?.value || '').trim();
+  if (!text) return;
+
+  // Limpiar input antes del fetch
+  if (inputEl && !textOverride) inputEl.value = '';
+
+  // Construir mensaje con contexto si es el primero
+  let agentMessage = text;
+  if (window._rcPendingContext) {
+    agentMessage = window._rcPendingContext + '\n\n' + text;
+    window._rcPendingContext = '';
+  }
+
+  // Mensaje del usuario
+  const userEl = document.createElement('div');
+  userEl.className = 'rc-msg user';
+  userEl.textContent = text;
+  messagesEl.appendChild(userEl);
+
+  // Placeholder del asistente
+  const assistEl = document.createElement('div');
+  assistEl.className = 'rc-msg assistant';
+  messagesEl.appendChild(assistEl);
+
+  const workEl = document.createElement('div');
+  workEl.className = 'rc-msg working';
+  workEl.textContent = 'Analizando...';
+  messagesEl.appendChild(workEl);
+  rcScrollBottom();
+
+  _rcStreaming  = true;
+  _rcAbortCtrl  = new AbortController();
+
+  const sendBtn = document.getElementById('rc-send-btn');
+  if (sendBtn) sendBtn.disabled = true;
+
+  // Obtener modelo desde la sesión principal si está disponible
+  let model = 'haiku';
+  try {
+    const { getModel } = await import('./chat.js');
+    model = getModel() || 'haiku';
+  } catch(_) {}
+
+  let accumulated = '';
+
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: _rcSessionId, message: agentMessage, model }),
+      signal: _rcAbortCtrl.signal,
+    });
+
+    workEl.remove();
+
+    if (!resp.ok) {
+      assistEl.className = 'rc-msg error';
+      assistEl.textContent = resp.status === 401
+        ? 'Iniciá sesión para usar el chat IA.'
+        : resp.status === 403
+        ? 'Tu plan no incluye acceso al chat IA.'
+        : 'Error ' + resp.status + ' — intentá nuevamente.';
+      return;
+    }
+
+    const reader  = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.type === 'text') {
+            accumulated += ev.data;
+            assistEl.innerHTML = accumulated
+              .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+              .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+              .replace(/`([^`]+)`/g,'<code>$1</code>')
+              .replace(/\n/g,'<br>');
+            rcScrollBottom();
+          } else if (ev.type === 'working') {
+            // ya se eliminó workEl
+          } else if (ev.type === 'error') {
+            assistEl.className = 'rc-msg error';
+            assistEl.textContent = ev.data;
+          }
+        } catch(_) {}
+      }
+    }
+
+    assistEl.classList.add('done');
+
+  } catch(e) {
+    workEl.remove();
+    if (e.name !== 'AbortError') {
+      assistEl.className = 'rc-msg error';
+      assistEl.textContent = e.message;
+    }
+  } finally {
+    _rcStreaming = false;
+    _rcAbortCtrl = null;
+    if (sendBtn) sendBtn.disabled = false;
+    rcScrollBottom();
+  }
+}
+// ── FIN REPORT CHAT
 
 async function rcSend(textOverride) {
   if (_rcStreaming) return;
