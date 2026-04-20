@@ -783,9 +783,11 @@ function openFullReport() {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Mostrar botón de descarga PDF
+  // Mostrar barra de descarga PDF
+  const pdfToolbar = document.getElementById('pdf-toolbar');
+  if (pdfToolbar) pdfToolbar.classList.add('visible');
   const dlBtn = document.getElementById('btn-download-pdf');
-  if (dlBtn) { dlBtn.classList.add('visible'); dlBtn.onclick = downloadPDF; }
+  if (dlBtn) dlBtn.onclick = downloadPDF;
 
   // Inicializar chat DESPUÉS de mostrar el modal
   setTimeout(() => rcInit(_rcCtx2), 50);
@@ -797,75 +799,82 @@ function closeFullReport() {
   document.body.style.overflow = '';
   // Destruir mapa del reporte para liberar memoria
   if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
-  // Ocultar botón PDF
-  const dlBtn = document.getElementById('btn-download-pdf');
-  if (dlBtn) dlBtn.classList.remove('visible');
+  // Ocultar barra PDF
+  const pdfToolbar = document.getElementById('pdf-toolbar');
+  if (pdfToolbar) pdfToolbar.classList.remove('visible');
 }
 
 async function downloadPDF() {
   const btn = document.getElementById('btn-download-pdf');
+  const toolbar = document.getElementById('pdf-toolbar');
+  const resetBtn = () => {
+    if (btn) {
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> DESCARGAR PDF';
+      btn.style.opacity = ''; btn.style.pointerEvents = '';
+    }
+  };
   if (btn) { btn.textContent = 'GENERANDO…'; btn.style.opacity = '.5'; btn.style.pointerEvents = 'none'; }
 
-  // 1. Capturar el canvas del mapa Leaflet antes de clonar
+  // 1. Esperar a que el mapa Leaflet cargue sus tiles
+  await new Promise(r => setTimeout(r, 500));
+
+  // 2. Capturar canvas del mapa Leaflet antes de modificar el DOM
   let mapImgSrc = '';
   try {
-    // Esperar un tick para que el mapa termine de renderizar
-    await new Promise(r => setTimeout(r, 200));
     const mapCanvas = document.querySelector('#report-location-map canvas');
     if (mapCanvas) mapImgSrc = mapCanvas.toDataURL('image/png');
-  } catch(e) { /* el mapa puede no estar disponible */ }
+  } catch(e) {}
 
-  // 2. Clonar la columna principal del informe
-  const source = document.querySelector('.frm-main-col') || document.querySelector('.frm-body');
-  if (!source) { if (btn) { btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> DESCARGAR PDF'; btn.style.opacity=''; btn.style.pointerEvents=''; } return; }
-  const clone = source.cloneNode(true);
-
-  // 3. Reemplazar el mapa Leaflet con la imagen capturada
-  const cloneMap = clone.querySelector('#report-location-map');
-  if (cloneMap) {
+  // 3. Swapear el div del mapa por una <img> en el DOM real (html2canvas captura mejor así)
+  const mapDiv = document.getElementById('report-location-map');
+  const mapPlaceholder = document.createElement('div');
+  if (mapDiv) {
+    mapDiv.parentNode.replaceChild(mapPlaceholder, mapDiv);
+    mapPlaceholder.id = 'report-location-map';
+    mapPlaceholder.style.cssText = mapDiv.style.cssText || 'width:100%;height:100%;min-height:320px';
     if (mapImgSrc) {
-      cloneMap.innerHTML = `<img src="${mapImgSrc}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+      mapPlaceholder.innerHTML = `<img src="${mapImgSrc}" style="width:100%;height:100%;min-height:320px;object-fit:cover;display:block">`;
     } else {
-      cloneMap.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:12px">Mapa no disponible</div>';
+      mapPlaceholder.style.cssText += ';background:#111;display:flex;align-items:center;justify-content:center';
+      mapPlaceholder.innerHTML = '<span style="color:rgba(255,255,255,.3);font-size:12px">Mapa</span>';
     }
   }
 
-  // 4. Pie de página institucional
-  const body = clone.querySelector('.frm-body') || clone;
-  const footer = document.createElement('div');
+  // 4. Ocultar toolbar (no debe aparecer en PDF)
+  if (toolbar) toolbar.style.display = 'none';
+
+  // 5. Agregar footer al frm-body
+  const frmBody = document.querySelector('.frm-body');
   const today = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const footer = document.createElement('div');
+  footer.id = '_pdf-footer';
   footer.style.cssText = 'margin-top:40px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);font-size:10px;color:rgba(255,255,255,.3);text-align:center;font-family:Inter,sans-serif;letter-spacing:1px';
   footer.textContent = `Informe generado por EdificIA · ${today} · www.edificia.website`;
-  body.appendChild(footer);
-
-  // 5. Posicionar el clon fuera de pantalla para renderizado
-  clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;background:#000;color:#fff;font-family:Inter,system-ui,sans-serif;';
-  document.body.appendChild(clone);
+  if (frmBody) frmBody.appendChild(footer);
 
   // 6. Nombre del archivo
   const addr = (document.getElementById('full-address')?.textContent || 'parcela')
     .replace(/[^\wÀ-ÿ\s]/g,'').replace(/\s+/g,'_').substring(0,50);
 
-  // 7. Generar PDF
+  // 7. Generar PDF capturando el .frm-body real (visible en DOM)
   const opt = {
-    margin: [10, 10, 15, 10],
+    margin: 10,
     filename: `EdificIA_Informe_${addr}.pdf`,
-    image: { type: 'jpeg', quality: 0.92 },
-    html2canvas: { scale: 2, backgroundColor: '#000000', useCORS: true, logging: false, allowTaint: true },
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, backgroundColor: '#000000', useCORS: true, allowTaint: true, logging: false },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
 
   try {
-    await window.html2pdf().set(opt).from(clone).save();
+    await window.html2pdf().set(opt).from(frmBody).save();
   } catch(err) {
-    console.error('PDF generation error:', err);
+    console.error('PDF error:', err);
   } finally {
-    document.body.removeChild(clone);
-    if (btn) {
-      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> DESCARGAR PDF';
-      btn.style.opacity = '';
-      btn.style.pointerEvents = '';
-    }
+    // Restaurar todo
+    if (mapPlaceholder && mapDiv) mapPlaceholder.parentNode?.replaceChild(mapDiv, mapPlaceholder);
+    if (toolbar) toolbar.style.display = '';
+    footer.remove();
+    resetBtn();
   }
 }
 
