@@ -783,6 +783,10 @@ function openFullReport() {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
+  // Mostrar botón de descarga PDF
+  const dlBtn = document.getElementById('btn-download-pdf');
+  if (dlBtn) { dlBtn.classList.add('visible'); dlBtn.onclick = downloadPDF; }
+
   // Inicializar chat DESPUÉS de mostrar el modal
   setTimeout(() => rcInit(_rcCtx2), 50);
 }
@@ -793,6 +797,76 @@ function closeFullReport() {
   document.body.style.overflow = '';
   // Destruir mapa del reporte para liberar memoria
   if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
+  // Ocultar botón PDF
+  const dlBtn = document.getElementById('btn-download-pdf');
+  if (dlBtn) dlBtn.classList.remove('visible');
+}
+
+async function downloadPDF() {
+  const btn = document.getElementById('btn-download-pdf');
+  if (btn) { btn.textContent = 'GENERANDO…'; btn.style.opacity = '.5'; btn.style.pointerEvents = 'none'; }
+
+  // 1. Capturar el canvas del mapa Leaflet antes de clonar
+  let mapImgSrc = '';
+  try {
+    // Esperar un tick para que el mapa termine de renderizar
+    await new Promise(r => setTimeout(r, 200));
+    const mapCanvas = document.querySelector('#report-location-map canvas');
+    if (mapCanvas) mapImgSrc = mapCanvas.toDataURL('image/png');
+  } catch(e) { /* el mapa puede no estar disponible */ }
+
+  // 2. Clonar la columna principal del informe
+  const source = document.querySelector('.frm-main-col') || document.querySelector('.frm-body');
+  if (!source) { if (btn) { btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> DESCARGAR PDF'; btn.style.opacity=''; btn.style.pointerEvents=''; } return; }
+  const clone = source.cloneNode(true);
+
+  // 3. Reemplazar el mapa Leaflet con la imagen capturada
+  const cloneMap = clone.querySelector('#report-location-map');
+  if (cloneMap) {
+    if (mapImgSrc) {
+      cloneMap.innerHTML = `<img src="${mapImgSrc}" style="width:100%;height:100%;object-fit:cover;display:block">`;
+    } else {
+      cloneMap.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:12px">Mapa no disponible</div>';
+    }
+  }
+
+  // 4. Pie de página institucional
+  const body = clone.querySelector('.frm-body') || clone;
+  const footer = document.createElement('div');
+  const today = new Date().toLocaleDateString('es-AR', { day:'2-digit', month:'2-digit', year:'numeric' });
+  footer.style.cssText = 'margin-top:40px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);font-size:10px;color:rgba(255,255,255,.3);text-align:center;font-family:Inter,sans-serif;letter-spacing:1px';
+  footer.textContent = `Informe generado por EdificIA · ${today} · www.edificia.website`;
+  body.appendChild(footer);
+
+  // 5. Posicionar el clon fuera de pantalla para renderizado
+  clone.style.cssText = 'position:fixed;left:-9999px;top:0;width:900px;background:#000;color:#fff;font-family:Inter,system-ui,sans-serif;';
+  document.body.appendChild(clone);
+
+  // 6. Nombre del archivo
+  const addr = (document.getElementById('full-address')?.textContent || 'parcela')
+    .replace(/[^\wÀ-ÿ\s]/g,'').replace(/\s+/g,'_').substring(0,50);
+
+  // 7. Generar PDF
+  const opt = {
+    margin: [10, 10, 15, 10],
+    filename: `EdificIA_Informe_${addr}.pdf`,
+    image: { type: 'jpeg', quality: 0.92 },
+    html2canvas: { scale: 2, backgroundColor: '#000000', useCORS: true, logging: false, allowTaint: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+
+  try {
+    await window.html2pdf().set(opt).from(clone).save();
+  } catch(err) {
+    console.error('PDF generation error:', err);
+  } finally {
+    document.body.removeChild(clone);
+    if (btn) {
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> DESCARGAR PDF';
+      btn.style.opacity = '';
+      btn.style.pointerEvents = '';
+    }
+  }
 }
 
 // Mostrar/ocultar botón junto con el panel de resultados

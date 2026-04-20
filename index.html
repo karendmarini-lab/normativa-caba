@@ -306,6 +306,20 @@
     }
     #close-full-report:hover{color:#fff}
 
+    /* Botón descarga PDF */
+    #btn-download-pdf{
+      position:fixed;top:18px;right:72px;z-index:10001;
+      display:none;align-items:center;gap:7px;
+      padding:10px 20px;border-radius:100px;
+      background:var(--accent);color:#000;border:none;cursor:pointer;
+      font-family:'Inter',system-ui,sans-serif;font-size:9px;font-weight:700;
+      letter-spacing:2px;text-transform:uppercase;white-space:nowrap;
+      box-shadow:0 2px 14px rgba(0,0,0,.5);transition:opacity .2s,transform .1s;
+    }
+    #btn-download-pdf:hover{opacity:.85}
+    #btn-download-pdf:active{transform:scale(.97)}
+    #btn-download-pdf.visible{display:flex}
+
     /* Contenedor interno con padding */
     .frm-body{padding:40px 5vw 60px;max-width:1400px;margin:0 auto}
 
@@ -839,6 +853,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script type="module">
   import { initApp } from './static/js/app.js';
   import { initChat } from './static/js/chat.js';
@@ -849,6 +864,10 @@
   <!-- FULL REPORT MODAL -->
   <div id="full-report-modal" class="formal-report hidden">
     <button id="close-full-report" title="Cerrar">&times;</button>
+    <button id="btn-download-pdf" title="Descargar informe PDF">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      DESCARGAR PDF
+    </button>
 
     <div class="frm-with-chat">
     <div class="frm-main-col">
