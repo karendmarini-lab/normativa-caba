@@ -239,6 +239,18 @@ function showParcelDetail(addr, parcel, lat, lng) {
   // Calculator
   setupCalculator(parcel, planoSan);
 
+  // Enrase: mostrar bloque y calcular asincrónicamente
+  const enraseBloque = document.getElementById('enrase-bloque');
+  if (enraseBloque) enraseBloque.classList.add('visible');
+  const enraseResult = document.getElementById('enrase-resultado');
+  if (enraseResult) enraseResult.innerHTML = '<div class="enrase-no"><span class="enrase-icon">—</span><span>Calculando linderos...</span></div>';
+  if (parcel?.smp) {
+    calcularEnrase(parcel).then(res => {
+      window._enraseData = res;
+      mostrarEnrase(res);
+    });
+  }
+
   // Guardar estado para el Full Report
   window._currentParcelData = parcel;
   window._currentLat = lat;
@@ -1293,12 +1305,4 @@ function mostrarEnrase(res) {
     </div>`;
 }
 // ── FIN MÓDULO ENRASE ─────────────────────────────────────────────
-
-  // Calcular enrase asincrónicamente
-  if (parcel?.smp) {
-    calcularEnrase(parcel).then(res => {
-      window._enraseData = res;
-      mostrarEnrase(res);
-    });
-  }
 
