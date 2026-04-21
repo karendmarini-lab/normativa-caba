@@ -153,8 +153,8 @@ def compute_from_normativa(
     altura = parcel.plano_san if parcel.plano_san > 3 else _district_altura(dist)
     pisos = _compute_pisos(altura, dist)
 
-    # Direct multiplier from calibration table
-    mult = _get_multiplier(dist, parcel.fondo)
+    # Direct multiplier from 3D calibration table
+    mult = _get_multiplier(dist, parcel.fondo, parcel.frente)
     total = parcel.frente * parcel.fondo * pisos * mult
     pisada = parcel.frente * parcel.fondo * mult
 
@@ -221,71 +221,139 @@ def _constr_multiplier_fallback(fondo: float) -> float:
 
 
 # Construibles multiplier: tile_construibles / (frente × fondo × pisos)
-# Calibrated from 193k tile parcels (median per district × fondo bucket)
-CONSTR_MULTIPLIER: dict[tuple[str, int], float] = {
-    ("Corredor Alto", 10): 0.960, ("Corredor Alto", 15): 0.976,
-    ("Corredor Alto", 20): 0.940, ("Corredor Alto", 25): 0.896,
-    ("Corredor Alto", 30): 0.859, ("Corredor Alto", 35): 0.743,
-    ("Corredor Alto", 40): 0.633, ("Corredor Alto", 45): 0.547,
-    ("Corredor Alto", 50): 0.528, ("Corredor Alto", 55): 0.505,
-    ("Corredor Alto", 60): 0.500, ("Corredor Alto", 65): 0.493,
-    ("Corredor Alto", 70): 0.394,
-    ("Corredor Medio", 10): 0.871, ("Corredor Medio", 15): 0.892,
-    ("Corredor Medio", 20): 0.876, ("Corredor Medio", 25): 0.800,
-    ("Corredor Medio", 30): 0.701, ("Corredor Medio", 35): 0.613,
-    ("Corredor Medio", 40): 0.546, ("Corredor Medio", 45): 0.516,
-    ("Corredor Medio", 50): 0.490, ("Corredor Medio", 55): 0.479,
-    ("Corredor Medio", 60): 0.454, ("Corredor Medio", 65): 0.448,
-    ("Corredor Medio", 70): 0.399,
-    ("E1", 10): 0.976, ("E1", 15): 0.977, ("E1", 20): 0.927,
-    ("E1", 25): 0.800, ("E1", 30): 0.709, ("E1", 35): 0.617,
-    ("E1", 40): 0.577, ("E1", 45): 0.528, ("E1", 50): 0.432,
-    ("E1", 55): 0.512, ("E1", 60): 0.482, ("E1", 70): 0.471,
-    ("E2", 10): 0.917, ("E2", 15): 0.928, ("E2", 20): 0.940,
-    ("E2", 25): 0.858, ("E2", 30): 0.710, ("E2", 35): 0.651,
-    ("E2", 40): 0.625, ("E2", 45): 0.548, ("E2", 50): 0.554,
-    ("E2", 55): 0.521, ("E2", 60): 0.475, ("E2", 65): 0.475,
-    ("E2", 70): 0.493,
-    ("E3", 10): 0.909, ("E3", 15): 0.921, ("E3", 20): 0.921,
-    ("E3", 25): 0.814, ("E3", 30): 0.708, ("E3", 35): 0.651,
-    ("E3", 40): 0.584, ("E3", 45): 0.521, ("E3", 50): 0.498,
-    ("E3", 55): 0.473, ("E3", 60): 0.472, ("E3", 65): 0.451,
-    ("E3", 70): 0.437,
-    ("U.S.A.A.", 10): 0.902, ("U.S.A.A.", 15): 0.926,
-    ("U.S.A.A.", 20): 0.897, ("U.S.A.A.", 25): 0.808,
-    ("U.S.A.A.", 30): 0.710, ("U.S.A.A.", 35): 0.625,
-    ("U.S.A.A.", 40): 0.557, ("U.S.A.A.", 45): 0.515,
-    ("U.S.A.A.", 50): 0.507, ("U.S.A.A.", 55): 0.498,
-    ("U.S.A.A.", 60): 0.466, ("U.S.A.A.", 65): 0.456,
-    ("U.S.A.A.", 70): 0.409,
-    ("U.S.A.B. 1", 10): 0.931, ("U.S.A.B. 1", 15): 0.937,
-    ("U.S.A.B. 1", 20): 0.921, ("U.S.A.B. 1", 25): 0.814,
-    ("U.S.A.B. 1", 30): 0.674, ("U.S.A.B. 1", 35): 0.612,
-    ("U.S.A.B. 1", 40): 0.504, ("U.S.A.B. 1", 45): 0.493,
-    ("U.S.A.B. 1", 50): 0.496, ("U.S.A.B. 1", 55): 0.481,
-    ("U.S.A.B. 1", 60): 0.474, ("U.S.A.B. 1", 65): 0.436,
-    ("U.S.A.B. 1", 70): 0.411,
-    ("U.S.A.B. 2", 10): 0.911, ("U.S.A.B. 2", 15): 0.922,
-    ("U.S.A.B. 2", 20): 0.904, ("U.S.A.B. 2", 25): 0.723,
-    ("U.S.A.B. 2", 30): 0.631, ("U.S.A.B. 2", 35): 0.572,
-    ("U.S.A.B. 2", 40): 0.497, ("U.S.A.B. 2", 45): 0.483,
-    ("U.S.A.B. 2", 50): 0.477, ("U.S.A.B. 2", 55): 0.465,
-    ("U.S.A.B. 2", 60): 0.444, ("U.S.A.B. 2", 65): 0.437,
-    ("U.S.A.B. 2", 70): 0.382,
+# 3D calibration table: tile_constr / (frente × fondo × pisos)
+# Key: (district, fondo_bucket_5m, frente_bucket: 0=<10m, 1=10-15m, 2=>15m)
+# Calibrated from 193k tile parcels (median per bucket, ≥15 samples each)
+CONSTR_MULTIPLIER: dict[tuple[str, int, int], float] = {
+    ("Corredor Alto", 10, 0): 0.960, ("Corredor Alto", 10, 1): 0.965,
+    ("Corredor Alto", 15, 0): 0.986, ("Corredor Alto", 15, 1): 0.947, ("Corredor Alto", 15, 2): 0.954,
+    ("Corredor Alto", 20, 0): 0.949, ("Corredor Alto", 20, 1): 0.932, ("Corredor Alto", 20, 2): 0.939,
+    ("Corredor Alto", 25, 0): 0.890, ("Corredor Alto", 25, 1): 0.899, ("Corredor Alto", 25, 2): 0.912,
+    ("Corredor Alto", 30, 0): 0.858, ("Corredor Alto", 30, 1): 0.844, ("Corredor Alto", 30, 2): 0.888,
+    ("Corredor Alto", 35, 0): 0.731, ("Corredor Alto", 35, 1): 0.756, ("Corredor Alto", 35, 2): 0.754,
+    ("Corredor Alto", 40, 0): 0.597, ("Corredor Alto", 40, 1): 0.752, ("Corredor Alto", 40, 2): 0.644,
+    ("Corredor Alto", 45, 0): 0.547, ("Corredor Alto", 45, 1): 0.562, ("Corredor Alto", 45, 2): 0.547,
+    ("Corredor Alto", 50, 0): 0.539, ("Corredor Alto", 50, 1): 0.505, ("Corredor Alto", 50, 2): 0.534,
+    ("Corredor Alto", 55, 0): 0.514, ("Corredor Alto", 55, 1): 0.503, ("Corredor Alto", 55, 2): 0.505,
+    ("Corredor Alto", 60, 0): 0.508, ("Corredor Alto", 60, 1): 0.482, ("Corredor Alto", 60, 2): 0.497,
+    ("Corredor Alto", 65, 0): 0.503, ("Corredor Alto", 65, 1): 0.518, ("Corredor Alto", 65, 2): 0.472,
+    ("Corredor Alto", 70, 2): 0.392,
+    ("Corredor Medio", 10, 0): 0.874, ("Corredor Medio", 10, 1): 0.864,
+    ("Corredor Medio", 15, 0): 0.912, ("Corredor Medio", 15, 1): 0.864, ("Corredor Medio", 15, 2): 0.805,
+    ("Corredor Medio", 20, 0): 0.899, ("Corredor Medio", 20, 1): 0.860, ("Corredor Medio", 20, 2): 0.832,
+    ("Corredor Medio", 25, 0): 0.798, ("Corredor Medio", 25, 1): 0.834, ("Corredor Medio", 25, 2): 0.777,
+    ("Corredor Medio", 30, 0): 0.685, ("Corredor Medio", 30, 1): 0.747, ("Corredor Medio", 30, 2): 0.706,
+    ("Corredor Medio", 35, 0): 0.606, ("Corredor Medio", 35, 1): 0.631, ("Corredor Medio", 35, 2): 0.644,
+    ("Corredor Medio", 40, 0): 0.549, ("Corredor Medio", 40, 1): 0.549, ("Corredor Medio", 40, 2): 0.531,
+    ("Corredor Medio", 45, 0): 0.516, ("Corredor Medio", 45, 1): 0.509, ("Corredor Medio", 45, 2): 0.524,
+    ("Corredor Medio", 50, 0): 0.493, ("Corredor Medio", 50, 1): 0.491, ("Corredor Medio", 50, 2): 0.482,
+    ("Corredor Medio", 55, 0): 0.490, ("Corredor Medio", 55, 1): 0.464, ("Corredor Medio", 55, 2): 0.461,
+    ("Corredor Medio", 60, 0): 0.479, ("Corredor Medio", 60, 1): 0.439, ("Corredor Medio", 60, 2): 0.422,
+    ("Corredor Medio", 65, 0): 0.455, ("Corredor Medio", 65, 1): 0.465, ("Corredor Medio", 65, 2): 0.416,
+    ("Corredor Medio", 70, 0): 0.434, ("Corredor Medio", 70, 1): 0.428, ("Corredor Medio", 70, 2): 0.377,
+    ("E1", 10, 0): 0.979, ("E1", 15, 0): 1.003, ("E1", 15, 1): 0.926,
+    ("E1", 20, 0): 0.927, ("E1", 20, 1): 0.919, ("E1", 20, 2): 0.943,
+    ("E1", 25, 0): 0.801, ("E1", 25, 1): 0.882, ("E1", 25, 2): 0.744,
+    ("E1", 30, 0): 0.701, ("E1", 30, 1): 0.813, ("E1", 30, 2): 0.773,
+    ("E1", 35, 0): 0.606, ("E1", 35, 2): 0.747,
+    ("E1", 40, 0): 0.582, ("E1", 40, 2): 0.577,
+    ("E1", 45, 0): 0.522, ("E1", 45, 2): 0.570,
+    ("E1", 50, 0): 0.432, ("E1", 55, 0): 0.518,
+    ("E1", 60, 0): 0.476, ("E1", 60, 1): 0.471, ("E1", 60, 2): 0.495,
+    ("E1", 70, 2): 0.374,
+    ("E2", 10, 0): 0.908, ("E2", 10, 1): 0.980,
+    ("E2", 15, 0): 0.934, ("E2", 15, 1): 0.893, ("E2", 15, 2): 0.864,
+    ("E2", 20, 0): 0.941, ("E2", 20, 1): 0.940, ("E2", 20, 2): 0.867,
+    ("E2", 25, 0): 0.848, ("E2", 25, 1): 0.957, ("E2", 25, 2): 0.836,
+    ("E2", 30, 0): 0.706, ("E2", 30, 1): 0.774, ("E2", 30, 2): 0.695,
+    ("E2", 35, 0): 0.645, ("E2", 35, 1): 0.743, ("E2", 35, 2): 0.620,
+    ("E2", 40, 0): 0.618, ("E2", 40, 1): 1.006, ("E2", 40, 2): 0.614,
+    ("E2", 45, 0): 0.548, ("E2", 45, 1): 0.592, ("E2", 45, 2): 0.545,
+    ("E2", 50, 0): 0.557, ("E2", 50, 1): 0.597, ("E2", 50, 2): 0.507,
+    ("E2", 55, 0): 0.518, ("E2", 55, 1): 0.602, ("E2", 55, 2): 0.498,
+    ("E2", 60, 0): 0.475, ("E2", 60, 2): 0.424,
+    ("E2", 65, 0): 0.522, ("E2", 65, 2): 0.472, ("E2", 70, 2): 0.488,
+    ("E3", 10, 0): 0.910, ("E3", 10, 1): 0.903,
+    ("E3", 15, 0): 0.926, ("E3", 15, 1): 0.892, ("E3", 15, 2): 0.893,
+    ("E3", 20, 0): 0.929, ("E3", 20, 1): 0.865, ("E3", 20, 2): 0.868,
+    ("E3", 25, 0): 0.811, ("E3", 25, 1): 0.860, ("E3", 25, 2): 0.751,
+    ("E3", 30, 0): 0.710, ("E3", 30, 1): 0.697, ("E3", 30, 2): 0.659,
+    ("E3", 35, 0): 0.644, ("E3", 35, 1): 0.674, ("E3", 35, 2): 0.659,
+    ("E3", 40, 0): 0.585, ("E3", 40, 1): 0.559, ("E3", 40, 2): 0.581,
+    ("E3", 45, 0): 0.530, ("E3", 45, 1): 0.524, ("E3", 45, 2): 0.477,
+    ("E3", 50, 0): 0.505, ("E3", 50, 1): 0.484, ("E3", 50, 2): 0.482,
+    ("E3", 55, 0): 0.473, ("E3", 55, 1): 0.472, ("E3", 55, 2): 0.470,
+    ("E3", 60, 0): 0.482, ("E3", 60, 1): 0.469, ("E3", 60, 2): 0.437,
+    ("E3", 65, 0): 0.482, ("E3", 65, 2): 0.432,
+    ("E3", 70, 0): 0.445, ("E3", 70, 1): 0.418, ("E3", 70, 2): 0.437,
+    ("U.S.A.A.", 10, 0): 0.899, ("U.S.A.A.", 10, 1): 0.908,
+    ("U.S.A.A.", 15, 0): 0.942, ("U.S.A.A.", 15, 1): 0.904, ("U.S.A.A.", 15, 2): 0.915,
+    ("U.S.A.A.", 20, 0): 0.899, ("U.S.A.A.", 20, 1): 0.895, ("U.S.A.A.", 20, 2): 0.894,
+    ("U.S.A.A.", 25, 0): 0.792, ("U.S.A.A.", 25, 1): 0.855, ("U.S.A.A.", 25, 2): 0.822,
+    ("U.S.A.A.", 30, 0): 0.699, ("U.S.A.A.", 30, 1): 0.753, ("U.S.A.A.", 30, 2): 0.719,
+    ("U.S.A.A.", 35, 0): 0.622, ("U.S.A.A.", 35, 1): 0.637, ("U.S.A.A.", 35, 2): 0.633,
+    ("U.S.A.A.", 40, 0): 0.566, ("U.S.A.A.", 40, 1): 0.546, ("U.S.A.A.", 40, 2): 0.530,
+    ("U.S.A.A.", 45, 0): 0.520, ("U.S.A.A.", 45, 1): 0.512, ("U.S.A.A.", 45, 2): 0.498,
+    ("U.S.A.A.", 50, 0): 0.512, ("U.S.A.A.", 50, 1): 0.507, ("U.S.A.A.", 50, 2): 0.481,
+    ("U.S.A.A.", 55, 0): 0.516, ("U.S.A.A.", 55, 1): 0.500, ("U.S.A.A.", 55, 2): 0.456,
+    ("U.S.A.A.", 60, 0): 0.471, ("U.S.A.A.", 60, 1): 0.473, ("U.S.A.A.", 60, 2): 0.440,
+    ("U.S.A.A.", 65, 0): 0.474, ("U.S.A.A.", 65, 1): 0.462, ("U.S.A.A.", 65, 2): 0.447,
+    ("U.S.A.A.", 70, 0): 0.430, ("U.S.A.A.", 70, 1): 0.418, ("U.S.A.A.", 70, 2): 0.383,
+    ("U.S.A.B. 1", 10, 0): 0.956, ("U.S.A.B. 1", 10, 1): 0.911,
+    ("U.S.A.B. 1", 15, 0): 0.954, ("U.S.A.B. 1", 15, 1): 0.921, ("U.S.A.B. 1", 15, 2): 0.871,
+    ("U.S.A.B. 1", 20, 0): 0.926, ("U.S.A.B. 1", 20, 1): 0.906, ("U.S.A.B. 1", 20, 2): 0.869,
+    ("U.S.A.B. 1", 25, 0): 0.810, ("U.S.A.B. 1", 25, 1): 0.851, ("U.S.A.B. 1", 25, 2): 0.754,
+    ("U.S.A.B. 1", 30, 0): 0.670, ("U.S.A.B. 1", 30, 1): 0.693, ("U.S.A.B. 1", 30, 2): 0.681,
+    ("U.S.A.B. 1", 35, 0): 0.613, ("U.S.A.B. 1", 35, 1): 0.613, ("U.S.A.B. 1", 35, 2): 0.601,
+    ("U.S.A.B. 1", 40, 0): 0.505, ("U.S.A.B. 1", 40, 1): 0.506, ("U.S.A.B. 1", 40, 2): 0.488,
+    ("U.S.A.B. 1", 45, 0): 0.494, ("U.S.A.B. 1", 45, 1): 0.482, ("U.S.A.B. 1", 45, 2): 0.480,
+    ("U.S.A.B. 1", 50, 0): 0.497, ("U.S.A.B. 1", 50, 1): 0.490, ("U.S.A.B. 1", 50, 2): 0.484,
+    ("U.S.A.B. 1", 55, 0): 0.485, ("U.S.A.B. 1", 55, 1): 0.470, ("U.S.A.B. 1", 55, 2): 0.459,
+    ("U.S.A.B. 1", 60, 0): 0.486, ("U.S.A.B. 1", 60, 1): 0.471, ("U.S.A.B. 1", 60, 2): 0.431,
+    ("U.S.A.B. 1", 65, 0): 0.451, ("U.S.A.B. 1", 65, 1): 0.438, ("U.S.A.B. 1", 65, 2): 0.402,
+    ("U.S.A.B. 1", 70, 0): 0.401, ("U.S.A.B. 1", 70, 1): 0.420, ("U.S.A.B. 1", 70, 2): 0.424,
+    ("U.S.A.B. 2", 10, 0): 0.914, ("U.S.A.B. 2", 10, 1): 0.899,
+    ("U.S.A.B. 2", 15, 0): 0.933, ("U.S.A.B. 2", 15, 1): 0.904, ("U.S.A.B. 2", 15, 2): 0.896,
+    ("U.S.A.B. 2", 20, 0): 0.909, ("U.S.A.B. 2", 20, 1): 0.881, ("U.S.A.B. 2", 20, 2): 0.851,
+    ("U.S.A.B. 2", 25, 0): 0.719, ("U.S.A.B. 2", 25, 1): 0.775, ("U.S.A.B. 2", 25, 2): 0.713,
+    ("U.S.A.B. 2", 30, 0): 0.627, ("U.S.A.B. 2", 30, 1): 0.693, ("U.S.A.B. 2", 30, 2): 0.634,
+    ("U.S.A.B. 2", 35, 0): 0.573, ("U.S.A.B. 2", 35, 1): 0.588, ("U.S.A.B. 2", 35, 2): 0.554,
+    ("U.S.A.B. 2", 40, 0): 0.501, ("U.S.A.B. 2", 40, 1): 0.483, ("U.S.A.B. 2", 40, 2): 0.480,
+    ("U.S.A.B. 2", 45, 0): 0.484, ("U.S.A.B. 2", 45, 1): 0.475, ("U.S.A.B. 2", 45, 2): 0.462,
+    ("U.S.A.B. 2", 50, 0): 0.481, ("U.S.A.B. 2", 50, 1): 0.466, ("U.S.A.B. 2", 50, 2): 0.444,
+    ("U.S.A.B. 2", 55, 0): 0.475, ("U.S.A.B. 2", 55, 1): 0.422, ("U.S.A.B. 2", 55, 2): 0.424,
+    ("U.S.A.B. 2", 60, 0): 0.459, ("U.S.A.B. 2", 60, 1): 0.430, ("U.S.A.B. 2", 60, 2): 0.402,
+    ("U.S.A.B. 2", 65, 0): 0.457, ("U.S.A.B. 2", 65, 1): 0.429, ("U.S.A.B. 2", 65, 2): 0.325,
+    ("U.S.A.B. 2", 70, 0): 0.393, ("U.S.A.B. 2", 70, 1): 0.394, ("U.S.A.B. 2", 70, 2): 0.373,
 }
 
 
-def _get_multiplier(dist: str, fondo: float) -> float:
-    """Get construibles multiplier from calibration table.
+def _get_multiplier(dist: str, fondo: float, frente: float = 8.7) -> float:
+    """Get construibles multiplier from 3D calibration table.
 
-    Interpolates between fondo buckets for the given district.
-    Falls back to cross-district average if district not in table.
+    Looks up (district, fondo_bucket, frente_bucket), interpolating
+    between fondo buckets. Falls back to 2D (without frente) then
+    to cross-district average.
     """
     fb_lo = max(10, int(fondo / 5) * 5)
-    fb_hi = fb_lo + 5
+    fb_hi = min(70, fb_lo + 5)
+    fr = 0 if frente < 10 else (1 if frente < 15 else 2)
 
-    m_lo = CONSTR_MULTIPLIER.get((dist, fb_lo))
-    m_hi = CONSTR_MULTIPLIER.get((dist, min(70, fb_hi)))
+    # Try 3D lookup first
+    m_lo = CONSTR_MULTIPLIER.get((dist, fb_lo, fr))
+    m_hi = CONSTR_MULTIPLIER.get((dist, fb_hi, fr))
+
+    # Fallback: try nearby frente buckets
+    if m_lo is None:
+        for alt_fr in [0, 1, 2]:
+            m_lo = CONSTR_MULTIPLIER.get((dist, fb_lo, alt_fr))
+            if m_lo is not None:
+                break
+    if m_hi is None:
+        for alt_fr in [0, 1, 2]:
+            m_hi = CONSTR_MULTIPLIER.get((dist, fb_hi, alt_fr))
+            if m_hi is not None:
+                break
 
     if m_lo is not None and m_hi is not None:
         t = (fondo - fb_lo) / 5.0
