@@ -794,9 +794,16 @@ function openFullReport() {
       const rmap = L.map('report-location-map', {
         zoomControl: false, attributionControl: false, scrollWheelZoom: false
       }).setView([lat, lng], 17);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Base oscura sin etiquetas
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
-        crossOrigin: 'anonymous'   // permite capturar el canvas sin CORS bloqueado
+        crossOrigin: 'anonymous',
+      }).addTo(rmap);
+      // Etiquetas blancas (light_only_labels + CSS invert)
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        crossOrigin: 'anonymous',
+        className: 'map-labels-layer',
       }).addTo(rmap);
       const goldIcon = L.divIcon({
         html: '<div style="width:14px;height:14px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px rgba(200,169,110,.9)"></div>',
