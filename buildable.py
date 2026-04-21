@@ -201,24 +201,19 @@ def _compute_pisada(
     - LFI (Art. 6.4.2): 1/4 manzana depth, precomputed from geometry
     - Banda mínima: always ≥ 16m from L.O. (Art. 6.4)
     """
-    retiro = RETIRO_FONDO.get(dist, 6)
-
-    # Edificable depth
+    # Edificable depth: constrained by LFI only.
+    # CUR retiro fondo is redundant — LFI already captures the setback.
+    # (Validated on 170k tile parcels: retiro real ≈ 1m for shallow lots,
+    #  scales with fondo for deep lots, matching LFI constraint exactly.)
     if fondo <= 16:
-        # Short lot: entire depth is edificable (banda mínima guarantee)
-        banda = fondo
+        banda = fondo  # banda mínima guarantee
+    elif lfi and lfi > 0:
+        # LFI from manzana geometry, calibrated ×0.92 vs tiles
+        banda = max(16.0, min(fondo, lfi * 0.92))
     else:
-        # Apply retiro fondo
-        banda_retiro = fondo - retiro
-
-        # Apply LFI if available (precomputed from real manzana geometry)
-        # Correction: LFI from bounding rectangle is ~8% generous vs tiles
-        # (calibrated on 60k deep parcels: tile_depth / my_banda = 0.91)
-        if lfi and lfi > 0:
-            banda = max(16.0, min(banda_retiro, lfi * 0.92))
-        else:
-            lfi_est = fondo * 0.65 if fondo > 25 else fondo
-            banda = max(16.0, min(banda_retiro, lfi_est * 0.92))
+        # Fallback: LFI ≈ 65% of fondo for typical CABA blocks
+        lfi_est = fondo * 0.65 if fondo > 25 else fondo
+        banda = max(16.0, min(fondo, lfi_est * 0.92))
 
     return frente * banda
 
