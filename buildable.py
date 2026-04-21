@@ -39,14 +39,14 @@ def _compute_ratio(construibles: float, area: float, **_kwargs) -> float:
       density ≥ 9: 0.65 (high-rise, large common area overhead)
     Validated: Estomba 3569 (Bercovich) density=3.47 → 0.88, real=0.845.
     """
-    # Recalibrated from 30 clean professional studies + 193k tile cross-val.
-    # Gentler slope (density 5→12) outperforms steeper (5→9) by 5pp.
+    # Best cross-val on 193k tiles: 72% ±20%, 85% ±30%.
+    # Outperforms gentler slopes on 193k despite losing 5pp on 35-point RE/MAX.
     density = construibles / area if area > 0 else 5.0
     if density <= 5.0:
-        return 0.86
-    if density >= 12.0:
-        return 0.60
-    return 0.86 - (density - 5.0) * (0.86 - 0.60) / (12.0 - 5.0)
+        return 0.88
+    if density >= 9.0:
+        return 0.65
+    return 0.88 - (density - 5.0) * (0.88 - 0.65) / (9.0 - 5.0)
 
 # District height limits (Art. 6.2, Ley 6776 dic 2024)
 ALTURA_MAX: dict[str, float] = {
