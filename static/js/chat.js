@@ -136,20 +136,12 @@ async function _loadUserPlan() {
 function _showTrialBanner() {
   if (!_userPlan?.trial || !_userPlan?.days_remaining) return;
   const days = _userPlan.days_remaining;
-  const existing = document.getElementById('trial-banner');
-  if (existing) existing.remove();
-  const banner = document.createElement('div');
-  banner.id = 'trial-banner';
-  Object.assign(banner.style, {
-    position: 'fixed', top: '52px', left: '0', right: '0', zIndex: '300',
-    background: 'rgba(232,197,71,.12)', borderBottom: '1px solid rgba(232,197,71,.2)',
-    padding: '8px 20px', textAlign: 'center',
-    fontSize: '12px', color: '#E8C547', fontFamily: 'Inter,system-ui,sans-serif',
-  });
+  const banner = document.getElementById('trial-banner');
+  if (!banner) return;
+  banner.style.display = '';
   banner.innerHTML = days <= 1
-    ? 'Tu período de prueba termina hoy. <a href="mailto:karendmarini@gmail.com" style="color:#fff;text-decoration:underline;margin-left:6px">Contactar equipo</a>'
-    : `Te quedan <b>${days} días</b> de prueba. <a href="mailto:karendmarini@gmail.com" style="color:#fff;text-decoration:underline;margin-left:6px">Contactar equipo</a>`;
-  document.body.appendChild(banner);
+    ? 'Prueba termina hoy · <a href="mailto:karendmarini@gmail.com" style="color:#fff;text-decoration:underline">Contactar</a>'
+    : `${days} días de prueba · <a href="mailto:karendmarini@gmail.com" style="color:#fff;text-decoration:underline">Contactar</a>`;
 }
 
 function _updateModelSelector() {
