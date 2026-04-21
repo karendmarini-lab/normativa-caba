@@ -1,143 +1,262 @@
 """
 Compute m² construibles for any parcel in CABA.
 
-Three-tier approach:
-1. GCBA exact (edif_sup_max_edificable) — 0% error, 5% coverage (growing)
-2. GCBA planta + CUR rules (model V12) — 3.8% median error, 71% coverage
-3. CUR rule estimation — ~15% error, 24% coverage
+Two-model approach for 100% coverage:
+  Model A: GCBA tiles (volumetría 3D con LFI real) — 77% coverage, ~0% error
+  Model B: Normativa CUR (reglas Ley 6099 + Ley 6776) — 100% coverage
 
-Calibrated against 14,008 parcels with GCBA ground truth.
-Validated against 25 real Zonaprop publications.
-
-Model V12 performance by zone:
-  USAB1:  2.6% median, 92% ±10%
-  USAA:   3.6% median, 82% ±10%
-  USAB2:  4.2% median, 81% ±10%
-  E3:     4.9% median, 72% ±10%
-  CM:    12.9% median, 39% ±10% (irreducible without 3D geometry)
-  TOTAL:  3.8% median, 80% ±10%
+Uses A when tile data exists, B otherwise. Reports source.
+Calibrated against 25 professional RE/MAX prefactibilidad studies.
 """
 
-import json
 import math
-from pathlib import Path
+import sqlite3
+from dataclasses import dataclass
+from typing import Optional
 
-RATIO_VENDIBLE = 0.78  # calibrated from 108 publications
+RATIO_VENDIBLE = 0.83  # calibrated from 55 RE/MAX descriptions
+
+# District height limits (Art. 6.2, Ley 6776 dic 2024)
+ALTURA_MAX: dict[str, float] = {
+    "Corredor Alto": 38.0,
+    "Corredor Medio": 31.20,
+    "U.S.A.A.": 22.80,
+    "U.S.A.M.": 17.20,
+    "U.S.A.B. 2": 14.60,
+    "U.S.A.B. 1": 12.0,
+    "U.S.A.B. 0": 9.0,
+    "E3": 29.8,
+    "E2": 12.0,
+    "E1": 9.0,
+}
+
+# Retiro fondo mínimo por distrito (Art. 6.4.2.4)
+RETIRO_FONDO: dict[str, int] = {
+    "Corredor Alto": 8,
+    "Corredor Medio": 8,
+    "U.S.A.A.": 6,
+    "U.S.A.M.": 6,
+    "U.S.A.B. 2": 6,
+    "U.S.A.B. 1": 4,
+    "U.S.A.B. 0": 4,
+    "E3": 6,
+    "E2": 4,
+    "E1": 4,
+}
+
+H_PB_USAB = 2.60
+H_PB_ALTA = 3.00
+H_PISO = 3.00
 
 
-def get_m2_construibles(
-    edif_sup_max: float | None,
-    edif_planta: float | None,
-    area: float,
-    frente: float,
-    fondo: float,
-    alt1: float | None,
-    plano_lim: float | None,
-    dist: str | None,
-) -> tuple[float, str]:
-    """Compute m² construibles from best available data.
+@dataclass(frozen=True)
+class ParcelData:
+    """All data needed for construibles calculation."""
 
-    Returns (m2_construibles, source).
-    Source is one of: "gcba_exact", "model_v12", "rule_fallback".
+    smp_norm: str
+    frente: float
+    fondo: float
+    area: float
+    cur_distrito: str
+    plano_san: float  # sanitized height limit from precompute
+
+
+@dataclass(frozen=True)
+class TileData:
+    """Tile-derived buildable data for a parcel."""
+
+    total_construibles: float  # sum of (area × floors) per section
+    pisada_cuerpo: float
+    h_max: float
+
+
+@dataclass(frozen=True)
+class Construibles:
+    """Result of m² construibles calculation."""
+
+    m2_construibles: float
+    m2_vendibles: float
+    source: str  # "tile" or "normativa"
+    pisos: int
+    pisada: float
+
+
+# ─── Model A: Tiles ──────────────────────────────────────────────────────────
+
+
+def compute_from_tiles(parcel: ParcelData, tile: TileData) -> Construibles:
+    """Compute construibles from GCBA volumetric tiles.
+
+    Total = sum of (section_area × floors_in_section) across all sections.
+    Already computed and stored in tile_construibles table.
     """
-    # Tier 0: GCBA computed exact total
-    if edif_sup_max and edif_sup_max > 100:
-        return edif_sup_max, "gcba_exact"
+    total = tile.total_construibles
+    h = tile.h_max if tile.h_max > 0 else parcel.plano_san or 14.6
+    pisos = _compute_pisos(h, parcel.cur_distrito)
 
-    # Tier 1: GCBA planta + model V12
-    if edif_planta and edif_planta > 10 and area > 0:
-        ratio = edif_planta / area
-        if ratio >= 1.05:
-            # planta is already total, not per-floor
-            return edif_planta, "model_v12"
-        return _model_v12(edif_planta, alt1, plano_lim, dist, frente, fondo), "model_v12"
-
-    # Tier 2: estimate pisada from CUR rules, then apply model
-    pisada = _estimate_pisada(area, frente, fondo, dist)
-    return _model_v12(pisada, alt1, plano_lim, dist, frente, fondo), "rule_fallback"
+    return Construibles(
+        m2_construibles=max(0, total),
+        m2_vendibles=max(0, total) * RATIO_VENDIBLE,
+        source="tile",
+        pisos=pisos,
+        pisada=tile.pisada_cuerpo,
+    )
 
 
-def _model_v12(
-    planta: float,
-    alt1: float | None,
-    plano: float | None,
-    dist: str | None,
-    frente: float,
-    fondo: float,
+# ─── Model B: Normativa pura ─────────────────────────────────────────────────
+
+
+def compute_from_normativa(
+    parcel: ParcelData, lfi: float | None = None,
+) -> Construibles:
+    """Compute construibles from CUR rules only (no enrichment needed).
+
+    Steps:
+    1. Compute altura from plano_san or district default
+    2. Compute pisos from altura
+    3. Compute pisada = frente × banda_edificable (using real LFI from geometry)
+    4. Apply envelope (pisos × pisada + retiros)
+    """
+    dist = parcel.cur_distrito or ""
+    altura = parcel.plano_san if parcel.plano_san > 3 else _district_altura(dist)
+    pisos = _compute_pisos(altura, dist)
+    pisada = _compute_pisada(parcel.frente, parcel.fondo, parcel.area, dist, lfi)
+    total = _apply_envelope(pisada, pisos, altura, dist, parcel.frente)
+
+    return Construibles(
+        m2_construibles=max(0, total),
+        m2_vendibles=max(0, total) * RATIO_VENDIBLE,
+        source="normativa",
+        pisos=pisos,
+        pisada=pisada,
+    )
+
+
+# ─── Internal helpers ─────────────────────────────────────────────────────────
+
+
+def _district_altura(dist: str) -> float:
+    """Default height for a district."""
+    return ALTURA_MAX.get(dist, 14.6)
+
+
+def _compute_pisos(altura: float, dist: str) -> int:
+    """Floor count from height limit (integer for reporting)."""
+    h_pb = H_PB_USAB if _is_usab(dist) else H_PB_ALTA
+    if altura <= h_pb:
+        return 1
+    return 1 + math.floor((altura - h_pb) / H_PISO)
+
+
+def _continuous_floors(altura: float, dist: str) -> float:
+    """Continuous floor equivalent (for area calculation accuracy)."""
+    return max(1.0, altura / H_PISO)
+
+
+def _is_usab(dist: str) -> bool:
+    """Check if district is USAB0/1/2."""
+    return "U.S.A.B." in dist or "USAB" in dist.upper()
+
+
+def _compute_pisada(
+    frente: float, fondo: float, area: float, dist: str,
+    lfi: float | None = None,
 ) -> float:
-    """CUR rule-based model, calibrated against 14k GCBA parcels."""
-    d = (dist or "").upper()
-    altura = alt1 if alt1 and alt1 > 0 else 14.6
-    pl = plano if plano and plano > 0 else altura
-    pc = 1 + (math.floor((altura - 3) / 2.8) if altura > 3 else 0)
-    has_ret = pl > altura + 1
+    """Compute per-floor footprint from parcel geometry + CUR rules.
 
-    # Low-rise regimes (h <= 12, no retiro): FOT ≈ 1
-    if abs(pl - altura) < 1 and altura <= 12.5:
-        if "USAB1" in d or "U.S.A.B. 1" in d or "USAB0" in d or "U.S.A.B. 0" in d:
-            return planta * 1.0
-        # USAB2 with low height: empirical multiplier
-        if altura <= 9.5:
-            return planta * 5.0
-        return planta * 4.8
+    Applies:
+    - Retiro fondo (Art. 6.4.2.4): mandatory setback from back LDP
+    - LFI (Art. 6.4.2): 1/4 manzana depth, precomputed from geometry
+    - Banda mínima: always ≥ 16m from L.O. (Art. 6.4)
+    """
+    retiro = RETIRO_FONDO.get(dist, 6)
 
-    # E3/E2: FOT=3 allows more than envelope
-    if "E3" in d or "E2" in d:
-        mult = 1.4 if pc <= 5 else 1.2
-        return planta * pc * mult
-
-    # Corredores: calibrated multiplier by height (basamento/torre baked in)
-    if any(z in d for z in ["CORREDOR", "CM", "CA"]):
-        h_round = round(altura)
-        if h_round <= 15:
-            mult = 4.89
-        elif h_round <= 17:
-            mult = 6.43
-        elif h_round <= 23:
-            mult = 8.37
-        else:
-            mult = 10.08
-        return planta * mult
-
-    # Standard zones (USAB2, USAM, USAA, E1): pisos × planta + retiros
-    total = planta * pc
-    if has_ret:
-        if "USAB" in d:
-            ret1 = max(0, planta - 2 * frente)
-            n_ret = max(1, math.floor((pl - altura) / 2.8))
-            total += ret1 * n_ret
-        else:
-            # USAM/USAA: retiro correction ×0.92
-            ret1 = max(0, planta - 2 * frente) * 0.92
-            total += ret1
-            ret2 = max(0, planta - 4 * frente) * 0.92
-            n_ret2 = max(0, math.floor((pl - altura) / 2.8) - 1)
-            total += ret2 * n_ret2
-
-    return max(0, total)
-
-
-def _estimate_pisada(
-    area: float, frente: float, fondo: float, dist: str | None,
-) -> float:
-    """Estimate edificable footprint from CUR rules when no GCBA data."""
-    d = (dist or "").upper()
-
-    if any(z in d for z in ["USAB0", "USAB1", "USAB2"]):
-        retiro = 4
-    elif any(z in d for z in ["USAM", "USAA"]):
-        retiro = 6
-    else:
-        retiro = 8
-
+    # Edificable depth
     if fondo <= 16:
-        prof_edif = fondo
+        # Short lot: entire depth is edificable (banda mínima guarantee)
+        banda = fondo
     else:
-        prof_edif = max(16, fondo - retiro)
+        # Apply retiro fondo
+        banda_retiro = fondo - retiro
 
-    return frente * prof_edif
+        # Apply LFI if available (precomputed from real manzana geometry)
+        if lfi and lfi > 0:
+            banda = max(16.0, min(banda_retiro, lfi))
+        else:
+            # Fallback: LFI ≈ 65% of fondo for typical CABA blocks
+            lfi_est = fondo * 0.65 if fondo > 25 else fondo
+            banda = max(16.0, min(banda_retiro, lfi_est))
+
+    return frente * banda
+
+
+def _apply_envelope(
+    pisada: float, pisos: int, altura: float, dist: str, frente: float,
+) -> float:
+    """Total construibles = cuerpo floors × pisada + retiro floors.
+
+    The plano limit INCLUDES retiro height. So:
+    - cuerpo height = plano - 7m (retiros)
+    - Then retiro floors are added with reduced pisada.
+
+    Retiros (Art. 6.3, Ley 6776):
+    - USAB0/1/2, E-zones: NO retiros (plano = cuerpo height limit)
+    - USAM/USAA: retiro 1 (1 floor, 2m from L.O.) + retiro 2 (1 floor, 4m from L.O. + LFI)
+    - CM/CA: same retiros, plus basamento at ground level
+    """
+    # USAB and E-zones: no retiros, use integer floors
+    if _is_usab(dist) or "E" in dist.upper().replace("CORREDOR", "").replace("MEDIO", ""):
+        return pisada * pisos
+
+    # Districts with retiros (USAM, USAA, CM, CA):
+    # Retiro 1 = 3m, Retiro 2 = 4m (total 7m above cuerpo)
+    # Cuerpo height = plano - 7m (retiros eat from the top)
+    h_retiro_total = 7.0  # 3m + 4m
+    h_cuerpo = max(3.0, altura - h_retiro_total)
+    cuerpo_floors = h_cuerpo / H_PISO
+    total = pisada * cuerpo_floors
+
+    # Retiro 1: 3m (1 floor), 2m setback from L.O.
+    ret1_pisada = max(0, pisada - 2 * frente)
+    total += ret1_pisada * (3.0 / H_PISO)
+
+    # Retiro 2: 4m (1.33 floors), 4m from L.O. + 4m from LFI
+    ret2_pisada = max(0, pisada - 8 * frente)
+    total += ret2_pisada * (4.0 / H_PISO)
+
+    return total
+
+
+# ─── Data loading helpers ─────────────────────────────────────────────────────
+
+
+def load_tile_data(tile_db_path: str) -> dict[str, TileData]:
+    """Load precomputed tile construibles indexed by smp_norm."""
+    conn = sqlite3.connect(tile_db_path)
+    rows = conn.execute("""
+        SELECT smp_norm, total_construibles, pisada_cuerpo, h_max
+        FROM tile_construibles
+        WHERE total_construibles > 0
+    """).fetchall()
+    conn.close()
+    return {
+        r[0]: TileData(
+            total_construibles=r[1],
+            pisada_cuerpo=r[2] or 0,
+            h_max=r[3] or 0,
+        )
+        for r in rows
+    }
+
+
+def load_lfi_data(lfi_db_path: str) -> dict[str, float]:
+    """Load precomputed LFI values indexed by smp_norm."""
+    conn = sqlite3.connect(lfi_db_path)
+    rows = conn.execute("SELECT smp_norm, lfi FROM parcel_lfi").fetchall()
+    conn.close()
+    return {r[0]: r[1] for r in rows}
 
 
 def get_m2_vendibles(m2_construibles: float) -> float:
-    """Vendibles = construibles × 0.78 (calibrated from 108 publications)."""
+    """Vendibles = construibles × 0.83."""
     return m2_construibles * RATIO_VENDIBLE

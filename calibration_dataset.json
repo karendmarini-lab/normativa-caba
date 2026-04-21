@@ -1,0 +1,152 @@
+[
+  {
+    "smp": "47-125-28A",
+    "direccion": "Leiva 4400",
+    "m2v_real": 675,
+    "has_tile": true
+  },
+  {
+    "smp": "41-89-30A",
+    "direccion": "Conesa 2800",
+    "m2v_real": 1430,
+    "has_tile": true
+  },
+  {
+    "smp": "48-117-14",
+    "direccion": "Alberdi 2400",
+    "m2v_real": 4634,
+    "has_tile": false
+  },
+  {
+    "smp": "35-115-34",
+    "direccion": "JB Justo 755",
+    "m2v_real": 2682,
+    "has_tile": true
+  },
+  {
+    "smp": "10-8-11E",
+    "direccion": "Isabel La Católica",
+    "m2v_real": 9280,
+    "has_tile": true
+  },
+  {
+    "smp": "36-24-46",
+    "direccion": "José Mármol 767",
+    "m2v_real": 3621,
+    "has_tile": false
+  },
+  {
+    "smp": "55-216-13",
+    "direccion": "Ramallo 4200",
+    "m2v_real": 599,
+    "has_tile": false
+  },
+  {
+    "smp": "18-110-11",
+    "direccion": "Vieytes 1200",
+    "m2v_real": 1537,
+    "has_tile": true
+  },
+  {
+    "smp": "17-1-12B",
+    "direccion": "Lezica 4400",
+    "m2v_real": 3166,
+    "has_tile": true
+  },
+  {
+    "smp": "89-12-4",
+    "direccion": "Gral Paz 7300",
+    "m2v_real": 430,
+    "has_tile": true
+  },
+  {
+    "smp": "71-35-21",
+    "direccion": "Nazca 3100",
+    "m2v_real": 1400,
+    "has_tile": true
+  },
+  {
+    "smp": "12-44-21",
+    "direccion": "Belgrano 1200",
+    "m2v_real": 3326,
+    "has_tile": true
+  },
+  {
+    "smp": "22-33-32",
+    "direccion": "Cochabamba 2200",
+    "m2v_real": 5013,
+    "has_tile": true
+  },
+  {
+    "smp": "30-96-38",
+    "direccion": "Jujuy 900",
+    "m2v_real": 1465,
+    "has_tile": true
+  },
+  {
+    "smp": "66-47-2",
+    "direccion": "Castañares 5000",
+    "m2v_real": 1785,
+    "has_tile": true
+  },
+  {
+    "smp": "17-45-6",
+    "direccion": "Sarmiento 4300",
+    "m2v_real": 1676,
+    "has_tile": true
+  },
+  {
+    "smp": "22-27-27",
+    "direccion": "Humberto 1° 2300",
+    "m2v_real": 1301,
+    "has_tile": true
+  },
+  {
+    "smp": "71-53-24",
+    "direccion": "Tinogasta 2800",
+    "m2v_real": 1000,
+    "has_tile": false
+  },
+  {
+    "smp": "47-101-26",
+    "direccion": "Darwin 100",
+    "m2v_real": 874,
+    "has_tile": true
+  },
+  {
+    "smp": "43-101B-3",
+    "direccion": "Ramallo 3100",
+    "m2v_real": 592,
+    "has_tile": false
+  },
+  {
+    "smp": "83-207-2A",
+    "direccion": "Cochrane 3400",
+    "m2v_real": 982,
+    "has_tile": false
+  },
+  {
+    "smp": "5-23-1A",
+    "direccion": "Lavalle 1500",
+    "m2v_real": 1042,
+    "has_tile": true
+  },
+  {
+    "smp": "30-7-13",
+    "direccion": "Boedo 1000",
+    "m2v_real": 1055,
+    "has_tile": true
+  },
+  {
+    "smp": "5-5-33",
+    "direccion": "Rodríguez Peña 400",
+    "m2v_real": 1645,
+    "has_tile": true
+  },
+  {
+    "smp": "85-24-18",
+    "direccion": "Calderón de la Barca",
+    "m2v_real": 527,
+    "has_tile": true
+  }
+]
