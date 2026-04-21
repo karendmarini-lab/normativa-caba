@@ -142,19 +142,21 @@ def compute_from_tiles(parcel: ParcelData, tile: TileData) -> Construibles:
 def compute_from_normativa(
     parcel: ParcelData, lfi: float | None = None,
 ) -> Construibles:
-    """Compute construibles from CUR rules + calibrated depth curve.
+    """Compute construibles from calibrated multiplier table.
 
-    Steps:
-    1. Compute altura from plano_san or district default
-    2. Compute pisos from altura
-    3. Compute pisada from depth curve (calibrated on 170k tiles)
-    4. Apply envelope (pisos × pisada + retiros)
+    construibles = frente × fondo × pisos × multiplier(distrito, fondo)
+
+    Multiplier table calibrated from 193k tile parcels (median per bucket).
+    Captures LFI, retiros, and envelope effects in a single empirical value.
     """
     dist = parcel.cur_distrito or ""
     altura = parcel.plano_san if parcel.plano_san > 3 else _district_altura(dist)
     pisos = _compute_pisos(altura, dist)
-    pisada = _compute_pisada(parcel.frente, parcel.fondo, parcel.area, dist, lfi)
-    total = _apply_envelope(pisada, pisos, altura, dist, parcel.frente)
+
+    # Direct multiplier from calibration table
+    mult = _get_multiplier(dist, parcel.fondo)
+    total = parcel.frente * parcel.fondo * pisos * mult
+    pisada = parcel.frente * parcel.fondo * mult
 
     ratio = _compute_ratio(total, parcel.area)
     return Construibles(
@@ -196,52 +198,104 @@ def _compute_pisada(
     frente: float, fondo: float, area: float, dist: str,
     lfi: float | None = None,
 ) -> float:
-    """Compute per-floor footprint from LFI + calibrated depth curve.
+    """Compute per-floor footprint.
 
-    Two sources blended:
-    1. LFI from manzana geometry (parcel-specific, ×0.92 calibration)
-    2. Depth curve from 170k tiles (universal average by fondo)
-
-    Uses LFI when available (better per-parcel accuracy), capped by
-    depth curve to prevent overestimates on shallow lots.
+    Not used when CONSTR_MULTIPLIER is available (compute_from_normativa
+    uses the multiplier table directly). Kept as fallback for districts
+    not in the table.
     """
-    # Depth from universal curve (always available)
-    depth_curve = fondo * _depth_fraction(fondo)
-
-    if lfi and lfi > 0:
-        # LFI from manzana geometry, calibrated ×0.92
-        depth_lfi = min(fondo, lfi * 0.92)
-        # Use LFI but cap with curve (+10% tolerance)
-        banda = min(depth_lfi, depth_curve * 1.10)
-    else:
-        banda = depth_curve
-
-    return frente * max(16.0, banda)
+    depth = fondo * _constr_multiplier_fallback(fondo)
+    return frente * max(16.0, depth)
 
 
-# Depth fraction curve: calibrated from 170k tile parcels (all districts)
-# depth = fondo × fraction. Interpolated linearly between control points.
-_DEPTH_CURVE = [
-    (10, 0.94), (15, 0.94), (20, 0.93),  # shallow: nearly full fondo
-    (25, 0.81), (30, 0.69),               # LFI starts constraining
-    (35, 0.61), (40, 0.53),               # LFI dominates
-    (50, 0.50), (65, 0.45),               # deep: ~half fondo
-]
+def _constr_multiplier_fallback(fondo: float) -> float:
+    """Fallback depth fraction when district not in multiplier table."""
+    if fondo <= 15:
+        return 0.90
+    if fondo <= 20:
+        return 0.90
+    if fondo >= 50:
+        return 0.48
+    # Linear interpolation 20→50
+    return 0.90 - (fondo - 20) * (0.90 - 0.48) / (50 - 20)
 
 
-def _depth_fraction(fondo: float) -> float:
-    """Interpolate edificable depth fraction from calibrated curve."""
-    if fondo <= _DEPTH_CURVE[0][0]:
-        return _DEPTH_CURVE[0][1]
-    if fondo >= _DEPTH_CURVE[-1][0]:
-        return _DEPTH_CURVE[-1][1]
-    for i in range(len(_DEPTH_CURVE) - 1):
-        f1, r1 = _DEPTH_CURVE[i]
-        f2, r2 = _DEPTH_CURVE[i + 1]
-        if fondo <= f2:
-            t = (fondo - f1) / (f2 - f1)
-            return r1 + t * (r2 - r1)
-    return _DEPTH_CURVE[-1][1]
+# Construibles multiplier: tile_construibles / (frente × fondo × pisos)
+# Calibrated from 193k tile parcels (median per district × fondo bucket)
+CONSTR_MULTIPLIER: dict[tuple[str, int], float] = {
+    ("Corredor Alto", 10): 0.960, ("Corredor Alto", 15): 0.976,
+    ("Corredor Alto", 20): 0.940, ("Corredor Alto", 25): 0.896,
+    ("Corredor Alto", 30): 0.859, ("Corredor Alto", 35): 0.743,
+    ("Corredor Alto", 40): 0.633, ("Corredor Alto", 45): 0.547,
+    ("Corredor Alto", 50): 0.528, ("Corredor Alto", 55): 0.505,
+    ("Corredor Alto", 60): 0.500, ("Corredor Alto", 65): 0.493,
+    ("Corredor Alto", 70): 0.394,
+    ("Corredor Medio", 10): 0.871, ("Corredor Medio", 15): 0.892,
+    ("Corredor Medio", 20): 0.876, ("Corredor Medio", 25): 0.800,
+    ("Corredor Medio", 30): 0.701, ("Corredor Medio", 35): 0.613,
+    ("Corredor Medio", 40): 0.546, ("Corredor Medio", 45): 0.516,
+    ("Corredor Medio", 50): 0.490, ("Corredor Medio", 55): 0.479,
+    ("Corredor Medio", 60): 0.454, ("Corredor Medio", 65): 0.448,
+    ("Corredor Medio", 70): 0.399,
+    ("E1", 10): 0.976, ("E1", 15): 0.977, ("E1", 20): 0.927,
+    ("E1", 25): 0.800, ("E1", 30): 0.709, ("E1", 35): 0.617,
+    ("E1", 40): 0.577, ("E1", 45): 0.528, ("E1", 50): 0.432,
+    ("E1", 55): 0.512, ("E1", 60): 0.482, ("E1", 70): 0.471,
+    ("E2", 10): 0.917, ("E2", 15): 0.928, ("E2", 20): 0.940,
+    ("E2", 25): 0.858, ("E2", 30): 0.710, ("E2", 35): 0.651,
+    ("E2", 40): 0.625, ("E2", 45): 0.548, ("E2", 50): 0.554,
+    ("E2", 55): 0.521, ("E2", 60): 0.475, ("E2", 65): 0.475,
+    ("E2", 70): 0.493,
+    ("E3", 10): 0.909, ("E3", 15): 0.921, ("E3", 20): 0.921,
+    ("E3", 25): 0.814, ("E3", 30): 0.708, ("E3", 35): 0.651,
+    ("E3", 40): 0.584, ("E3", 45): 0.521, ("E3", 50): 0.498,
+    ("E3", 55): 0.473, ("E3", 60): 0.472, ("E3", 65): 0.451,
+    ("E3", 70): 0.437,
+    ("U.S.A.A.", 10): 0.902, ("U.S.A.A.", 15): 0.926,
+    ("U.S.A.A.", 20): 0.897, ("U.S.A.A.", 25): 0.808,
+    ("U.S.A.A.", 30): 0.710, ("U.S.A.A.", 35): 0.625,
+    ("U.S.A.A.", 40): 0.557, ("U.S.A.A.", 45): 0.515,
+    ("U.S.A.A.", 50): 0.507, ("U.S.A.A.", 55): 0.498,
+    ("U.S.A.A.", 60): 0.466, ("U.S.A.A.", 65): 0.456,
+    ("U.S.A.A.", 70): 0.409,
+    ("U.S.A.B. 1", 10): 0.931, ("U.S.A.B. 1", 15): 0.937,
+    ("U.S.A.B. 1", 20): 0.921, ("U.S.A.B. 1", 25): 0.814,
+    ("U.S.A.B. 1", 30): 0.674, ("U.S.A.B. 1", 35): 0.612,
+    ("U.S.A.B. 1", 40): 0.504, ("U.S.A.B. 1", 45): 0.493,
+    ("U.S.A.B. 1", 50): 0.496, ("U.S.A.B. 1", 55): 0.481,
+    ("U.S.A.B. 1", 60): 0.474, ("U.S.A.B. 1", 65): 0.436,
+    ("U.S.A.B. 1", 70): 0.411,
+    ("U.S.A.B. 2", 10): 0.911, ("U.S.A.B. 2", 15): 0.922,
+    ("U.S.A.B. 2", 20): 0.904, ("U.S.A.B. 2", 25): 0.723,
+    ("U.S.A.B. 2", 30): 0.631, ("U.S.A.B. 2", 35): 0.572,
+    ("U.S.A.B. 2", 40): 0.497, ("U.S.A.B. 2", 45): 0.483,
+    ("U.S.A.B. 2", 50): 0.477, ("U.S.A.B. 2", 55): 0.465,
+    ("U.S.A.B. 2", 60): 0.444, ("U.S.A.B. 2", 65): 0.437,
+    ("U.S.A.B. 2", 70): 0.382,
+}
+
+
+def _get_multiplier(dist: str, fondo: float) -> float:
+    """Get construibles multiplier from calibration table.
+
+    Interpolates between fondo buckets for the given district.
+    Falls back to cross-district average if district not in table.
+    """
+    fb_lo = max(10, int(fondo / 5) * 5)
+    fb_hi = fb_lo + 5
+
+    m_lo = CONSTR_MULTIPLIER.get((dist, fb_lo))
+    m_hi = CONSTR_MULTIPLIER.get((dist, min(70, fb_hi)))
+
+    if m_lo is not None and m_hi is not None:
+        t = (fondo - fb_lo) / 5.0
+        return m_lo + t * (m_hi - m_lo)
+    if m_lo is not None:
+        return m_lo
+    if m_hi is not None:
+        return m_hi
+
+    return _constr_multiplier_fallback(fondo)
 
 
 def _apply_envelope(
