@@ -23,7 +23,7 @@ ZP_DB = "zonaprop.db"
 ED_DB = "caba_normativa.db"
 
 # Calibrated from 108 listings with both construible and vendible
-RATIO_VENDIBLE = 0.78
+RATIO_VENDIBLE = 0.80  # average of density-based ratio (0.86→0.60)
 
 # Construction cost USD/m² by floor count
 COST_PER_M2 = {3: 1050, 7: 1300, 12: 1550, 99: 1800}

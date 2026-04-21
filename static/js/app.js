@@ -224,7 +224,7 @@ function showParcelDetail(addr, parcel, lat, lng) {
   $('res-plano').textContent = planoSan || '—';
 
   if (planoSan > 0) {
-    const pisos = Math.max(1, 1 + Math.floor((planoSan - 3.30) / 2.90));
+    const pisos = Math.max(1, 1 + Math.floor((planoSan - 3.00) / 3.00));
     $('res-pis').textContent = pisos <= 1 ? 'PB' : `PB + ${pisos - 1}`;
     const u = $('res-pis').closest?.('.card')?.querySelector('.card-unit');
     if (u) u.textContent = `pisos · PL ${planoSan}m`;
@@ -367,7 +367,7 @@ function setupCalculator(parcel, planoSan) {
   }
 
   const altRef = planoSan > 0 ? planoSan : (parcel.h || 0);
-  _pisosEstimados = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.30) / 2.90)) : 1;
+  _pisosEstimados = altRef > 0 ? Math.max(1, 1 + Math.floor((altRef - 3.00) / 3.00)) : 1;
   _planoSanitizado = planoSan;
   _frente = parcel.fr || 0;
   _fondo = parcel.fo || 0;
@@ -377,13 +377,13 @@ function setupCalculator(parcel, planoSan) {
   let pisadaCalc, bandaLabel;
 
   if (fr > 0 && fo > 0) {
-    if (fo <= 16) {
-      pisadaCalc = Math.min(Math.round(fr * fo), Math.round(area));
-      bandaLabel = `${fr.toFixed(2)} x ${fo.toFixed(2)} m (100%)`;
-    } else {
-      pisadaCalc = Math.min(Math.round(fr * 22), Math.round(area));
-      bandaLabel = `${fr.toFixed(2)} x 22 m (LFI)`;
-    }
+    // Depth curve calibrated from 193k tile parcels
+    const depthFrac = fo <= 10 ? 0.66 : fo <= 15 ? 0.75 : fo <= 20 ? 0.90
+      : fo <= 25 ? 0.78 : fo <= 30 ? 0.67 : fo <= 35 ? 0.60
+      : fo <= 40 ? 0.52 : fo <= 50 ? 0.49 : 0.44;
+    const banda = Math.max(16, fo * depthFrac);
+    pisadaCalc = Math.min(Math.round(fr * banda), Math.round(area));
+    bandaLabel = `${fr.toFixed(1)} x ${banda.toFixed(1)} m (${Math.round(depthFrac*100)}%)`;
   } else {
     pisadaCalc = Math.round(area * 0.65);
     bandaLabel = 'estimado 65%';
@@ -421,13 +421,12 @@ export function recalculate() {
     modoAtipica = true;
   } else {
     const pbVal = parseFloat(pbInput.value) || 0;
-    nuevaPisada = pbVal > 0 ? pbVal
-      : (_fondo <= 16 ? areaLote : Math.min(_frente * 22, areaLote));
+    nuevaPisada = pbVal > 0 ? pbVal : areaLote;
   }
   if (nuevaPisada <= 0 || _pisosEstimados <= 0) return;
 
   const lblPisada = $('c-pb')?.closest('.citem')?.querySelector('.cunit');
-  if (lblPisada) lblPisada.textContent = modoAtipica ? '⬡ Dato Oficial: Manzana Atípica' : '✦ Calculado: LFI a 22m';
+  if (lblPisada) lblPisada.textContent = modoAtipica ? '⬡ Dato Oficial: Manzana Atípica' : '✦ Calculado: curva profundidad';
 
   const profEdificio = _frente > 0 ? nuevaPisada / _frente : 20;
 
@@ -443,10 +442,12 @@ export function recalculate() {
     volumen = nuevaPisada * _pisosEstimados;
   }
 
-  // Dynamic efficiency
-  let eficiencia = 0.85;
-  if (profEdificio <= 13) eficiencia = 0.88;
-  else if (profEdificio > 18) eficiencia = 0.82;
+  // Density-based efficiency (calibrated from 30 professional studies)
+  const density = areaLote > 0 ? volumen / areaLote : 5;
+  let eficiencia;
+  if (density <= 5) eficiencia = 0.86;
+  else if (density >= 12) eficiencia = 0.60;
+  else eficiencia = 0.86 - (density - 5) * (0.86 - 0.60) / (12 - 5);
 
   const vendibleCubierto = volumen * eficiencia;
 

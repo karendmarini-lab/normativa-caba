@@ -1,9 +1,12 @@
-"""Update sup_vendible for all parcels using best available model.
+"""Update ALL derived columns for all parcels using best available model.
+
+Updates: sup_vendible, m2_construibles, m2_vendibles_source,
+         pisos, pisada, vol_edificable, fot.
 
 Priority: Model A (tiles) when available, Model B (normativa) otherwise.
-Also stores m2_construibles and model source for transparency.
 """
 
+import math
 import sqlite3
 import time
 
@@ -69,17 +72,28 @@ def main() -> None:
             source = "normativa"
             norm_count += 1
 
+        # Derived columns consistent with app.js
+        pisos = result.pisos
+        pisada = round(result.pisada, 1)
+        vol_edif = round(result.m2_construibles, 1)
+        fot = round(result.m2_construibles / area, 2) if area > 0 else 0
+
         batch.append((
             round(result.m2_vendibles, 1),
             round(result.m2_construibles, 1),
             source,
+            pisos,
+            pisada,
+            vol_edif,
+            fot,
             smp,
         ))
 
         if len(batch) >= 5000 or i == len(rows) - 1:
             conn.executemany(
                 """UPDATE parcelas
-                   SET sup_vendible = ?, m2_construibles = ?, m2_vendibles_source = ?
+                   SET sup_vendible = ?, m2_construibles = ?, m2_vendibles_source = ?,
+                       pisos = ?, pisada = ?, vol_edificable = ?, fot = ?
                    WHERE smp_norm = ?""",
                 batch,
             )
@@ -96,15 +110,17 @@ def main() -> None:
 
     # Verify
     stats = conn.execute("""
-        SELECT m2_vendibles_source, COUNT(*), ROUND(AVG(sup_vendible), 0)
+        SELECT m2_vendibles_source, COUNT(*), ROUND(AVG(sup_vendible), 0),
+               ROUND(AVG(pisos), 1), ROUND(AVG(vol_edificable), 0)
         FROM parcelas
         WHERE pisos >= 1 AND cur_distrito IS NOT NULL AND cur_distrito != ''
         GROUP BY m2_vendibles_source
     """).fetchall()
 
     print(f"\nDone. {tile_count:,} tile + {norm_count:,} normativa = {tile_count+norm_count:,}")
-    for source, n, avg in stats:
-        print(f"  {source}: {n:,} parcels, avg {avg:,.0f} m²v")
+    for source, n, avg_v, avg_p, avg_vol in stats:
+        print(f"  {source}: {n:,} parcels, avg {avg_v:,.0f} m²v, "
+              f"{avg_p:.1f} pisos, {avg_vol:,.0f} vol")
 
     conn.close()
 

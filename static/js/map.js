@@ -32,9 +32,9 @@ const METRICS = [
   { id: 'delta', label: 'Delta oportunidad',
     desc: 'Plano Límite (CUR) − Altura construida (tejido fotogramétrico GCBA), en metros. Parcelas sin dato de tejido se excluyen. Fuente: CUR Ley 6099/2018, relevamiento fotogramétrico GCBA.' },
   { id: 'vol', label: 'm² vendibles',
-    desc: 'vol_edificable en m². Pisada × pisos × 0.85. Pisada = frente × min(fondo, 22m) si fondo > 16m. Pisos = 1 + floor((PL − 3.30) / 2.90). Fuente: EPOK catastro GCBA.' },
+    desc: 'sup_vendible en m². Tiles GCBA cuando disponible, normativa CUR cuando no. Eficiencia variable por densidad (86%→60%). Calibrado contra 46 estudios profesionales.' },
   { id: 'pisos', label: 'Pisos',
-    desc: 'Pisos permitidos: 1 + floor((PL − 3.30) / 2.90). PB = 3.30m, piso tipo = 2.90m. No contempla premios, enrase ni basamento diferenciado. Fuente: CUR Ley 6099/2018.' },
+    desc: 'Pisos permitidos: 1 + floor((PL − 3) / 3). PB = 3m, piso tipo = 3m. Fuente: CUR Ley 6099/2018.' },
   { id: 'area', label: 'Superficie',
     desc: 'Área del lote en m² según catastro EPOK/AGIP. Sin transformación.' },
 ];

@@ -84,10 +84,10 @@ def calcular_plano_sanitizado(h: float, plano: float) -> float:
 
 
 def calcular_pisos(plano_san: float) -> int:
-    """Floor estimation from index.html:831. PB=3.30m, typical=2.90m."""
+    """Floor estimation. PB=3.00m, piso tipo=3.00m."""
     if plano_san <= 0:
         return 0
-    return max(1, 1 + int((plano_san - 3.30) / 2.90))
+    return max(1, 1 + int((plano_san - 3.00) / 3.00))
 
 
 def calcular_edificabilidad(
