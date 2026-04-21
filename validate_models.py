@@ -20,7 +20,6 @@ from buildable import (
     compute_from_tiles,
     load_lfi_data,
     load_tile_data,
-    RATIO_VENDIBLE,
 )
 
 NORMATIVA_DB = "caba_normativa.db"
