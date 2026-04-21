@@ -29,7 +29,7 @@
     .logo-wordmark{font-size:1.6rem;font-weight:200;letter-spacing:5px;text-transform:uppercase;line-height:1;color:#fff;display:flex;align-items:center}
     .logo-e{margin-right:2px;display:inline-block;vertical-align:middle}
     .logo-wordmark em{color:var(--accent);font-style:normal}
-    .branding-signature{font-size:7px;text-transform:uppercase;color:rgba(255,255,255,.25);
+    .branding-signature{font-size:7px;text-transform:uppercase;color:#fff;
       font-weight:300;line-height:1;letter-spacing:4px;margin-top:3px}
     .header-nav{display:flex;gap:24px}
     .header-nav a{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
@@ -272,6 +272,11 @@
       outline: 1px solid transparent;
       border: none !important;
       margin: -1px;
+      filter: brightness(1.1) contrast(1.05);
+    }
+    /* Etiquetas invertidas → blanco brillante sobre fondo oscuro */
+    .map-labels-layer img {
+      filter: invert(1) brightness(1.4) !important;
     }
     .leaflet-container { background: #000 !important; }
     #open-full-report {
@@ -910,7 +915,7 @@
       <!-- LOGO INSTITUCIONAL -->
       <div style="display:flex;flex-direction:column;margin-bottom:40px">
         <div style="font-size:2.2rem;font-weight:200;letter-spacing:5px;text-transform:uppercase;line-height:1;color:#fff;display:flex;align-items:center"><svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg" style="margin-right:2px;vertical-align:middle"><rect x="0.75" y="0.75" width="42.5" height="42.5" fill="none" stroke="rgba(255,255,255,.8)" stroke-width="1.5"/><path d="M14 10 L14 34 M14 10 L30 10 M14 22 L28 22 M14 34 L30 34" stroke="#fff" stroke-width="1.5" fill="none"/></svg>DIFIC<em style="color:var(--accent);font-style:normal">IA</em></div>
-        <small style="font-size:7px;text-transform:uppercase;color:rgba(255,255,255,.25);font-weight:300;letter-spacing:4px;margin-top:3px">KAREN MARINI</small>
+        <small style="font-size:7px;text-transform:uppercase;color:#fff;font-weight:300;letter-spacing:4px;margin-top:3px">KAREN MARINI</small>
       </div>
 
       <!-- MÓDULO HERO: dirección + mapa -->

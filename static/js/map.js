@@ -82,10 +82,17 @@ export function initMap(containerId, callbacks = {}) {
   }).setView(CABA_CENTER, CABA_ZOOM);
 
   L.control.zoom({ position: 'topright' }).addTo(_map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  // Base: fondo oscuro sin etiquetas
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd',
     maxZoom: 19,
     opacity: 0.85,
+  }).addTo(_map);
+  // Etiquetas: capa transparente con labels oscuros → CSS invert → blanco brillante
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    className: 'map-labels-layer',
   }).addTo(_map);
 
   return _map;
