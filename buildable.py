@@ -27,20 +27,17 @@ CIRC_BASE = 16  # 1 stair + elevator + palier + walls
 CIRC_EXTRA_STAIR = 6  # 2nd stair required if H > 12m
 
 
-def _compute_ratio(construibles: float, area: float) -> float:
+def _compute_ratio(construibles: float, area: float, **_kwargs) -> float:
     """Compute vendible/construible ratio from building density.
 
     density = construibles / area (≈ effective floor count).
-    Higher density → taller building → more losses to:
-    - CUR mandatory patios (Art. 6.4.4: d ≥ H/1.5)
-    - Circulation (stairs, elevator, palier)
-    - Parking, lobbies, mechanical rooms
+    Higher density → more losses to CUR patios, circulation, parking, lobbies.
 
     Calibrated from 25 RE/MAX professional studies:
-      density < 5: avg 0.88 (n=5)
+      density ≤ 5: 0.88 (low-rise, minimal common areas)
       density 5-9: linear interpolation
-      density ≥ 9: avg 0.65 (n=6)
-    Validated: Estomba 3569 (Bercovich) density=3.47 → ratio=0.88, real=0.845.
+      density ≥ 9: 0.65 (high-rise, large common area overhead)
+    Validated: Estomba 3569 (Bercovich) density=3.47 → 0.88, real=0.845.
     """
     density = construibles / area if area > 0 else 5.0
     if density <= 5.0:
@@ -215,12 +212,13 @@ def _compute_pisada(
         banda_retiro = fondo - retiro
 
         # Apply LFI if available (precomputed from real manzana geometry)
+        # Correction: LFI from bounding rectangle is ~8% generous vs tiles
+        # (calibrated on 60k deep parcels: tile_depth / my_banda = 0.91)
         if lfi and lfi > 0:
-            banda = max(16.0, min(banda_retiro, lfi))
+            banda = max(16.0, min(banda_retiro, lfi * 0.92))
         else:
-            # Fallback: LFI ≈ 65% of fondo for typical CABA blocks
             lfi_est = fondo * 0.65 if fondo > 25 else fondo
-            banda = max(16.0, min(banda_retiro, lfi_est))
+            banda = max(16.0, min(banda_retiro, lfi_est * 0.92))
 
     return frente * banda
 
