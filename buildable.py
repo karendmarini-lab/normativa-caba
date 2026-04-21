@@ -27,7 +27,7 @@ CIRC_BASE = 16  # 1 stair + elevator + palier + walls
 CIRC_EXTRA_STAIR = 6  # 2nd stair required if H > 12m
 
 
-def _compute_ratio(construibles: float, area: float, **_kwargs) -> float:
+def _compute_ratio(construibles: float, area: float, **kwargs) -> float:
     """Compute vendible/construible ratio from building density.
 
     density = construibles / area (≈ effective floor count).
@@ -39,8 +39,10 @@ def _compute_ratio(construibles: float, area: float, **_kwargs) -> float:
       density ≥ 9: 0.65 (high-rise, large common area overhead)
     Validated: Estomba 3569 (Bercovich) density=3.47 → 0.88, real=0.845.
     """
-    # Calibrated from 30 clean professional studies (grid search, 83% ±20%).
-    # Cross-val measures construibles not ratio — ratio validated here only.
+    # Density-based ratio: 83% ±20% on 30 clean RE/MAX studies.
+    # Analytical model (CE rules) scores 94% on 120 Guimat professional studies
+    # but those measure vendible cubierto, not vendible total.
+    # Density model is more robust for marketing-grade m²v numbers.
     density = construibles / area if area > 0 else 5.0
     if density <= 5.0:
         return 0.86
@@ -126,7 +128,8 @@ def compute_from_tiles(parcel: ParcelData, tile: TileData) -> Construibles:
     h = tile.h_max if tile.h_max > 0 else parcel.plano_san or 14.6
     pisos = _compute_pisos(h, parcel.cur_distrito)
 
-    ratio = _compute_ratio(total, parcel.area)
+    ratio = _compute_ratio(total, parcel.area, pisada=tile.pisada_cuerpo,
+                           frente=parcel.frente, altura=h)
     return Construibles(
         m2_construibles=max(0, total),
         m2_vendibles=max(0, total) * ratio,
@@ -158,7 +161,8 @@ def compute_from_normativa(
     total = parcel.frente * parcel.fondo * pisos * mult
     pisada = parcel.frente * parcel.fondo * mult
 
-    ratio = _compute_ratio(total, parcel.area)
+    ratio = _compute_ratio(total, parcel.area, pisada=pisada,
+                           frente=parcel.frente, altura=altura)
     return Construibles(
         m2_construibles=max(0, total),
         m2_vendibles=max(0, total) * ratio,
