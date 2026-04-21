@@ -140,12 +140,12 @@ def compute_from_tiles(parcel: ParcelData, tile: TileData) -> Construibles:
 def compute_from_normativa(
     parcel: ParcelData, lfi: float | None = None,
 ) -> Construibles:
-    """Compute construibles from CUR rules only (no enrichment needed).
+    """Compute construibles from CUR rules + calibrated depth curve.
 
     Steps:
     1. Compute altura from plano_san or district default
     2. Compute pisos from altura
-    3. Compute pisada = frente × banda_edificable (using real LFI from geometry)
+    3. Compute pisada from depth curve (calibrated on 170k tiles)
     4. Apply envelope (pisos × pisada + retiros)
     """
     dist = parcel.cur_distrito or ""
@@ -194,28 +194,52 @@ def _compute_pisada(
     frente: float, fondo: float, area: float, dist: str,
     lfi: float | None = None,
 ) -> float:
-    """Compute per-floor footprint from parcel geometry + CUR rules.
+    """Compute per-floor footprint from LFI + calibrated depth curve.
 
-    Applies:
-    - Retiro fondo (Art. 6.4.2.4): mandatory setback from back LDP
-    - LFI (Art. 6.4.2): 1/4 manzana depth, precomputed from geometry
-    - Banda mínima: always ≥ 16m from L.O. (Art. 6.4)
+    Two sources blended:
+    1. LFI from manzana geometry (parcel-specific, ×0.92 calibration)
+    2. Depth curve from 170k tiles (universal average by fondo)
+
+    Uses LFI when available (better per-parcel accuracy), capped by
+    depth curve to prevent overestimates on shallow lots.
     """
-    # Edificable depth: constrained by LFI only.
-    # CUR retiro fondo is redundant — LFI already captures the setback.
-    # (Validated on 170k tile parcels: retiro real ≈ 1m for shallow lots,
-    #  scales with fondo for deep lots, matching LFI constraint exactly.)
-    if fondo <= 16:
-        banda = fondo  # banda mínima guarantee
-    elif lfi and lfi > 0:
-        # LFI from manzana geometry, calibrated ×0.92 vs tiles
-        banda = max(16.0, min(fondo, lfi * 0.92))
-    else:
-        # Fallback: LFI ≈ 65% of fondo for typical CABA blocks
-        lfi_est = fondo * 0.65 if fondo > 25 else fondo
-        banda = max(16.0, min(fondo, lfi_est * 0.92))
+    # Depth from universal curve (always available)
+    depth_curve = fondo * _depth_fraction(fondo)
 
-    return frente * banda
+    if lfi and lfi > 0:
+        # LFI from manzana geometry, calibrated ×0.92
+        depth_lfi = min(fondo, lfi * 0.92)
+        # Use LFI but cap with curve (+10% tolerance)
+        banda = min(depth_lfi, depth_curve * 1.10)
+    else:
+        banda = depth_curve
+
+    return frente * max(16.0, banda)
+
+
+# Depth fraction curve: calibrated from 170k tile parcels (all districts)
+# depth = fondo × fraction. Interpolated linearly between control points.
+_DEPTH_CURVE = [
+    (10, 0.94), (15, 0.94), (20, 0.93),  # shallow: nearly full fondo
+    (25, 0.81), (30, 0.69),               # LFI starts constraining
+    (35, 0.61), (40, 0.53),               # LFI dominates
+    (50, 0.50), (65, 0.45),               # deep: ~half fondo
+]
+
+
+def _depth_fraction(fondo: float) -> float:
+    """Interpolate edificable depth fraction from calibrated curve."""
+    if fondo <= _DEPTH_CURVE[0][0]:
+        return _DEPTH_CURVE[0][1]
+    if fondo >= _DEPTH_CURVE[-1][0]:
+        return _DEPTH_CURVE[-1][1]
+    for i in range(len(_DEPTH_CURVE) - 1):
+        f1, r1 = _DEPTH_CURVE[i]
+        f2, r2 = _DEPTH_CURVE[i + 1]
+        if fondo <= f2:
+            t = (fondo - f1) / (f2 - f1)
+            return r1 + t * (r2 - r1)
+    return _DEPTH_CURVE[-1][1]
 
 
 def _apply_envelope(
