@@ -1,0 +1,57 @@
+[
+  {
+    "id": 2522,
+    "m2v": 577.6,
+    "m2c": 777.6,
+    "terreno": 196.31,
+    "frente": 8.67,
+    "distrito": "USAB 2",
+    "altura": 14.6,
+    "pisos": "PB + 4 PISOS",
+    "lfi": 17.47
+  },
+  {
+    "id": 2532,
+    "m2v": 953.0,
+    "m2c": 1291.0,
+    "terreno": 184.0,
+    "frente": 10.49,
+    "distrito": "USAM",
+    "altura": 17.2,
+    "pisos": "PB + 5 PISOS + 2 RETIROS",
+    "lfi": 17.2
+  },
+  {
+    "id": 2545,
+    "m2v": 884.65,
+    "m2c": 1223.65,
+    "terreno": 170.87,
+    "frente": 8.63,
+    "distrito": "USAM",
+    "altura": 17.2,
+    "pisos": "PB + 5 PISOS + 2 RETIROS",
+    "lfi": 17.2
+  },
+  {
+    "id": 2589,
+    "m2v": 1404.0,
+    "m2c": 1905.0,
+    "terreno": 254.32,
+    "frente": 9.0,
+    "distrito": "USAA",
+    "altura": 22.8,
+    "pisos": "PB + 7 PISOS + 2 RETIROS",
+    "lfi": 25.0
+  },
+  {
+    "id": 2590,
+    "m2v": 739.16,
+    "m2c": 1039.16,
+    "terreno": 127.0,
+    "frente": 8.54,
+    "distrito": "USAM",
+    "altura": 17.2,
+    "pisos": "PB + 5 PISOS + 2 RETIROS",
+    "lfi": 17.2
+  }
+]

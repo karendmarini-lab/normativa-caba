@@ -273,5 +273,11 @@
     "m2v_real": 945,
     "source": "factibilidad_img",
     "has_tile": true
+  },
+  {
+    "smp": "63-125-19",
+    "m2v_real": 990,
+    "source": "factibilidad_img",
+    "has_tile": true
   }
 ]
