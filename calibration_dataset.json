@@ -148,5 +148,40 @@
     "direccion": "Calderón de la Barca",
     "m2v_real": 527,
     "has_tile": true
+  },
+  {
+    "smp": "19-3-36",
+    "direccion": "Lavalle 3900",
+    "m2v_real": 2065,
+    "has_tile": true,
+    "source": "remax_img"
+  },
+  {
+    "smp": "25-19-2C",
+    "direccion": "",
+    "m2v_real": 1363,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "85-22-40D",
+    "direccion": "",
+    "m2v_real": 760,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "47-143-26",
+    "direccion": "",
+    "m2v_real": 690,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "17-36-23",
+    "direccion": "",
+    "m2v_real": 1425,
+    "has_tile": true,
+    "source": "factibilidad_img"
   }
 ]

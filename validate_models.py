@@ -26,7 +26,7 @@ NORMATIVA_DB = "caba_normativa.db"
 TILE_DB = "tile_volumen_v3.db"
 LFI_DB = "lfi_data.db"
 
-# 25 RE/MAX professional studies (m²v real from prefactibilidad images)
+# 30 professional studies (m²v real from prefactibilidad images)
 REMAX_STUDIES = [
     ("47-125-28A", 675),
     ("41-89-30A", 1430),
@@ -53,6 +53,12 @@ REMAX_STUDIES = [
     ("30-7-13", 1055),
     ("5-5-33", 1645),
     ("85-24-18", 527),
+    # New from image scraping (this session)
+    ("19-3-36", 2065),
+    ("25-19-2C", 1363),
+    ("85-22-40D", 760),
+    ("47-143-26", 690),
+    ("17-36-23", 1425),
 ]
 
 
