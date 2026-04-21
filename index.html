@@ -274,9 +274,9 @@
       margin: -1px;
       filter: brightness(1.1) contrast(1.05);
     }
-    /* Etiquetas off-white sedoso (#CCCCCC aprox) — sin invert agresivo */
+    /* Etiquetas blanco hueso ~#E8E8E8: invert(negro→blanco) + brightness(0.91) */
     .map-labels-layer img {
-      filter: brightness(0.78) contrast(0.85) !important;
+      filter: invert(1) brightness(0.91) grayscale(1) !important;
     }
     .leaflet-container { background: #000 !important; }
     #open-full-report {
