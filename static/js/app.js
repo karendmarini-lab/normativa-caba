@@ -799,8 +799,8 @@ function openFullReport() {
         maxZoom: 20,
         crossOrigin: 'anonymous',
       }).addTo(rmap);
-      // Etiquetas blancas (light_only_labels + CSS invert)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+      // Etiquetas: dark_only_labels → off-white suave vía CSS
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         crossOrigin: 'anonymous',
         className: 'map-labels-layer',
