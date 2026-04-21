@@ -88,8 +88,8 @@ export function initMap(containerId, callbacks = {}) {
     maxZoom: 19,
     opacity: 0.85,
   }).addTo(_map);
-  // Etiquetas: capa transparente con labels oscuros → CSS invert → blanco brillante
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+  // Etiquetas: dark_only_labels (ya son claras sobre transparente) → filtro suave → off-white
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png', {
     subdomains: 'abcd',
     maxZoom: 19,
     className: 'map-labels-layer',
