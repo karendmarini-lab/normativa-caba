@@ -39,6 +39,8 @@ def _compute_ratio(construibles: float, area: float, **_kwargs) -> float:
       density ≥ 9: 0.65 (high-rise, large common area overhead)
     Validated: Estomba 3569 (Bercovich) density=3.47 → 0.88, real=0.845.
     """
+    # Calibrated from 25 RE/MAX professional studies.
+    # 551 text-extracted values confirmed trend but too noisy for fine-tuning.
     density = construibles / area if area > 0 else 5.0
     if density <= 5.0:
         return 0.88
