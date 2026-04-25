@@ -387,15 +387,21 @@
       width:clamp(220px,26vw,290px);
       height:clamp(220px,26vw,290px);
       border-radius:50%;
-      padding:8px;
-      background:conic-gradient(from 30deg,
-        #2e1c00 0%,#7a4e10 12%,#c8973a 25%,#f0c840 38%,#c8973a 50%,
-        #7a4e10 62%,#3d2600 72%,#7a4e10 82%,#c8973a 92%,#2e1c00 100%);
-      box-shadow:
-        0 0 0 2px rgba(200,150,50,.08),
-        0 16px 56px rgba(0,0,0,.75),
-        0 0 32px rgba(200,150,50,.12);
+      padding:0;
+      background:transparent;
+      border:1px solid #333;
+      box-shadow:0 12px 48px rgba(0,0,0,.75),0 2px 12px rgba(0,0,0,.4);
       flex-shrink:0;
+      position:relative;
+      overflow:hidden;
+    }
+    .frm-map-ring::after{
+      content:'';
+      position:absolute;inset:0;
+      border-radius:50%;
+      background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.03) 35%,transparent 55%);
+      pointer-events:none;
+      z-index:10;
     }
     .frm-map-clip{
       width:100%;height:100%;
@@ -416,8 +422,9 @@
     /* ── MÓDULO SUPERFICIES: 4 cards en fila ──────────────── */
     .frm-cards-row{
       display:grid;grid-template-columns:repeat(4,1fr);
-      gap:0;background:#121212;border:1px solid #2a2a2a;
+      gap:0;background:linear-gradient(to bottom,#1a1a1a,#0f0f0f);border:1px solid #2a2a2a;
       border-top:2px solid var(--accent);border-radius:16px;overflow:hidden;
+      box-shadow:0 6px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
       padding:24px 20px;margin-bottom:2rem;
     }
     .frm-card{
@@ -444,9 +451,10 @@
 
     /* ── MÓDULO NORMATIVO: tabla formal ─────────────────────── */
     .frm-table-card{
-      background:#121212;border:1px solid #2a2a2a;
+      background:linear-gradient(to bottom,#1a1a1a,#0f0f0f);border:1px solid #2a2a2a;
       border-top:2px solid var(--accent);border-radius:16px;
       padding:24px 28px;margin-bottom:2rem;
+      box-shadow:0 6px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
     }
     .frm-table-title{
       font-size:20px;letter-spacing:.5px;text-transform:uppercase;
@@ -476,9 +484,10 @@
     .frm-analysis{
       display:grid;grid-template-columns:1fr 1fr;
       gap:0;margin-bottom:2rem;
-      background:#121212;border:1px solid #2a2a2a;
+      background:linear-gradient(to bottom,#1a1a1a,#0f0f0f);border:1px solid #2a2a2a;
       border-top:2px solid var(--accent);border-radius:16px;overflow:hidden;
       padding:24px;
+      box-shadow:0 6px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
     }
     .frm-analysis-card{
       background:transparent;border:none;border-radius:0;padding:0 20px;
@@ -496,19 +505,24 @@
 
     /* Croquis */
     .frm-croquis{
-      background:#121212;border:1px solid #2a2a2a;
+      background:linear-gradient(to bottom,#1a1a1a,#0f0f0f);border:1px solid #2a2a2a;
       border-top:2px solid var(--accent);border-radius:16px;
       padding:24px;margin-bottom:2rem;
+      box-shadow:0 6px 32px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.04);
     }
     .frm-croquis-links{display:flex;gap:10px;flex-wrap:nowrap;margin-top:12px}
     .croquis-link{
-      flex:1;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-      color:#000;text-decoration:none;text-align:center;
-      background:var(--accent);border:none;
-      padding:13px 16px;border-radius:8px;
-      transition:opacity .2s;white-space:nowrap;
+      flex:1;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+      color:var(--accent);text-decoration:none;text-align:center;
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,191,0,.45);
+      padding:12px 16px;border-radius:8px;
+      transition:background .22s,box-shadow .22s,color .22s;white-space:nowrap;
     }
-    .croquis-link:hover{opacity:.82;background:var(--accent);color:#000}
+    .croquis-link:hover{
+      background:var(--accent);color:#000;
+      box-shadow:0 0 18px rgba(255,191,0,.38);
+    }
     /* Plusvalía dual moneda */
     .pv-usd{color:#fff;font-size:17px;font-weight:500}
     .pv-uva{color:rgba(255,255,255,.38);font-size:13px;font-weight:300}
@@ -545,8 +559,9 @@
     #report-chat-container {
       width: 320px;
       flex-shrink: 0;
-      border-left: 1px solid #222;
-      background: #000;
+      border-left: 0.5px solid #1c1c1c;
+      background: rgba(4,4,4,.96);
+      backdrop-filter: blur(8px);
       display: flex;
       flex-direction: column;
       height: 100vh;
@@ -650,13 +665,14 @@
     .rc-input::placeholder { color: rgba(255,255,255,.25); font-size: 12px; }
     .rc-send {
       width: 32px; height: 32px; flex-shrink: 0;
-      background: #fff; color: #000; border: none;
+      background: rgba(255,191,0,.12); color: var(--accent);
+      border: 1px solid rgba(255,191,0,.25);
       border-radius: 8px; cursor: pointer; font-size: 16px;
       display: flex; align-items: center; justify-content: center;
-      transition: opacity .15s;
+      transition: background .15s, box-shadow .15s;
     }
-    .rc-send:hover { opacity: .8; }
-    .rc-send:disabled { opacity: .35; cursor: default; }
+    .rc-send:hover { background: rgba(255,191,0,.22); box-shadow: 0 0 12px rgba(255,191,0,.2); }
+    .rc-send:disabled { opacity: .3; cursor: default; }
 
     #report-chat-container.rc-fullscreen {
       position: fixed; inset: 0; width: 100%; height: 100vh;
@@ -675,12 +691,13 @@
 
     /* ── CALCULADORA FACTIBILIDAD EN MODAL ──────────────────── */
     .frm-calc-section {
-      background: #121212;
+      background: linear-gradient(to bottom, #1a1a1a, #0f0f0f);
       border: 1px solid #2a2a2a;
       border-top: 2px solid var(--accent);
       border-radius: 16px;
       padding: 24px 28px;
       margin-bottom: 2rem;
+      box-shadow: 0 6px 32px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.04);
     }
     .frm-calc-header {
       display: flex;
@@ -760,6 +777,7 @@
     #fc-r-ganancia { color: #fff !important; font-size: clamp(1.6rem,2.4vw,2.2rem); }
     .frm-calc-result-sub {
       font-size: 12px; color: rgba(255,255,255,.3); margin-top: 4px;
+      display: none;
     }
     .frm-calc-nota {
       font-size: 10px; color: rgba(255,255,255,.2);
@@ -1161,14 +1179,14 @@
 
       <!-- CROQUIS (visible si el backend provee links) — integrado con normativa -->
       <div id="croquis-container" class="frm-croquis hidden">
-        <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>Croquis y Planos Oficiales — Ciudad 3D</div>
+        <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>Croquis y Planos Oficiales</div>
         <div class="frm-croquis-links" id="croquis-links-inner"></div>
       </div>
 
       <!-- MÓDULO ANÁLISIS ECONÓMICO + AFECTACIONES -->
       <div class="frm-analysis">
         <div class="frm-analysis-card">
-          <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Plusvalía y Análisis Económico (DDHUS)</div>
+          <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Plusvalía y Análisis Económico</div>
           <div class="frm-analysis-item">
             <span>Incidencia UVA</span>
             <span id="full-plusvalia-incidencia">No disponible</span>
