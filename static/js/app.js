@@ -820,6 +820,8 @@ function openFullReport() {
   ].filter(Boolean).join('\n');
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
+  // Inicializar calculadora con valores de la parcela
+  setTimeout(() => initFeasCalc(), 60);
 
   // Mostrar botón PDF (fijo en la esquina superior del modal)
   const dlBtn = document.getElementById('btn-download-pdf');
@@ -1313,3 +1315,137 @@ function mostrarEnrase(res) {
 }
 // ── FIN MÓDULO ENRASE ─────────────────────────────────────────────
 
+
+
+
+// ── CALCULADORA FACTIBILIDAD EN MODAL ────────────────────────────
+// Precios de venta por barrio (USD/m²) — Zonaprop scraping 2025
+const PRECIOS_BARRIO = {"Palermo": 3503, "Belgrano": 3439, "Núñez": 3634, "Recoleta": 3231, "Caballito": 2569, "Villa Urquiza": 2676, "Villa Devoto": 2767, "Villa Crespo": 2597, "Almagro": 2433, "Flores": 2146, "Saavedra": 2616, "Palermo Hollywood": 3277, "Colegiales": 2787, "Las Cañitas": 3789, "Puerto Madero": 5515, "Balvanera": 2157, "Barrio Norte": 2711, "Villa del Parque": 2488, "Coghlan": 2652, "Palermo Chico": 4650, "Palermo Soho": 3262, "Belgrano R": 3476, "Boedo": 2067, "Barracas": 2085, "Monserrat": 1971, "San Cristobal": 2039, "Villa Luro": 2244, "San Telmo": 2346, "Mataderos": 2040, "Villa Ortuzar": 2786, "Chacarita": 2535, "Villa Santa Rita": 2104, "Villa Pueyrredón": 2334, "Caballito Sur": 2937, "Congreso": 1938, "Retiro": 2995, "Liniers": 2161, "La Paternal": 2016, "Floresta": 1809, "Palermo Nuevo": 4091, "Belgrano C": 3617, "Centro / Microcentro": 2164, "San Nicolás": 2068, "Caballito Norte": 2899, "Constitución": 1582, "Villa Lugano": 2151, "Parque Chas": 2272, "Monte Castro": 2260, "Botánico": 3626, "Parque Patricios": 1955, "Palermo Viejo": 2880, "Parque Chacabuco": 2361, "Flores Norte, Flores": 1996, "Once": 1685, "Belgrano Chico": 3460, "Villa General Mitre": 2365, "Abasto": 2316, "Parque Centenario": 2305, "Barrio Chino": 2572, "Velez Sarsfield": 2040};
+
+// Costo de construcción tiered por pisos (de feasibility.py)
+function getCostoObra(pisos) {
+  if (pisos <= 3)  return 1050;
+  if (pisos <= 7)  return 1300;
+  if (pisos <= 12) return 1550;
+  return 1800;
+}
+
+// Valores por defecto — se sobreescriben al abrir el informe
+let _fcDefaults = {
+  m2Vendibles: 0,
+  costoObra: 1100,
+  precioVenta: 2500,
+  gastos: 15,
+};
+
+function initFeasCalc() {
+  const pd     = window._currentParcelData;
+  const barrio = pd?.barrio || '';
+  const pisos  = window._pisosEstimados || 0;
+
+  // M² vendibles: del cálculo normativo
+  const m2v = parseFloat(document.getElementById('full-total')?.innerText) ||
+              window._finMetrosVendibles || 0;
+
+  // Costo obra tiered por pisos
+  const costoObra = pisos > 0 ? getCostoObra(pisos) : 1100;
+
+  // Precio de venta: buscar en tabla por barrio
+  let precioVenta = 2500; // fallback
+  if (barrio) {
+    // Buscar match parcial en la tabla
+    const key = Object.keys(PRECIOS_BARRIO).find(k =>
+      barrio.toLowerCase().includes(k.toLowerCase()) ||
+      k.toLowerCase().includes(barrio.toLowerCase())
+    );
+    if (key) precioVenta = PRECIOS_BARRIO[key];
+  }
+
+  _fcDefaults = { m2Vendibles: m2v, costoObra, precioVenta, gastos: 15 };
+
+  // Setear los inputs
+  const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+  setVal('fc-m2-vendibles', Math.round(m2v) || '');
+  setVal('fc-costo-obra',   costoObra);
+  setVal('fc-precio-venta', precioVenta);
+  setVal('fc-gastos',       15);
+
+  // Hints
+  const hintCosto = document.getElementById('fc-costo-hint');
+  if (hintCosto && pisos > 0) hintCosto.textContent = `Estimado: ${pisos} pisos → USD ${costoObra}/m²`;
+
+  const hintPrecio = document.getElementById('fc-precio-hint');
+  if (hintPrecio) {
+    const key = Object.keys(PRECIOS_BARRIO).find(k =>
+      barrio.toLowerCase().includes(k.toLowerCase()) ||
+      k.toLowerCase().includes(barrio.toLowerCase())
+    );
+    hintPrecio.textContent = key
+      ? `Ref. ${key}: USD ${precioVenta}/m²`
+      : 'Referencia general';
+  }
+
+  // Bindear eventos (event delegation en la sección)
+  const section = document.querySelector('.frm-calc-section');
+  if (section && !section._fcBound) {
+    section.addEventListener('input', e => {
+      if (e.target.classList.contains('frm-calc-input')) recalcFeas();
+    });
+    section._fcBound = true;
+  }
+
+  // Botón reset
+  const resetBtn = document.getElementById('frm-calc-reset-btn');
+  if (resetBtn && !resetBtn._fcBound) {
+    resetBtn.addEventListener('click', () => {
+      setVal('fc-m2-vendibles', Math.round(_fcDefaults.m2Vendibles) || '');
+      setVal('fc-costo-obra',   _fcDefaults.costoObra);
+      setVal('fc-precio-venta', _fcDefaults.precioVenta);
+      setVal('fc-gastos',       _fcDefaults.gastos);
+      recalcFeas();
+    });
+    resetBtn._fcBound = true;
+  }
+
+  recalcFeas();
+}
+
+function recalcFeas() {
+  const getN = id => parseFloat(document.getElementById(id)?.value) || 0;
+  const m2v       = getN('fc-m2-vendibles');
+  const costoM2   = getN('fc-costo-obra');
+  const precioM2  = getN('fc-precio-venta');
+  const gastosPct = getN('fc-gastos') / 100;
+
+  const fmtUSD = n => 'USD ' + Math.round(n).toLocaleString('es-AR');
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  const setSub = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+
+  if (!m2v || !costoM2) {
+    ['fc-r-costo','fc-r-gdv','fc-r-ganancia','fc-r-incidencia'].forEach(id => set(id, '—'));
+    return;
+  }
+
+  // Cálculo
+  const costoBase   = m2v * costoM2;
+  const gastos      = costoBase * gastosPct;
+  const costoTotal  = costoBase + gastos;
+  const gdv         = precioM2 ? m2v * precioM2 : null;
+  const ganancia    = gdv ? gdv - costoTotal : null;
+  const margenPct   = gdv ? (ganancia / gdv * 100) : null;
+  // Incidencia máx: GDV - costoTotal - target 10% ROI
+  const targetROI   = costoTotal * 0.10;
+  const incidMax    = gdv ? Math.max(0, (gdv - costoTotal - targetROI) / m2v) : null;
+
+  set('fc-r-costo', fmtUSD(costoTotal));
+  setSub('fc-r-costo-sub', `Base ${fmtUSD(costoBase)} + honorarios ${fmtUSD(gastos)}`);
+
+  set('fc-r-gdv', gdv ? fmtUSD(gdv) : '—');
+  setSub('fc-r-gdv-sub', gdv ? `${Math.round(m2v).toLocaleString('es-AR')} m² × USD ${Math.round(precioM2)}` : 'Ingresá precio de venta');
+
+  set('fc-r-ganancia', ganancia != null ? fmtUSD(ganancia) : '—');
+  setSub('fc-r-ganancia-sub', margenPct != null ? `Margen: ${margenPct.toFixed(1)}%` : '');
+
+  set('fc-r-incidencia', incidMax != null ? fmtUSD(incidMax) : '—');
+}
+// ── FIN CALCULADORA FACTIBILIDAD ──────────────────────────────────
