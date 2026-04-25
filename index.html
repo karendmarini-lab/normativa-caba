@@ -13,7 +13,7 @@
       --bg:#000;--card:#0e0e0e;--lift:#181818;
       --border:rgba(255,255,255,.08);--bh:rgba(255,255,255,.18);
       --text:#fff;--muted:rgba(255,255,255,.4);--r:6px;
-      --accent:#FFD700;--panel:rgba(10,10,10,.94);--line:rgba(255,255,255,.1);
+      --accent:#FFBF00;--panel:rgba(10,10,10,.94);--line:rgba(255,255,255,.1);
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);
@@ -373,8 +373,8 @@
     .frm-hero-badge{
       display:inline-block;font-size:9px;font-weight:600;letter-spacing:2.5px;
       text-transform:uppercase;padding:6px 16px;border-radius:100px;
-      background:rgba(255,204,0,.1);color:var(--accent);
-      border:1px solid rgba(255,204,0,.35);
+      background:rgba(255,191,0,.1);color:var(--accent);
+      border:1px solid rgba(255,191,0,.35);
     }
     .frm-hero-right{
       background:#0a0a0a;border:none;border-radius:24px;
@@ -389,14 +389,14 @@
     /* ── MÓDULO SUPERFICIES: 4 cards en fila ──────────────── */
     .frm-cards-row{
       display:grid;grid-template-columns:repeat(4,1fr);
-      gap:0;background:transparent;border:none;
-      border-top:1px solid rgba(255,215,0,.4);border-radius:0;overflow:visible;
-      padding:24px 0;margin-bottom:2rem;
+      gap:0;background:#121212;border:1px solid #2a2a2a;
+      border-top:2px solid var(--accent);border-radius:16px;overflow:hidden;
+      padding:24px 20px;margin-bottom:2rem;
     }
     .frm-card{
       background:transparent;padding:24px 20px;
       display:flex;flex-direction:column;gap:8px;
-      border-right:1px solid rgba(255,255,255,.07);
+      border-right:1px solid #2a2a2a;
     }
     .frm-card:first-child{padding-left:0}
     .frm-card:last-child{border-right:none;padding-right:0}
@@ -417,22 +417,23 @@
 
     /* ── MÓDULO NORMATIVO: tabla formal ─────────────────────── */
     .frm-table-card{
-      background:transparent;border:none;border-radius:0;
-      border-top:1px solid rgba(255,215,0,.4);
-      padding:24px 0;margin-bottom:2rem;
+      background:#121212;border:1px solid #2a2a2a;
+      border-top:2px solid var(--accent);border-radius:16px;
+      padding:24px 28px;margin-bottom:2rem;
     }
     .frm-table-title{
-      font-size:9px;letter-spacing:4px;text-transform:uppercase;
-      color:var(--accent);margin-bottom:20px;
-      border-bottom:1px solid rgba(255,215,0,.2);padding-bottom:10px;
+      font-size:12px;letter-spacing:3px;text-transform:uppercase;
+      font-weight:800;color:var(--accent);margin-bottom:20px;
+      border-bottom:1px solid rgba(255,191,0,.2);padding-bottom:12px;
+      display:flex;align-items:center;gap:9px;
     }
     .frm-table-grid{
       display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:0;border-top:1px solid rgba(255,255,255,.07);
+      gap:0;border-top:1px solid #2a2a2a;
     }
     .frm-table-item{
-      padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.05);
-      border-right:1px solid rgba(255,255,255,.05);
+      padding:14px 16px;border-bottom:1px solid #242424;
+      border-right:1px solid #242424;
     }
     .frm-table-item:nth-child(3n){border-right:none}
     .frm-table-item label{
@@ -447,17 +448,19 @@
     .frm-analysis{
       display:grid;grid-template-columns:1fr 1fr;
       gap:0;margin-bottom:2rem;
-      border-top:1px solid rgba(255,215,0,.4);padding-top:24px;
+      background:#121212;border:1px solid #2a2a2a;
+      border-top:2px solid var(--accent);border-radius:16px;overflow:hidden;
+      padding:24px;
     }
     .frm-analysis-card{
       background:transparent;border:none;border-radius:0;padding:0 20px;
     }
-    .frm-analysis-card:first-child{padding-left:0;border-right:1px solid rgba(255,255,255,.07)}
+    .frm-analysis-card:first-child{padding-left:0;border-right:1px solid #2a2a2a}
     .frm-analysis-card:last-child{padding-right:0}
     .frm-analysis-card .frm-table-title{margin-bottom:12px}
     .frm-analysis-item{
       display:flex;justify-content:space-between;align-items:baseline;
-      padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:14px;
+      padding:8px 0;border-bottom:1px solid #242424;font-size:14px;
     }
     .frm-analysis-item:last-child{border-bottom:none}
     .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:11px;letter-spacing:1px}
@@ -465,15 +468,15 @@
 
     /* Croquis */
     .frm-croquis{
-      background:transparent;border:none;border-radius:0;
-      border-top:1px solid rgba(255,215,0,.4);
-      padding:24px 0;margin-bottom:2rem;
+      background:#121212;border:1px solid #2a2a2a;
+      border-top:2px solid var(--accent);border-radius:16px;
+      padding:24px;margin-bottom:2rem;
     }
     .frm-croquis-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
     .croquis-link{
       font-size:10px;letter-spacing:2px;text-transform:uppercase;
       color:var(--accent);text-decoration:none;
-      border:1px solid rgba(255,204,0,.35);padding:8px 16px;border-radius:100px;
+      border:1px solid rgba(255,191,0,.35);padding:8px 16px;border-radius:100px;
       transition:background .2s,color .2s;
     }
     .croquis-link:hover{background:var(--accent);color:#000}
@@ -481,7 +484,7 @@
     /* Footer */
     .frm-footer-note{
       font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
-      color:rgba(255,255,255,.15);padding-top:16px;border-top:1px solid rgba(255,255,255,.07);
+      color:rgba(255,255,255,.15);padding-top:16px;border-top:1px solid #333;
     }
 
     @media(max-width:900px){
@@ -640,24 +643,25 @@
 
     /* ── CALCULADORA FACTIBILIDAD EN MODAL ──────────────────── */
     .frm-calc-section {
-      background: transparent;
-      border: none;
-      border-top: 1px solid rgba(255,215,0,.4);
-      border-radius: 0;
-      padding: 24px 0;
+      background: #121212;
+      border: 1px solid #2a2a2a;
+      border-top: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 24px 28px;
       margin-bottom: 2rem;
     }
     .frm-calc-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255,215,0,.2);
+      border-bottom: 1px solid rgba(255,191,0,.2);
       padding-bottom: 12px;
       margin-bottom: 20px;
     }
     .frm-calc-title {
-      font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
-      color: var(--accent);
+      font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+      font-weight: 800; color: var(--accent);
+      display: flex; align-items: center; gap: 9px;
     }
     .frm-calc-reset {
       font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -700,7 +704,7 @@
       gap: 0;
       background: transparent;
       border: none;
-      border-top: 1px solid rgba(255,215,0,.2);
+      border-top: 1px solid #2a2a2a;
       border-radius: 0;
       overflow: visible;
       margin-top: 8px;
@@ -708,7 +712,7 @@
     .frm-calc-result {
       background: transparent;
       padding: 16px 18px;
-      border-right: 1px solid rgba(255,255,255,.06);
+      border-right: 1px solid #2a2a2a;
     }
     .frm-calc-result:last-child { border-right: none; }
     .frm-calc-result.highlight { background: transparent; }
@@ -1105,7 +1109,7 @@
 
       <!-- MÓDULO NORMATIVO: tabla formal -->
       <div class="frm-table-card">
-        <div class="frm-table-title">Parámetros del Lote y Normativa CUR</div>
+        <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Parámetros del Lote y Normativa CUR</div>
         <div class="frm-table-grid">
           <div class="frm-table-item"><label>Altura Máx.</label><p id="full-h">—</p></div>
           <div class="frm-table-item"><label>Plano Límite</label><p id="full-plano">—</p></div>
@@ -1122,7 +1126,7 @@
       <!-- MÓDULO ANÁLISIS ECONÓMICO + AFECTACIONES -->
       <div class="frm-analysis">
         <div class="frm-analysis-card">
-          <div class="frm-table-title">Plusvalía y Análisis Económico (DDHUS)</div>
+          <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Plusvalía y Análisis Económico (DDHUS)</div>
           <div class="frm-analysis-item">
             <span>Incidencia UVA</span>
             <span id="full-plusvalia-incidencia">No disponible</span>
@@ -1133,7 +1137,7 @@
           </div>
         </div>
         <div class="frm-analysis-card">
-          <div class="frm-table-title">Afectaciones y Condicionantes</div>
+          <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Afectaciones y Condicionantes</div>
           <div class="frm-analysis-item">
             <span>Catalogación APH</span>
             <span id="full-catalogacion">Sin registro especial</span>
@@ -1160,7 +1164,7 @@
       <!-- CALCULADORA DE FACTIBILIDAD -->
       <div class="frm-calc-section">
         <div class="frm-calc-header">
-          <div class="frm-calc-title">Simulador de Factibilidad Económica</div>
+          <div class="frm-calc-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v12M9.5 10h3.5a1.5 1.5 0 0 1 0 3H10a1.5 1.5 0 0 0 0 3H14"/></svg>Simulador de Factibilidad Económica</div>
           <button class="frm-calc-reset" id="frm-calc-reset-btn">↺ Restaurar valores</button>
         </div>
 
@@ -1252,7 +1256,7 @@
 
       <!-- CROQUIS (visible si el backend provee links) -->
       <div id="croquis-container" class="frm-croquis hidden">
-        <div class="frm-table-title">Croquis y Planos Oficiales — Ciudad 3D</div>
+        <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>Croquis y Planos Oficiales — Ciudad 3D</div>
         <div class="frm-croquis-links" id="croquis-links-inner"></div>
       </div>
 
