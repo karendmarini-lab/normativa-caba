@@ -1441,33 +1441,42 @@ function recalcFeas() {
   // 1. COSTO DE OBRA sobre m² totales construibles
   const costoObra    = m2total * costoM2;
   const honorarios   = costoObra * honorPct;
-  const costoTotal   = costoObra + honorarios;
 
-  // 2. INGRESOS por ventas (GDV) sobre m² vendibles
+  // 2. INGRESOS BRUTOS sobre m² vendibles (sin descontar nada)
   const gdv          = precioM2 ? m2v * precioM2 : null;
+
+  // 3. GASTOS COMERCIALIZACIÓN sobre ingresos brutos
   const gastosVenta  = gdv ? gdv * comercPct : 0;
 
-  // 3. GANANCIA BRUTA = GDV - costoTotal - gastosComercialización
-  const ganancia     = gdv != null ? gdv - costoTotal - gastosVenta : null;
+  // 4. COSTO TOTAL = Obra + Honorarios + Comercialización
+  const costoTotal   = costoObra + honorarios + gastosVenta;
+
+  // 5. GANANCIA BRUTA = Ingresos Brutos - Costo Total
+  const ganancia     = gdv != null ? gdv - costoTotal : null;
   const margenPct    = gdv ? (ganancia / gdv * 100) : null;
 
-  // 4. INCIDENCIA MÁX del terreno = GDV - costoTotal - gastosVenta - target 10% ROI
+  // 6. INCIDENCIA MÁX del terreno con target 10% ROI
   const targetROI    = costoTotal * 0.10;
-  const incidMax     = gdv ? Math.max(0, (gdv - costoTotal - gastosVenta - targetROI) / m2v) : null;
+  const incidMax     = gdv ? Math.max(0, (gdv - costoTotal - targetROI) / m2v) : null;
 
   // Mostrar resultados
-  set('fc-r-costo', fmtUSD(costoTotal));
-  setSub('fc-r-costo-sub',
-    `Obra: ${fmtUSD(costoObra)} (${Math.round(m2total)} m²) + honorarios: ${fmtUSD(honorarios)}`);
 
+  // Ingresos: GDV bruto, con desglose de comercialización abajo
   set('fc-r-gdv', gdv ? fmtUSD(gdv) : '—');
   setSub('fc-r-gdv-sub', gdv
-    ? `${Math.round(m2v).toLocaleString('es-AR')} m² × USD ${Math.round(precioM2)} − comerc. ${fmtUSD(gastosVenta)}`
+    ? `${Math.round(m2v).toLocaleString('es-AR')} m² × USD ${Math.round(precioM2)} | Comerc.: ${fmtUSD(gastosVenta)}`
     : 'Ingresá precio de venta');
 
+  // Costo total: obra + honorarios + comercialización
+  set('fc-r-costo', fmtUSD(costoTotal));
+  setSub('fc-r-costo-sub',
+    `Obra ${fmtUSD(costoObra)} + hon. ${fmtUSD(honorarios)} + comerc. ${fmtUSD(gastosVenta)}`);
+
+  // Ganancia
   set('fc-r-ganancia', ganancia != null ? fmtUSD(ganancia) : '—');
   setSub('fc-r-ganancia-sub', margenPct != null ? `Margen sobre GDV: ${margenPct.toFixed(1)}%` : '');
 
+  // Incidencia
   set('fc-r-incidencia', incidMax != null ? fmtUSD(incidMax) : '—');
 }
 // ── FIN CALCULADORA FACTIBILIDAD ──────────────────────────────────
@@ -1531,7 +1540,7 @@ async function fetchMacroIndicators() {
     if (dolarOk && uvaOk) {
       setStatus(true, 'EN VIVO');
     } else if (dolarOk || uvaOk) {
-      setStatus(false, 'PARCIAL');
+      setStatus(true, 'EN VIVO');
     } else {
       setStatus(false, 'REF. MANUAL');
     }
