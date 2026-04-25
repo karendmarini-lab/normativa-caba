@@ -829,6 +829,119 @@
     @keyframes incid-flash { 0%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 30%{box-shadow:0 0 0 6px rgba(255,215,0,.35)} 100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} }
     .incid-flash { animation: incid-flash .55s ease-out; }
 
+
+    /* ══ LUXURY v3 ═══════════════════════════════════════════════ */
+
+    /* 1. EFECTO CRISTAL — gradiente + sombra flotante + hilo de luz */
+    .frm-card,
+    .frm-table-card,
+    .frm-analysis-card,
+    .frm-calc-section,
+    .frm-hero-left,
+    .frm-croquis {
+      background: linear-gradient(145deg, #1c1c1c 0%, #0d0d0d 100%) !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05) inset !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+      border-top: 1px solid rgba(255,255,255,.09) !important;
+      border-radius: 16px !important;
+    }
+    .frm-calc-result {
+      background: linear-gradient(145deg, #161616 0%, #0e0e0e 100%) !important;
+      border-top: 1px solid rgba(255,255,255,.05) !important;
+    }
+    .frm-calc-result.highlight {
+      background: linear-gradient(145deg, #1a1300 0%, #0a0800 100%) !important;
+      border-top: 1px solid rgba(200,169,110,.1) !important;
+    }
+    /* grilla de calc sin gap visible */
+    .frm-calc-results {
+      border-radius: 12px !important;
+      overflow: hidden;
+    }
+
+    /* 2. LIMPIEZA RADICAL — ocultar subs de resultados */
+    .frm-calc-result-sub { display: none !important; }
+
+    /* 3. INPUTS — misma altura, alineados por top */
+    .frm-calc-inputs {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+      gap: 12px !important;
+      align-items: start !important;
+    }
+    .frm-calc-field { display: flex; flex-direction: column; }
+    .frm-calc-input {
+      height: 44px !important;
+      padding: 0 14px !important;
+      box-sizing: border-box !important;
+    }
+
+    /* 4. MAPA CIRCULAR — borde gris plomo, sin neón */
+    .frm-map-ring {
+      border: 1.5px solid #333 !important;
+      box-shadow: none !important;
+    }
+
+    /* 5. BOTONES CROQUIS — ghost estilo */
+    .croquis-link {
+      background: rgba(0,0,0,.6) !important;
+      border: 1px solid rgba(200,169,110,.5) !important;
+      color: #C8A96E !important;
+      transition: background .2s, color .2s !important;
+    }
+    .croquis-link:hover {
+      background: #C8A96E !important;
+      color: #000 !important;
+    }
+
+    /* 6. CHAT — grafito + blur + scroll fino */
+    #report-chat-container {
+      background: rgba(18,18,18,.95) !important;
+      backdrop-filter: blur(12px) !important;
+      -webkit-backdrop-filter: blur(12px) !important;
+      border-left: 1px solid #333 !important;
+    }
+    /* Mensajes — timeline limpia sin burbujas */
+    .rc-msg.user {
+      background: transparent !important;
+      color: rgba(255,255,255,.9) !important;
+      border-radius: 0 !important;
+      padding: 6px 0 !important;
+      border-left: 2px solid rgba(200,169,110,.5);
+      padding-left: 10px !important;
+    }
+    .rc-msg.assistant {
+      background: transparent !important;
+      color: rgba(200,200,200,.75) !important;
+      border-radius: 0 !important;
+      padding: 6px 0 !important;
+    }
+    /* Scroll ultra fino */
+    #rc-messages::-webkit-scrollbar { width: 2px; }
+    #rc-messages::-webkit-scrollbar-track { background: transparent; }
+    #rc-messages::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,.08);
+      border-radius: 1px;
+    }
+
+    /* 7. BOTÓN PDF — glow + pulse amarillo */
+    #btn-download-pdf {
+      box-shadow: 0 0 10px rgba(232,197,71,.2), 0 0 28px rgba(232,197,71,.07) !important;
+      animation: pdf-pulse 3s ease-in-out infinite !important;
+    }
+    @keyframes pdf-pulse {
+      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2), 0 0 28px rgba(232,197,71,.07); }
+      50%      { box-shadow: 0 0 18px rgba(232,197,71,.4), 0 0 44px rgba(232,197,71,.15); }
+    }
+
+    /* 8. HEADER — eje horizontal unificado */
+    .frm-body { padding-top: 32px !important; }
+    /* ══ FIN LUXURY v3 ═══════════════════════════════════════════ */
+
+
+    .frm-plusvalia-usd { font-size:20px; font-weight:500; color:#fff; display:block; }
+    .frm-plusvalia-uva { font-size:11px; color:rgba(255,255,255,.35); display:block; margin-top:2px; }
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -1190,7 +1303,8 @@
           <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Plusvalía y Análisis Económico</div>
           <div class="frm-analysis-item">
             <span>Incidencia UVA</span>
-            <span id="full-plusvalia-incidencia">No disponible</span>
+            <span class="frm-plusvalia-usd" id="full-plusvalia-incidencia">No disponible</span>
+            <span class="frm-plusvalia-uva" id="full-plusvalia-uva-label"></span>
           </div>
           <div class="frm-analysis-item">
             <span>Alícuota</span>
@@ -1198,7 +1312,7 @@
           </div>
         </div>
         <div class="frm-analysis-card">
-          <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Afectaciones y Condicionantes</div>
+          <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>AFECTACIONES</div>
           <div class="frm-analysis-item">
             <span>Catalogación APH</span>
             <span id="full-catalogacion">Sin registro especial</span>
