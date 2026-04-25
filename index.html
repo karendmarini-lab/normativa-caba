@@ -627,6 +627,90 @@
     }
 
 
+
+    /* ── CALCULADORA FACTIBILIDAD EN MODAL ──────────────────── */
+    .frm-calc-section {
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 8px;
+      padding: 24px 28px;
+      margin-bottom: 2rem;
+    }
+    .frm-calc-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .frm-calc-title {
+      font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+      color: rgba(255,255,255,.28);
+    }
+    .frm-calc-reset {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(200,169,110,.6); background: none; border: none;
+      cursor: pointer; padding: 4px 10px;
+      border: 1px solid rgba(200,169,110,.2); border-radius: 100px;
+      transition: all .2s;
+    }
+    .frm-calc-reset:hover { color: #C8A96E; border-color: rgba(200,169,110,.5); }
+
+    /* Grid de inputs */
+    .frm-calc-inputs {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .frm-calc-field { display: flex; flex-direction: column; gap: 6px; }
+    .frm-calc-label {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: #C8A96E; font-weight: 400;
+    }
+    .frm-calc-input {
+      background: #111; border: 1px solid #333; border-radius: 4px;
+      padding: 10px 12px; color: #fff;
+      font-size: 14px; font-weight: 300;
+      font-family: 'Inter', inherit;
+      outline: none; transition: border-color .2s;
+      width: 100%; box-sizing: border-box;
+    }
+    .frm-calc-input:focus { border-color: rgba(200,169,110,.5); }
+    .frm-calc-input-hint {
+      font-size: 10px; color: rgba(255,255,255,.25); margin-top: 2px;
+    }
+
+    /* Resultados */
+    .frm-calc-results {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1px;
+      background: #222;
+      border: 1px solid #222;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .frm-calc-result {
+      background: #0a0a0a;
+      padding: 16px 18px;
+    }
+    .frm-calc-result.highlight { background: #0f0a00; }
+    .frm-calc-result-label {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,.35); margin-bottom: 8px;
+    }
+    .frm-calc-result-val {
+      font-size: 20px; font-weight: 200; color: #fff; line-height: 1;
+    }
+    .frm-calc-result.highlight .frm-calc-result-val { color: #C8A96E; }
+    .frm-calc-result-sub {
+      font-size: 10px; color: rgba(255,255,255,.3); margin-top: 4px;
+    }
+    .frm-calc-nota {
+      font-size: 10px; color: rgba(255,255,255,.2);
+      margin-top: 14px; font-style: italic; line-height: 1.5;
+    }
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -1007,6 +1091,65 @@
         <div class="frm-analysis-card" style="grid-column:span 2">
           <div class="frm-table-title">⬡ Análisis de Enrase (Completamiento de Tejido)</div>
           <div id="frm-enrase-contenido"></div>
+        </div>
+      </div>
+
+      <!-- CALCULADORA DE FACTIBILIDAD -->
+      <div class="frm-calc-section">
+        <div class="frm-calc-header">
+          <div class="frm-calc-title">Simulador de Factibilidad Económica</div>
+          <button class="frm-calc-reset" id="frm-calc-reset-btn">↺ Restaurar valores</button>
+        </div>
+
+        <div class="frm-calc-inputs">
+          <div class="frm-calc-field">
+            <label class="frm-calc-label">M² Vendibles</label>
+            <input class="frm-calc-input" id="fc-m2-vendibles" type="number" placeholder="0">
+            <div class="frm-calc-input-hint">Arrastrado del cálculo normativo</div>
+          </div>
+          <div class="frm-calc-field">
+            <label class="frm-calc-label">Costo de Obra (USD/m²)</label>
+            <input class="frm-calc-input" id="fc-costo-obra" type="number" placeholder="1100">
+            <div class="frm-calc-input-hint" id="fc-costo-hint">Estimado por altura</div>
+          </div>
+          <div class="frm-calc-field">
+            <label class="frm-calc-label">Precio de Venta (USD/m²)</label>
+            <input class="frm-calc-input" id="fc-precio-venta" type="number" placeholder="2500">
+            <div class="frm-calc-input-hint" id="fc-precio-hint">Referencia del barrio</div>
+          </div>
+          <div class="frm-calc-field">
+            <label class="frm-calc-label">Gastos y Honorarios (%)</label>
+            <input class="frm-calc-input" id="fc-gastos" type="number" placeholder="15" min="0" max="50">
+            <div class="frm-calc-input-hint">Sobre el costo total de obra</div>
+          </div>
+        </div>
+
+        <div class="frm-calc-results" id="fc-results">
+          <div class="frm-calc-result">
+            <div class="frm-calc-result-label">Costo Total Construcción</div>
+            <div class="frm-calc-result-val" id="fc-r-costo">—</div>
+            <div class="frm-calc-result-sub" id="fc-r-costo-sub"></div>
+          </div>
+          <div class="frm-calc-result">
+            <div class="frm-calc-result-label">Ingresos por Ventas (GDV)</div>
+            <div class="frm-calc-result-val" id="fc-r-gdv">—</div>
+            <div class="frm-calc-result-sub" id="fc-r-gdv-sub"></div>
+          </div>
+          <div class="frm-calc-result highlight">
+            <div class="frm-calc-result-label">Ganancia Bruta Estimada</div>
+            <div class="frm-calc-result-val" id="fc-r-ganancia">—</div>
+            <div class="frm-calc-result-sub" id="fc-r-ganancia-sub"></div>
+          </div>
+          <div class="frm-calc-result highlight">
+            <div class="frm-calc-result-label">Incidencia Máx. Terreno</div>
+            <div class="frm-calc-result-val" id="fc-r-incidencia">—</div>
+            <div class="frm-calc-result-sub">USD/m² vendible</div>
+          </div>
+        </div>
+
+        <div class="frm-calc-nota">
+          * Simulación preliminar. No incluye costo del terreno. Honorarios profesionales sobre costo de obra.
+          Verificar con desarrollador.
         </div>
       </div>
 
