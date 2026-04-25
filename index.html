@@ -668,7 +668,7 @@
       color: #C8A96E; font-weight: 400;
     }
     .frm-calc-input {
-      background: #111; border: 1px solid #333; border-radius: 4px;
+      background: #111; border: 1px solid rgba(200,169,110,.35); border-radius: 4px;
       padding: 10px 12px; color: #fff;
       font-size: 14px; font-weight: 300;
       font-family: 'Inter', inherit;
@@ -1118,9 +1118,14 @@
             <div class="frm-calc-input-hint" id="fc-precio-hint">Referencia del barrio</div>
           </div>
           <div class="frm-calc-field">
-            <label class="frm-calc-label">Gastos y Honorarios (%)</label>
-            <input class="frm-calc-input" id="fc-gastos" type="number" placeholder="15" min="0" max="50">
-            <div class="frm-calc-input-hint">Sobre el costo total de obra</div>
+            <label class="frm-calc-label">Honorarios Prof. (%)</label>
+            <input class="frm-calc-input" id="fc-honorarios" type="number" placeholder="10" min="0" max="30">
+            <div class="frm-calc-input-hint">Sobre el costo de obra</div>
+          </div>
+          <div class="frm-calc-field">
+            <label class="frm-calc-label">Comercialización (%)</label>
+            <input class="frm-calc-input" id="fc-comerc" type="number" placeholder="5" min="0" max="20">
+            <div class="frm-calc-input-hint">Sobre el precio de venta total</div>
           </div>
         </div>
 
@@ -1143,7 +1148,7 @@
           <div class="frm-calc-result highlight">
             <div class="frm-calc-result-label">Incidencia Máx. Terreno</div>
             <div class="frm-calc-result-val" id="fc-r-incidencia">—</div>
-            <div class="frm-calc-result-sub">USD/m² vendible</div>
+            <div class="frm-calc-result-sub">USD/m² vendible · Sugerida según mercado de la zona</div>
           </div>
         </div>
 
