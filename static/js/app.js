@@ -752,11 +752,28 @@ function openFullReport() {
   }
 
   if (pd) {
-    // Plusvalía
+    // Plusvalía — dual moneda USD/UVA
     const inc = pd.edif_plusvalia_incidencia_uva;
     const al  = pd.edif_plusvalia_alicuota;
-    set('full-plusvalia-incidencia', inc ? Math.round(inc).toLocaleString('es-AR') + ' UVA' : 'No disponible');
-    set('full-plusvalia-alicuota',   al  ? al + '%' : 'No disponible');
+    if (inc) {
+      const uvaRnd = Math.round(inc);
+      const usdVal = (_fcDolarBlue > 0 && _fcUVA > 0)
+        ? Math.round(uvaRnd * _fcUVA / _fcDolarBlue)
+        : null;
+      const elInc = document.getElementById('full-plusvalia-incidencia');
+      if (elInc) {
+        if (usdVal) {
+          elInc.innerHTML =
+            `<span class="pv-usd">USD ${usdVal.toLocaleString('es-AR')}</span>` +
+            `<span class="pv-uva">&nbsp;(${uvaRnd.toLocaleString('es-AR')} UVA)</span>`;
+        } else {
+          elInc.textContent = uvaRnd.toLocaleString('es-AR') + ' UVA';
+        }
+      }
+    } else {
+      set('full-plusvalia-incidencia', 'No disponible');
+    }
+    set('full-plusvalia-alicuota', al ? al + '%' : 'No disponible');
 
     // Afectaciones
     const cat = pd.edif_catalogacion_proteccion;
@@ -811,6 +828,7 @@ function openFullReport() {
       });
       L.marker([lat, lng], { icon: goldIcon }).addTo(rmap);
       window._reportMap = rmap;
+      setTimeout(() => rmap.invalidateSize(), 80);
     }, 150);
   }
 

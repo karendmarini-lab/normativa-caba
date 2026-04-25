@@ -377,13 +377,40 @@
       border:1px solid rgba(255,191,0,.35);
     }
     .frm-hero-right{
-      background:#0a0a0a;border:none;border-radius:24px;
-      overflow:hidden;min-height:320px;
+      background:transparent;border:none;border-radius:0;
+      overflow:visible;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:12px;padding:20px 0;
     }
-    #report-location-map{width:100%;height:100%;min-height:320px}
+    /* ── MAPA CIRCULAR: aro de bronce + clip ── */
+    .frm-map-ring{
+      width:clamp(220px,26vw,290px);
+      height:clamp(220px,26vw,290px);
+      border-radius:50%;
+      padding:8px;
+      background:conic-gradient(from 30deg,
+        #2e1c00 0%,#7a4e10 12%,#c8973a 25%,#f0c840 38%,#c8973a 50%,
+        #7a4e10 62%,#3d2600 72%,#7a4e10 82%,#c8973a 92%,#2e1c00 100%);
+      box-shadow:
+        0 0 0 2px rgba(200,150,50,.08),
+        0 16px 56px rgba(0,0,0,.75),
+        0 0 32px rgba(200,150,50,.12);
+      flex-shrink:0;
+    }
+    .frm-map-clip{
+      width:100%;height:100%;
+      border-radius:50%;
+      overflow:hidden;
+      background:#0a0a0a;
+    }
+    #report-location-map{width:100%;height:100%;min-height:0}
+    /* Etiquetas del mapa del informe: filtro oro */
+    #report-location-map .map-labels-layer img{
+      filter:invert(1) sepia(1) saturate(2.5) hue-rotate(-15deg) brightness(.82) !important;
+    }
     .frm-coords{
-      font-size:10px;color:rgba(255,255,255,.25);letter-spacing:1px;
-      padding:8px 12px;background:#0a0a0a;
+      font-size:11px;color:rgba(255,255,255,.2);letter-spacing:1px;
+      padding:2px 0;background:transparent;text-align:center;
     }
 
     /* ── MÓDULO SUPERFICIES: 4 cards en fila ──────────────── */
@@ -401,15 +428,15 @@
     .frm-card:first-child{padding-left:0}
     .frm-card:last-child{border-right:none;padding-right:0}
     .frm-card-label{
-      font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      font-size:12px;letter-spacing:2px;text-transform:uppercase;
       color:var(--accent);font-weight:400;
     }
     .frm-card-val{
       font-size:clamp(1.8rem,3vw,2.8rem);font-weight:200;
       color:#fff;line-height:1;
     }
-    .frm-card-unit{font-size:11px;color:rgba(255,255,255,.4)}
-    .frm-card-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px}
+    .frm-card-unit{font-size:13px;color:rgba(255,255,255,.4)}
+    .frm-card-sub{font-size:13px;color:rgba(255,255,255,.35);margin-top:2px}
 
     /* Card total — Level 1 Hero */
     .frm-card.total{background:transparent}
@@ -422,11 +449,12 @@
       padding:24px 28px;margin-bottom:2rem;
     }
     .frm-table-title{
-      font-size:12px;letter-spacing:3px;text-transform:uppercase;
+      font-size:20px;letter-spacing:.5px;text-transform:uppercase;
       font-weight:800;color:var(--accent);margin-bottom:20px;
-      border-bottom:1px solid rgba(255,191,0,.2);padding-bottom:12px;
-      display:flex;align-items:center;gap:9px;
+      border-bottom:1px solid rgba(255,191,0,.2);padding-bottom:14px;
+      display:flex;align-items:center;gap:10px;
     }
+    .frm-table-title svg,.frm-calc-title svg{width:18px;height:18px;flex-shrink:0}
     .frm-table-grid{
       display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
       gap:0;border-top:1px solid #2a2a2a;
@@ -437,11 +465,11 @@
     }
     .frm-table-item:nth-child(3n){border-right:none}
     .frm-table-item label{
-      display:block;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+      display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;
       color:var(--accent);font-weight:400;margin-bottom:6px;
     }
     .frm-table-item p{
-      font-size:16px;font-weight:300;color:#fff;margin:0;
+      font-size:17px;font-weight:300;color:#fff;margin:0;
     }
 
     /* ── MÓDULO ANÁLISIS ECONÓMICO ──────────────────────────── */
@@ -463,7 +491,7 @@
       padding:8px 0;border-bottom:1px solid #242424;font-size:14px;
     }
     .frm-analysis-item:last-child{border-bottom:none}
-    .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:11px;letter-spacing:1px}
+    .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:13px;letter-spacing:.5px}
     .frm-analysis-item span:last-child{color:#fff;font-weight:300;text-align:right}
 
     /* Croquis */
@@ -472,14 +500,18 @@
       border-top:2px solid var(--accent);border-radius:16px;
       padding:24px;margin-bottom:2rem;
     }
-    .frm-croquis-links{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .frm-croquis-links{display:flex;gap:10px;flex-wrap:nowrap;margin-top:12px}
     .croquis-link{
-      font-size:10px;letter-spacing:2px;text-transform:uppercase;
-      color:var(--accent);text-decoration:none;
-      border:1px solid rgba(255,191,0,.35);padding:8px 16px;border-radius:100px;
-      transition:background .2s,color .2s;
+      flex:1;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+      color:#000;text-decoration:none;text-align:center;
+      background:var(--accent);border:none;
+      padding:13px 16px;border-radius:8px;
+      transition:opacity .2s;white-space:nowrap;
     }
-    .croquis-link:hover{background:var(--accent);color:#000}
+    .croquis-link:hover{opacity:.82;background:var(--accent);color:#000}
+    /* Plusvalía dual moneda */
+    .pv-usd{color:#fff;font-size:17px;font-weight:500}
+    .pv-uva{color:rgba(255,255,255,.38);font-size:13px;font-weight:300}
 
     /* Footer */
     .frm-footer-note{
@@ -659,9 +691,9 @@
       margin-bottom: 20px;
     }
     .frm-calc-title {
-      font-size: 12px; letter-spacing: 3px; text-transform: uppercase;
+      font-size: 20px; letter-spacing: .5px; text-transform: uppercase;
       font-weight: 800; color: var(--accent);
-      display: flex; align-items: center; gap: 9px;
+      display: flex; align-items: center; gap: 10px;
     }
     .frm-calc-reset {
       font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
@@ -694,7 +726,7 @@
     }
     .frm-calc-input:focus { border-color: rgba(200,169,110,.5); }
     .frm-calc-input-hint {
-      font-size: 10px; color: rgba(255,255,255,.25); margin-top: 2px;
+      font-size: 12px; color: rgba(255,255,255,.3); margin-top: 2px;
     }
 
     /* Resultados */
@@ -717,7 +749,7 @@
     .frm-calc-result:last-child { border-right: none; }
     .frm-calc-result.highlight { background: transparent; }
     .frm-calc-result-label {
-      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
       color: rgba(255,255,255,.35); margin-bottom: 8px;
     }
     .frm-calc-result-val {
@@ -727,7 +759,7 @@
     /* Ganancia — Level 1 Hero: blanco + 50% más grande */
     #fc-r-ganancia { color: #fff !important; font-size: clamp(1.6rem,2.4vw,2.2rem); }
     .frm-calc-result-sub {
-      font-size: 10px; color: rgba(255,255,255,.3); margin-top: 4px;
+      font-size: 12px; color: rgba(255,255,255,.3); margin-top: 4px;
     }
     .frm-calc-nota {
       font-size: 10px; color: rgba(255,255,255,.2);
@@ -751,11 +783,11 @@
       display: flex; align-items: center; gap: 8px;
     }
     .frm-macro-label {
-      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
       color: rgba(255,255,255,.35);
     }
     .frm-macro-val {
-      font-size: 13px; font-weight: 300; color: #fff;
+      font-size: 14px; font-weight: 300; color: #fff;
     }
     .frm-macro-sep {
       width: 1px; height: 16px;
@@ -1077,7 +1109,11 @@
           <span class="frm-hero-badge" id="full-district-badge">—</span>
         </div>
         <div class="frm-hero-right">
-          <div id="report-location-map"></div>
+          <div class="frm-map-ring">
+            <div class="frm-map-clip">
+              <div id="report-location-map"></div>
+            </div>
+          </div>
           <div class="frm-coords" id="full-coordinates"></div>
         </div>
       </div>
@@ -1121,6 +1157,12 @@
           <div class="frm-table-item"><label>Fondo</label><p id="full-fondo">—</p></div>
           <div class="frm-table-item"><label>Distrito CUR</label><p id="full-dis">—</p></div>
         </div>
+      </div>
+
+      <!-- CROQUIS (visible si el backend provee links) — integrado con normativa -->
+      <div id="croquis-container" class="frm-croquis hidden">
+        <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>Croquis y Planos Oficiales — Ciudad 3D</div>
+        <div class="frm-croquis-links" id="croquis-links-inner"></div>
       </div>
 
       <!-- MÓDULO ANÁLISIS ECONÓMICO + AFECTACIONES -->
@@ -1191,12 +1233,10 @@
           <div class="frm-calc-field">
             <label class="frm-calc-label">M² Vendibles (Venta)</label>
             <input class="frm-calc-input" id="fc-m2-vendibles" type="number" placeholder="0">
-            <div class="frm-calc-input-hint">Base para calcular ingresos</div>
           </div>
           <div class="frm-calc-field">
             <label class="frm-calc-label">M² Totales (Construcción)</label>
             <input class="frm-calc-input" id="fc-m2-totales" type="number" placeholder="0">
-            <div class="frm-calc-input-hint">Base para calcular costo de obra</div>
           </div>
           <div class="frm-calc-field">
             <label class="frm-calc-label">Costo de Obra (USD/m²)</label>
@@ -1216,7 +1256,6 @@
           <div class="frm-calc-field">
             <label class="frm-calc-label">Comercialización (%)</label>
             <input class="frm-calc-input" id="fc-comerc" type="number" placeholder="5" min="0" max="20">
-            <div class="frm-calc-input-hint">Sobre los ingresos brutos</div>
           </div>
           <div class="frm-calc-field">
             <label class="frm-calc-label">Margen Deseado (%)</label>
@@ -1252,12 +1291,6 @@
           * Simulación preliminar. No incluye costo del terreno. Honorarios profesionales sobre costo de obra.
           Verificar con desarrollador.
         </div>
-      </div>
-
-      <!-- CROQUIS (visible si el backend provee links) -->
-      <div id="croquis-container" class="frm-croquis hidden">
-        <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>Croquis y Planos Oficiales — Ciudad 3D</div>
-        <div class="frm-croquis-links" id="croquis-links-inner"></div>
       </div>
 
       <!-- FOOTER -->
