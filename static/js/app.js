@@ -1361,14 +1361,20 @@ function initFeasCalc() {
     if (key) precioVenta = PRECIOS_BARRIO[key];
   }
 
-  _fcDefaults = { m2Vendibles: m2v, costoObra, precioVenta, gastos: 15 };
+  _fcDefaults = { m2Vendibles: m2v, costoObra, precioVenta, honorarios: 10, comerc: 5 };
 
   // Setear los inputs
   const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
   setVal('fc-m2-vendibles', Math.round(m2v) || '');
   setVal('fc-costo-obra',   costoObra);
   setVal('fc-precio-venta', precioVenta);
-  setVal('fc-gastos',       15);
+  setVal('fc-honorarios',  10);
+  setVal('fc-comerc',       5);
+  // Actualizar m²totales en el global si disponible
+  if (!window._finMetrosTotales && window._pisosEstimados) {
+    const m2total = parseFloat(document.getElementById('full-volumen')?.innerText) || 0;
+    if (m2total > 0) window._finMetrosTotales = m2total;
+  }
 
   // Hints
   const hintCosto = document.getElementById('fc-costo-hint');
@@ -1401,7 +1407,8 @@ function initFeasCalc() {
       setVal('fc-m2-vendibles', Math.round(_fcDefaults.m2Vendibles) || '');
       setVal('fc-costo-obra',   _fcDefaults.costoObra);
       setVal('fc-precio-venta', _fcDefaults.precioVenta);
-      setVal('fc-gastos',       _fcDefaults.gastos);
+      setVal('fc-honorarios',  _fcDefaults.honorarios);
+      setVal('fc-comerc',       _fcDefaults.comerc);
       recalcFeas();
     });
     resetBtn._fcBound = true;
@@ -1412,13 +1419,15 @@ function initFeasCalc() {
 
 function recalcFeas() {
   const getN = id => parseFloat(document.getElementById(id)?.value) || 0;
-  const m2v       = getN('fc-m2-vendibles');
-  const costoM2   = getN('fc-costo-obra');
-  const precioM2  = getN('fc-precio-venta');
-  const gastosPct = getN('fc-gastos') / 100;
+  const m2v       = getN('fc-m2-vendibles');       // m² vendibles (ingresos)
+  const m2total   = window._finMetrosTotales || m2v / 0.85; // m² construibles totales (base de costo)
+  const costoM2   = getN('fc-costo-obra');          // USD/m² sobre m² TOTALES
+  const precioM2  = getN('fc-precio-venta');        // USD/m² vendible
+  const honorPct  = getN('fc-honorarios') / 100;   // % sobre costo de obra
+  const comercPct = getN('fc-comerc') / 100;        // % sobre GDV
 
   const fmtUSD = n => 'USD ' + Math.round(n).toLocaleString('es-AR');
-  const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+  const set    = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
   const setSub = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
 
   if (!m2v || !costoM2) {
@@ -1426,25 +1435,35 @@ function recalcFeas() {
     return;
   }
 
-  // Cálculo
-  const costoBase   = m2v * costoM2;
-  const gastos      = costoBase * gastosPct;
-  const costoTotal  = costoBase + gastos;
-  const gdv         = precioM2 ? m2v * precioM2 : null;
-  const ganancia    = gdv ? gdv - costoTotal : null;
-  const margenPct   = gdv ? (ganancia / gdv * 100) : null;
-  // Incidencia máx: GDV - costoTotal - target 10% ROI
-  const targetROI   = costoTotal * 0.10;
-  const incidMax    = gdv ? Math.max(0, (gdv - costoTotal - targetROI) / m2v) : null;
+  // 1. COSTO DE OBRA sobre m² totales construibles
+  const costoObra    = m2total * costoM2;
+  const honorarios   = costoObra * honorPct;
+  const costoTotal   = costoObra + honorarios;
 
+  // 2. INGRESOS por ventas (GDV) sobre m² vendibles
+  const gdv          = precioM2 ? m2v * precioM2 : null;
+  const gastosVenta  = gdv ? gdv * comercPct : 0;
+
+  // 3. GANANCIA BRUTA = GDV - costoTotal - gastosComercialización
+  const ganancia     = gdv != null ? gdv - costoTotal - gastosVenta : null;
+  const margenPct    = gdv ? (ganancia / gdv * 100) : null;
+
+  // 4. INCIDENCIA MÁX del terreno = GDV - costoTotal - gastosVenta - target 10% ROI
+  const targetROI    = costoTotal * 0.10;
+  const incidMax     = gdv ? Math.max(0, (gdv - costoTotal - gastosVenta - targetROI) / m2v) : null;
+
+  // Mostrar resultados
   set('fc-r-costo', fmtUSD(costoTotal));
-  setSub('fc-r-costo-sub', `Base ${fmtUSD(costoBase)} + honorarios ${fmtUSD(gastos)}`);
+  setSub('fc-r-costo-sub',
+    `Obra: ${fmtUSD(costoObra)} (${Math.round(m2total)} m²) + honorarios: ${fmtUSD(honorarios)}`);
 
   set('fc-r-gdv', gdv ? fmtUSD(gdv) : '—');
-  setSub('fc-r-gdv-sub', gdv ? `${Math.round(m2v).toLocaleString('es-AR')} m² × USD ${Math.round(precioM2)}` : 'Ingresá precio de venta');
+  setSub('fc-r-gdv-sub', gdv
+    ? `${Math.round(m2v).toLocaleString('es-AR')} m² × USD ${Math.round(precioM2)} − comerc. ${fmtUSD(gastosVenta)}`
+    : 'Ingresá precio de venta');
 
   set('fc-r-ganancia', ganancia != null ? fmtUSD(ganancia) : '—');
-  setSub('fc-r-ganancia-sub', margenPct != null ? `Margen: ${margenPct.toFixed(1)}%` : '');
+  setSub('fc-r-ganancia-sub', margenPct != null ? `Margen sobre GDV: ${margenPct.toFixed(1)}%` : '');
 
   set('fc-r-incidencia', incidMax != null ? fmtUSD(incidMax) : '—');
 }
