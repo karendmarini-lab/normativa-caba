@@ -1403,7 +1403,17 @@ function initFeasCalc() {
   const section = document.querySelector('.frm-calc-section');
   if (section && !section._fcBound) {
     section.addEventListener('input', e => {
-      if (e.target.classList.contains('frm-calc-input')) recalcFeas();
+      if (!e.target.classList.contains('frm-calc-input')) return;
+      recalcFeas();
+      // Flash en el card de incidencia cuando cambia el margen deseado
+      if (e.target.id === 'fc-margen') {
+        const card = document.getElementById('fc-r-incidencia-card');
+        if (card) {
+          card.classList.remove('incid-flash');
+          void card.offsetWidth; // reflow para reiniciar la animación
+          card.classList.add('incid-flash');
+        }
+      }
     });
     section._fcBound = true;
   }
@@ -1483,8 +1493,10 @@ function recalcFeas() {
   set('fc-r-ganancia', ganancia != null ? fmtUSD(ganancia) : '—');
   setSub('fc-r-ganancia-sub', margenPct != null ? `Margen sobre ingresos: ${margenPct.toFixed(1)}%` : '');
 
-  // Cuadro 4: Incidencia máxima del terreno
+  // Cuadro 4: Incidencia máxima del terreno + sub dinámico
+  const margenPctDisplay = Math.round(margenDeseado * 100);
   set('fc-r-incidencia', incidMax != null ? fmtUSD(incidMax) : '—');
+  setSub('fc-r-incidencia-sub', `USD/m² vendible · Valor sugerido para mantener un margen del ${margenPctDisplay}%`);
 }
 // ── FIN CALCULADORA FACTIBILIDAD ──────────────────────────────────
 

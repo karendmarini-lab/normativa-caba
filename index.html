@@ -744,13 +744,16 @@
     }
     .frm-macro-dot {
       width: 6px; height: 6px; border-radius: 50%;
-      background: #4ade80;
+      background: #2ECC71;
       box-shadow: 0 0 4px rgba(74,222,128,.6);
       animation: frm-pulse 2s infinite;
     }
     .frm-macro-dot.manual { background: #C8A96E; box-shadow: 0 0 4px rgba(200,169,110,.6); animation: none; }
     .frm-macro-live-label { color: rgba(255,255,255,.3); }
     @keyframes frm-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+    /* Flash de incidencia al cambiar margen */
+    @keyframes incid-flash { 0%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 30%{box-shadow:0 0 0 6px rgba(255,215,0,.35)} 100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} }
+    .incid-flash { animation: incid-flash .55s ease-out; }
 
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
@@ -1163,14 +1166,14 @@
 
         <div class="frm-calc-inputs">
           <div class="frm-calc-field">
-            <label class="frm-calc-label">M² Vendibles</label>
+            <label class="frm-calc-label">M² Vendibles (Venta)</label>
             <input class="frm-calc-input" id="fc-m2-vendibles" type="number" placeholder="0">
-            <div class="frm-calc-input-hint">Arrastrado del cálculo normativo</div>
+            <div class="frm-calc-input-hint">Base para calcular ingresos</div>
           </div>
           <div class="frm-calc-field">
-            <label class="frm-calc-label">M² Totales Obra</label>
+            <label class="frm-calc-label">M² Totales (Construcción)</label>
             <input class="frm-calc-input" id="fc-m2-totales" type="number" placeholder="0">
-            <div class="frm-calc-input-hint">Base para costo de construcción</div>
+            <div class="frm-calc-input-hint">Base para calcular costo de obra</div>
           </div>
           <div class="frm-calc-field">
             <label class="frm-calc-label">Costo de Obra (USD/m²)</label>
@@ -1215,10 +1218,10 @@
             <div class="frm-calc-result-val" id="fc-r-ganancia">—</div>
             <div class="frm-calc-result-sub" id="fc-r-ganancia-sub"></div>
           </div>
-          <div class="frm-calc-result highlight">
+          <div class="frm-calc-result highlight" id="fc-r-incidencia-card">
             <div class="frm-calc-result-label">Incidencia Máx. Terreno</div>
             <div class="frm-calc-result-val" id="fc-r-incidencia">—</div>
-            <div class="frm-calc-result-sub">USD/m² vendible · Este valor es lo máximo que podrías pagar el terreno para mantener el margen actual</div>
+            <div class="frm-calc-result-sub" id="fc-r-incidencia-sub">USD/m² vendible</div>
           </div>
         </div>
 
