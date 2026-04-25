@@ -1363,6 +1363,171 @@
     }
     /* ══ FIN LAYOUT STRUCTURAL v4 ════════════════════════════════ */
 
+
+    /* ══ LAYOUT v5 ════════════════════════════════════════════════ */
+
+    /* ── Cards: cristal, respira ────────────────────────────────── */
+    .frm-card,
+    .frm-table-card,
+    .frm-analysis-card,
+    .frm-calc-section,
+    .frm-croquis {
+      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+      border-top: 1px solid rgba(255,255,255,.09) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 6px 24px rgba(0,0,0,.45) !important;
+      margin-bottom: 20px !important;
+    }
+
+    /* ── Hero: card única, dirección+mapa mismo eje ──────────────── */
+    .frm-hero-row {
+      display: grid !important;
+      grid-template-columns: 1fr auto !important;
+      align-items: center !important;
+      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
+      border: 1px solid rgba(255,255,255,.06) !important;
+      border-top: 1px solid rgba(255,255,255,.09) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 6px 24px rgba(0,0,0,.45) !important;
+      padding: 28px 32px !important;
+      margin-bottom: 20px !important;
+      gap: 28px !important;
+    }
+    .frm-hero-left, .frm-hero-right {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    /* ── Cards m²: misma altura, número centrado, padding uniforme ── */
+    .frm-cards-row {
+      display: grid !important;
+      grid-template-columns: repeat(4,1fr) !important;
+      gap: 1px !important;
+      background: #222 !important;
+      border: 1px solid #222 !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+      margin-bottom: 20px !important;
+    }
+    .frm-card {
+      margin-bottom: 0 !important;
+      border-radius: 0 !important;
+      border: none !important;
+      padding: 22px 20px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      text-align: center !important;
+    }
+    .frm-card-label { text-align: center !important; }
+    .frm-card-val   { text-align: center !important; }
+    .frm-card-unit  { text-align: center !important; }
+
+    /* ── Calculadora: 6 columnas exactas ─────────────────────────── */
+    .frm-calc-inputs {
+      display: grid !important;
+      grid-template-columns: repeat(6,1fr) !important;
+      gap: 10px !important;
+      align-items: start !important;
+    }
+    .frm-calc-input {
+      height: 44px !important;
+      line-height: 1 !important;
+      padding: 0 12px !important;
+      box-sizing: border-box !important;
+      width: 100% !important;
+    }
+    .frm-calc-result-val { text-align: center !important; }
+    .frm-calc-result-sub { display: none !important; }
+    .frm-calc-input-hint { display: none !important; }
+
+    /* ── Analysis: stretch ────────────────────────────────────────── */
+    .frm-analysis {
+      display: grid !important;
+      grid-template-columns: 1fr 1fr !important;
+      gap: 20px !important;
+      align-items: stretch !important;
+      margin-bottom: 20px !important;
+    }
+    .frm-analysis-card {
+      margin-bottom: 0 !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    /* ── Plusvalía: USD bold blanco, UVA gris inline ─────────────── */
+    .frm-plusvalia-usd {
+      font-size: 20px !important; font-weight: 600 !important;
+      color: #fff !important; display: block !important;
+    }
+    .frm-plusvalia-uva {
+      font-size: 10px !important; color: rgba(255,255,255,.3) !important;
+      display: inline !important; margin-left: 4px !important;
+    }
+
+    /* ── Chat: misma superficie, sin línea blanca ─────────────────── */
+    .frm-with-chat { display: flex !important; align-items: stretch !important; }
+    .frm-main-col  { flex: 1 !important; min-width: 0 !important; }
+    #report-chat-container {
+      width: 260px !important;
+      flex-shrink: 0 !important;
+      background: #0d0d0d !important;
+      border-left: 1px solid #222 !important;
+      align-self: stretch !important;
+    }
+    .rc-header { background: transparent !important; border-bottom: 1px solid #1e1e1e !important; }
+    .rc-msg.user {
+      background: transparent !important; border-radius: 0 !important;
+      padding: 4px 0 4px 10px !important;
+      border-left: 2px solid rgba(200,169,110,.35) !important;
+      color: rgba(255,255,255,.9) !important;
+    }
+    .rc-msg.assistant {
+      background: transparent !important; border-radius: 0 !important;
+      padding: 4px 0 !important; color: rgba(180,180,180,.75) !important;
+    }
+    #rc-messages {
+      scrollbar-width: none !important; -ms-overflow-style: none !important;
+    }
+    #rc-messages::-webkit-scrollbar { display: none !important; }
+    .rc-input-bar, .rc-input-row { background: transparent !important; border-top: 1px solid #1e1e1e !important; }
+    .rc-input {
+      background: rgba(255,255,255,.04) !important;
+      border-color: rgba(255,255,255,.08) !important;
+    }
+
+    /* ── Mapa: borde gris, sin neón ──────────────────────────────── */
+    .frm-map-ring { border: 1px solid #444 !important; box-shadow: none !important; }
+
+    /* ── PDF glow pulse ──────────────────────────────────────────── */
+    #btn-download-pdf { animation: pdf-glow-v5 3s ease-in-out infinite !important; }
+    @keyframes pdf-glow-v5 {
+      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2),0 0 28px rgba(232,197,71,.06); }
+      50%      { box-shadow: 0 0 18px rgba(232,197,71,.4),0 0 44px rgba(232,197,71,.14); }
+    }
+
+    /* ── Padding cuerpo, respira ─────────────────────────────────── */
+    .frm-body { padding: 36px 40px 60px !important; }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media(max-width:1100px) {
+      .frm-calc-inputs { grid-template-columns: repeat(3,1fr) !important; }
+    }
+    @media(max-width:800px) {
+      .frm-hero-row { grid-template-columns: 1fr !important; }
+      .frm-cards-row { grid-template-columns: repeat(2,1fr) !important; }
+      .frm-calc-inputs { grid-template-columns: repeat(2,1fr) !important; }
+      .frm-analysis { grid-template-columns: 1fr !important; }
+      #report-chat-container { width: 100% !important; height: 300px !important; border-left: none !important; border-top: 1px solid #222 !important; }
+      .frm-body { padding: 20px 16px 40px !important; }
+    }
+    /* ══ FIN LAYOUT v5 ════════════════════════════════════════════ */
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -1719,6 +1884,11 @@
       </div>
 
       <!-- MÓDULO ANÁLISIS ECONÓMICO + AFECTACIONES -->
+
+
+      <!-- ENRASE -->
+
+
       <div class="frm-analysis">
         <div class="frm-analysis-card">
           <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>PLUSVALÍA Y ANÁLISIS ECONÓMICO</div>
@@ -1749,7 +1919,6 @@
         </div>
       </div>
 
-      <!-- ENRASE -->
       <div id="frm-enrase-bloque" class="frm-analysis" style="display:none">
         <div class="frm-analysis-card" style="grid-column:span 2">
           <div class="frm-table-title">⬡ Análisis de Enrase (Completamiento de Tejido)</div>
