@@ -829,6 +829,63 @@
     @keyframes incid-flash { 0%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 30%{box-shadow:0 0 0 6px rgba(255,215,0,.35)} 100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} }
     .incid-flash { animation: incid-flash .55s ease-out; }
 
+
+    /* ── POLISH v2 ──────────────────────────────────────────── */
+
+    /* Tarjetas con gradiente + sombra flotante + hilo de luz */
+    .frm-card,
+    .frm-table-card,
+    .frm-analysis-card,
+    .frm-calc-section,
+    .frm-hero-left,
+    .frm-hero-right,
+    .frm-croquis {
+      background: linear-gradient(160deg, #1e1e1e 0%, #0a0a0a 100%) !important;
+      box-shadow: 0 4px 24px rgba(0,0,0,.45), 0 1px 0 rgba(255,255,255,.04) inset;
+      border-top: 1px solid rgba(255,255,255,.05) !important;
+    }
+
+    /* Cards de resultados del simulador */
+    .frm-calc-result {
+      background: linear-gradient(160deg, #181818 0%, #0d0d0d 100%) !important;
+      border-top: 1px solid rgba(255,255,255,.04) !important;
+    }
+    .frm-calc-result.highlight {
+      background: linear-gradient(160deg, #1a1200 0%, #0a0800 100%) !important;
+      border-top: 1px solid rgba(200,169,110,.08) !important;
+    }
+
+    /* Ocultar sub-textos de resultados (limpieza radical) */
+    .frm-calc-result-sub { display: none !important; }
+
+    /* Plusvalía — valor USD grande, UVA chico */
+    .frm-plusvalia-usd {
+      font-size: 22px; font-weight: 500; color: #fff; display: block;
+    }
+    .frm-plusvalia-uva {
+      font-size: 11px; color: rgba(255,255,255,.35); display: block; margin-top: 2px;
+    }
+
+    /* Chat — fondo igual a las tarjetas + scroll ultra fino */
+    #report-chat-container {
+      background: linear-gradient(180deg, #161616 0%, #0d0d0d 100%) !important;
+      border-left: 1px solid rgba(255,255,255,.06) !important;
+    }
+    #rc-messages::-webkit-scrollbar { width: 3px; }
+    #rc-messages::-webkit-scrollbar-track { background: transparent; }
+    #rc-messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+    #rc-messages::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+
+    /* Botón PDF — glow amarillo tenue + pulse */
+    #btn-download-pdf {
+      box-shadow: 0 0 12px rgba(232,197,71,.25), 0 0 32px rgba(232,197,71,.08) !important;
+      animation: pdf-glow 3s ease-in-out infinite;
+    }
+    @keyframes pdf-glow {
+      0%,100% { box-shadow: 0 0 12px rgba(232,197,71,.25), 0 0 32px rgba(232,197,71,.08); }
+      50%      { box-shadow: 0 0 18px rgba(232,197,71,.4),  0 0 48px rgba(232,197,71,.15); }
+    }
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -1188,9 +1245,10 @@
       <div class="frm-analysis">
         <div class="frm-analysis-card">
           <div class="frm-table-title"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Plusvalía y Análisis Económico</div>
-          <div class="frm-analysis-item">
-            <span>Incidencia UVA</span>
-            <span id="full-plusvalia-incidencia">No disponible</span>
+          <div class="frm-analysis-item" style="flex-direction:column;align-items:flex-start;gap:4px">
+            <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C8A96E">Plusvalía DDHUS</span>
+            <span class="frm-plusvalia-usd" id="full-plusvalia-incidencia">No disponible</span>
+            <span class="frm-plusvalia-uva" id="full-plusvalia-uva-label"></span>
           </div>
           <div class="frm-analysis-item">
             <span>Alícuota</span>
