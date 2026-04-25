@@ -711,6 +711,47 @@
       margin-top: 14px; font-style: italic; line-height: 1.5;
     }
 
+
+    /* ── INDICADORES MACRO ──────────────────────────────────── */
+    .frm-macro-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 12px 18px;
+      background: rgba(255,255,255,.03);
+      border: 1px solid #1e1e1e;
+      border-radius: 6px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .frm-macro-indicator {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .frm-macro-label {
+      font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase;
+      color: rgba(255,255,255,.35);
+    }
+    .frm-macro-val {
+      font-size: 13px; font-weight: 300; color: #fff;
+    }
+    .frm-macro-sep {
+      width: 1px; height: 16px;
+      background: rgba(255,255,255,.08);
+    }
+    .frm-macro-live {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    }
+    .frm-macro-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 4px rgba(74,222,128,.6);
+      animation: frm-pulse 2s infinite;
+    }
+    .frm-macro-dot.manual { background: #C8A96E; box-shadow: 0 0 4px rgba(200,169,110,.6); animation: none; }
+    .frm-macro-live-label { color: rgba(255,255,255,.3); }
+    @keyframes frm-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
     </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
@@ -1099,6 +1140,25 @@
         <div class="frm-calc-header">
           <div class="frm-calc-title">Simulador de Factibilidad Económica</div>
           <button class="frm-calc-reset" id="frm-calc-reset-btn">↺ Restaurar valores</button>
+        </div>
+
+        <!-- Indicadores macro en vivo -->
+        <div class="frm-macro-bar" id="fc-macro-bar">
+          <div class="frm-macro-indicator">
+            <span class="frm-macro-label">💵 Dólar Blue</span>
+            <span class="frm-macro-val" id="fc-dolar-val">—</span>
+            <span class="frm-macro-label" style="font-size:9px;opacity:.6">(venta)</span>
+          </div>
+          <div class="frm-macro-sep"></div>
+          <div class="frm-macro-indicator">
+            <span class="frm-macro-label">📈 UVA</span>
+            <span class="frm-macro-val" id="fc-uva-val">—</span>
+          </div>
+          <div class="frm-macro-sep"></div>
+          <div class="frm-macro-live" id="fc-live-status">
+            <div class="frm-macro-dot" id="fc-live-dot"></div>
+            <span class="frm-macro-live-label" id="fc-live-label">EN VIVO</span>
+          </div>
         </div>
 
         <div class="frm-calc-inputs">

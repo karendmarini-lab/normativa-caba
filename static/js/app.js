@@ -1339,6 +1339,9 @@ let _fcDefaults = {
 };
 
 function initFeasCalc() {
+  // Cargar indicadores macro en tiempo real
+  fetchMacroIndicators();
+
   const pd     = window._currentParcelData;
   const barrio = pd?.barrio || '';
   const pisos  = window._pisosEstimados || 0;
@@ -1468,3 +1471,77 @@ function recalcFeas() {
   set('fc-r-incidencia', incidMax != null ? fmtUSD(incidMax) : '—');
 }
 // ── FIN CALCULADORA FACTIBILIDAD ──────────────────────────────────
+
+
+// ── INDICADORES MACRO EN VIVO ─────────────────────────────────────
+const FC_FALLBACK_DOLAR = 1410;
+const FC_FALLBACK_UVA   = 1100;
+
+let _fcDolarBlue = FC_FALLBACK_DOLAR;
+let _fcUVA       = FC_FALLBACK_UVA;
+let _fcMacroLive = false;
+
+async function fetchMacroIndicators() {
+  const fmtARS = n => '$' + Math.round(n).toLocaleString('es-AR');
+  const setDolar = (val, live) => {
+    const el = document.getElementById('fc-dolar-val');
+    if (el) el.textContent = fmtARS(val);
+    _fcDolarBlue = val;
+  };
+  const setUVA = (val) => {
+    const el = document.getElementById('fc-uva-val');
+    if (el) el.textContent = fmtARS(val);
+    _fcUVA = val;
+  };
+  const setStatus = (live, msg) => {
+    const dot   = document.getElementById('fc-live-dot');
+    const label = document.getElementById('fc-live-label');
+    if (dot)   dot.className   = 'frm-macro-dot' + (live ? '' : ' manual');
+    if (label) label.textContent = msg;
+    _fcMacroLive = live;
+  };
+
+  // Mostrar fallback mientras carga
+  setDolar(FC_FALLBACK_DOLAR, false);
+  setUVA(FC_FALLBACK_UVA);
+  setStatus(false, 'CARGANDO...');
+
+  try {
+    const [rDolar, rUVA] = await Promise.allSettled([
+      fetch('https://dolarapi.com/v1/dolares/blue'),
+      fetch('https://dolarapi.com/v1/cotizaciones/uva'),
+    ]);
+
+    let dolarOk = false, uvaOk = false;
+
+    if (rDolar.status === 'fulfilled' && rDolar.value.ok) {
+      const d = await rDolar.value.json();
+      const venta = d.venta || d.value || FC_FALLBACK_DOLAR;
+      setDolar(venta, true);
+      dolarOk = true;
+    }
+
+    if (rUVA.status === 'fulfilled' && rUVA.value.ok) {
+      const d = await rUVA.value.json();
+      const val = d.valor || d.value || d.venta || FC_FALLBACK_UVA;
+      setUVA(val);
+      uvaOk = true;
+    }
+
+    if (dolarOk && uvaOk) {
+      setStatus(true, 'EN VIVO');
+    } else if (dolarOk || uvaOk) {
+      setStatus(false, 'PARCIAL');
+    } else {
+      setStatus(false, 'REF. MANUAL');
+    }
+
+  } catch(e) {
+    setStatus(false, 'VALORES DE REFERENCIA');
+  }
+}
+
+// Cuando el usuario modifica el dólar manualmente (no hay campo directo,
+// pero si modifica los inputs de costo/precio, el indicador sigue EN VIVO)
+// Si en el futuro se agrega un input de dólar, bindearlo aquí.
+// ── FIN INDICADORES MACRO ─────────────────────────────────────────
