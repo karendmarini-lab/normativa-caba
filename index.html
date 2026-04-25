@@ -1168,6 +1168,11 @@
             <div class="frm-calc-input-hint">Arrastrado del cálculo normativo</div>
           </div>
           <div class="frm-calc-field">
+            <label class="frm-calc-label">M² Totales Obra</label>
+            <input class="frm-calc-input" id="fc-m2-totales" type="number" placeholder="0">
+            <div class="frm-calc-input-hint">Base para costo de construcción</div>
+          </div>
+          <div class="frm-calc-field">
             <label class="frm-calc-label">Costo de Obra (USD/m²)</label>
             <input class="frm-calc-input" id="fc-costo-obra" type="number" placeholder="1100">
             <div class="frm-calc-input-hint" id="fc-costo-hint">Estimado por altura</div>
@@ -1180,12 +1185,17 @@
           <div class="frm-calc-field">
             <label class="frm-calc-label">Honorarios Prof. (%)</label>
             <input class="frm-calc-input" id="fc-honorarios" type="number" placeholder="10" min="0" max="30">
-            <div class="frm-calc-input-hint">Sobre el costo de obra</div>
+            <div class="frm-calc-input-hint">Sobre el costo de construcción</div>
           </div>
           <div class="frm-calc-field">
             <label class="frm-calc-label">Comercialización (%)</label>
             <input class="frm-calc-input" id="fc-comerc" type="number" placeholder="5" min="0" max="20">
-            <div class="frm-calc-input-hint">Sobre el precio de venta total</div>
+            <div class="frm-calc-input-hint">Sobre los ingresos brutos</div>
+          </div>
+          <div class="frm-calc-field">
+            <label class="frm-calc-label">Margen Deseado (%)</label>
+            <input class="frm-calc-input" id="fc-margen" type="number" placeholder="20" min="0" max="60">
+            <div class="frm-calc-input-hint">Para el cálculo de incidencia del terreno</div>
           </div>
         </div>
 
