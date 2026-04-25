@@ -1461,22 +1461,22 @@ function recalcFeas() {
 
   // Mostrar resultados
 
-  // Ingresos: GDV bruto, con desglose de comercialización abajo
-  set('fc-r-gdv', gdv ? fmtUSD(gdv) : '—');
-  setSub('fc-r-gdv-sub', gdv
-    ? `${Math.round(m2v).toLocaleString('es-AR')} m² × USD ${Math.round(precioM2)} | Comerc.: ${fmtUSD(gastosVenta)}`
-    : 'Ingresá precio de venta');
-
-  // Costo total: obra + honorarios + comercialización
+  // Cuadro 1: COSTO TOTAL DE PROYECTO = Obra + Honorarios + Comercialización
   set('fc-r-costo', fmtUSD(costoTotal));
   setSub('fc-r-costo-sub',
-    `Obra ${fmtUSD(costoObra)} + hon. ${fmtUSD(honorarios)} + comerc. ${fmtUSD(gastosVenta)}`);
+    `Obra ${fmtUSD(costoObra)} + Hon. ${fmtUSD(honorarios)} + Comerc. ${fmtUSD(gastosVenta)}`);
 
-  // Ganancia
+  // Cuadro 2: Ingresos = m² vendibles × precio (sin deducciones)
+  set('fc-r-gdv', gdv ? fmtUSD(gdv) : '—');
+  setSub('fc-r-gdv-sub', gdv
+    ? `${Math.round(m2v).toLocaleString('es-AR')} m² vendibles × USD ${Math.round(precioM2)}`
+    : 'Ingresá precio de venta');
+
+  // Cuadro 3: Ganancia = Ingresos - Costo Total
   set('fc-r-ganancia', ganancia != null ? fmtUSD(ganancia) : '—');
-  setSub('fc-r-ganancia-sub', margenPct != null ? `Margen sobre GDV: ${margenPct.toFixed(1)}%` : '');
+  setSub('fc-r-ganancia-sub', margenPct != null ? `Margen sobre ingresos: ${margenPct.toFixed(1)}%` : '');
 
-  // Incidencia
+  // Cuadro 4: Incidencia máxima del terreno
   set('fc-r-incidencia', incidMax != null ? fmtUSD(incidMax) : '—');
 }
 // ── FIN CALCULADORA FACTIBILIDAD ──────────────────────────────────
