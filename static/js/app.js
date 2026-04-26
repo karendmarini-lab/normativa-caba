@@ -764,8 +764,8 @@ function openFullReport() {
       if (elInc) {
         if (usdVal) {
           elInc.innerHTML =
-            `<span class="pv-usd">USD ${usdVal.toLocaleString('es-AR')}</span>` +
-            `<span class="pv-uva">&nbsp;(${uvaRnd.toLocaleString('es-AR')} UVA)</span>`;
+            `<span class="frm-plusvalia-usd">USD ${usdVal.toLocaleString('es-AR')}</span>` +
+            `<span class="frm-plusvalia-uva">&nbsp;(${uvaRnd.toLocaleString('es-AR')} UVA)</span>`;
         } else {
           elInc.textContent = uvaRnd.toLocaleString('es-AR') + ' UVA';
         }

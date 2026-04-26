@@ -261,7 +261,7 @@
 
     /* ANÁLISIS: dos columnas, misma altura */
     .frm-analysis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important}
-    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important}
+    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important;height:100%!important}
 
     /* CALC: 6 columnas exactas */
     .frm-calc-section{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
@@ -277,7 +277,7 @@
     /* CHAT: transparente, sin scroll visible, borderless */
     .frm-with-chat{display:flex!important;align-items:stretch!important}
     .frm-main-col{flex:1!important;min-width:0!important;overflow-y:auto!important}
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;border-left:1px solid rgba(255,255,255,.05)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
     .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(200,169,110,.4)!important}
@@ -596,9 +596,6 @@
       background:var(--accent);color:#000;
       box-shadow:0 0 18px rgba(255,191,0,.38);
     }
-    /* Plusvalía dual moneda */
-    .pv-usd{color:#fff;font-size:21px;font-weight:800}
-    .pv-uva{color:rgba(255,255,255,.38);font-size:13px;font-weight:300}
 
     /* Footer */
     .frm-footer-note{
@@ -2023,7 +2020,7 @@
     .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
     .frm-with-chat{display:flex!important;align-items:stretch!important}
     .frm-main-col{flex:1!important;min-width:0!important;overflow-y:auto!important}
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;border-left:1px solid rgba(255,255,255,.06)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
     .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(200,169,110,.4)!important}
@@ -2063,7 +2060,7 @@
 
     /* ANÁLISIS: stretch uniforme */
     .frm-analysis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important}
-    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important}
+    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important;height:100%!important}
 
     /* CALC: 6 columnas */
     .frm-calc-section{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
@@ -2076,7 +2073,7 @@
     /* CHAT: transparente, sin barreras */
     .frm-with-chat{display:flex!important;align-items:stretch!important}
     .frm-main-col{flex:1!important;min-width:0!important;overflow-y:auto!important}
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;border-left:1px solid rgba(255,255,255,.05)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
     .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(200,169,110,.4)!important}
@@ -2502,9 +2499,6 @@
           <div id="frm-enrase-contenido"></div>
         </div>
       </div>
-
-      <!-- MÓDULO ANÁLISIS ECONÓMICO + AFECTACIONES -->
-
 
       <!-- CALCULADORA DE FACTIBILIDAD -->
       <div class="frm-calc-section">
