@@ -2688,71 +2688,72 @@
 
 
   <style>
-    /* ── NUCLEAR v6 — chat fixed right dock ── */
+    /* ── NUCLEAR v7 — scroll + close + chat dock ── */
 
     /* Cards m²: label 45px altura fija */
     #full-report-modal .frm-card,
     #full-report-modal .frm-cards-row > div {
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-start !important;
-      align-items: center !important;
-      text-align: center !important;
-      min-height: 130px !important;
-      padding: 20px 16px !important;
+      display: flex !important; flex-direction: column !important;
+      justify-content: flex-start !important; align-items: center !important;
+      text-align: center !important; min-height: 130px !important; padding: 20px 16px !important;
     }
     #full-report-modal .frm-card-label {
-      display: flex !important;
-      align-items: flex-end !important;
-      justify-content: center !important;
-      height: 45px !important;
-      min-height: 45px !important;
-      max-height: 45px !important;
-      width: 100% !important;
-      text-align: center !important;
-      margin: 0 !important;
-      padding: 0 !important;
-      line-height: 1.2 !important;
-      overflow: hidden !important;
+      display: flex !important; align-items: flex-end !important;
+      justify-content: center !important; height: 45px !important;
+      min-height: 45px !important; max-height: 45px !important;
+      width: 100% !important; text-align: center !important;
+      margin: 0 !important; padding: 0 !important;
+      line-height: 1.2 !important; overflow: hidden !important;
     }
-    #full-report-modal .frm-card-val {
-      width: 100% !important;
-      text-align: center !important;
-      margin: 10px 0 0 0 !important;
-    }
-    #full-report-modal .frm-card-unit {
-      width: 100% !important;
-      text-align: center !important;
-      margin: 4px 0 0 0 !important;
-    }
+    #full-report-modal .frm-card-val { width: 100% !important; text-align: center !important; margin: 10px 0 0 0 !important; }
+    #full-report-modal .frm-card-unit { width: 100% !important; text-align: center !important; margin: 4px 0 0 0 !important; }
 
     /* Enrase visible */
     #full-report-modal #frm-enrase-bloque { display: block !important; }
     #full-report-modal #frm-enrase-contenido { color: rgba(255,255,255,.8) !important; }
     #full-report-modal #frm-enrase-contenido span { color: rgba(255,255,255,.8) !important; }
 
-    /* Scroll recovery */
-    body { overflow-y: auto !important; }
-
-    /* ── CHAT: FIXED RIGHT DOCK ─────────────────────────────────── */
-
-    /* El modal ocupa toda la pantalla menos los 400px del chat */
+    /* ── SCROLL CRÍTICO ─────────────────────────────────────── */
+    /* El modal scrollea verticalmente, body NO bloquea el scroll */
+    html, body { overflow: auto !important; }
     #full-report-modal {
+      overflow-y: auto !important;
+      height: 100vh !important;
       padding-right: 400px !important;
       box-sizing: border-box !important;
     }
 
-    /* frm-with-chat: el main-col llena el espacio disponible */
-    .frm-with-chat {
-      display: block !important;
+    /* El frm-body scrollea normalmente */
+    .frm-with-chat { display: block !important; }
+    .frm-main-col { display: block !important; width: 100% !important; }
+
+    /* ── BOTÓN CERRAR — visible y claro ─────────────────────── */
+    #full-report-modal #close-full-report {
+      position: fixed !important;
+      top: 20px !important;
+      right: 420px !important;   /* fuera del chat de 400px */
+      z-index: 10001 !important;
+      background: rgba(0,0,0,0.7) !important;
+      border: 1px solid #E8C547 !important;
+      border-radius: 50% !important;
+      width: 36px !important;
+      height: 36px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 18px !important;
+      color: #fff !important;
+      cursor: pointer !important;
+      opacity: 1 !important;
+      padding: 0 !important;
+      line-height: 1 !important;
     }
-    .frm-main-col {
-      display: block !important;
-      width: 100% !important;
-      overflow-y: visible !important;
+    #full-report-modal #close-full-report:hover {
+      background: rgba(232,197,71,.2) !important;
+      color: #E8C547 !important;
     }
 
-    /* Chat: panel fijo pegado a la derecha */
+    /* ── CHAT: FIXED RIGHT — no bloquea scroll del informe ─── */
     #full-report-modal #report-chat-container {
       position: fixed !important;
       right: 0 !important;
@@ -2762,8 +2763,8 @@
       height: 100vh !important;
       background-color: #0d0d0d !important;
       border-left: 1px solid #333 !important;
-      box-shadow: -5px 0 15px rgba(0,0,0,0.5) !important;
-      z-index: 9999 !important;
+      box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
+      z-index: 1000 !important;
       display: flex !important;
       flex-direction: column !important;
       overflow: hidden !important;
@@ -2773,111 +2774,49 @@
     #full-report-modal .rc-header {
       background: rgba(255,255,255,.03) !important;
       border-bottom: 1px solid rgba(255,255,255,.08) !important;
-      padding: 18px 20px 14px !important;
-      flex-shrink: 0 !important;
+      padding: 18px 20px 14px !important; flex-shrink: 0 !important;
     }
-    #full-report-modal .rc-label {
-      color: #E8C547 !important;
-      font-size: 10px !important;
-      letter-spacing: 3px !important;
-      font-weight: 600 !important;
-    }
+    #full-report-modal .rc-label { color: #E8C547 !important; font-size: 10px !important; letter-spacing: 3px !important; font-weight: 600 !important; }
 
     /* Mensajes */
     #full-report-modal #rc-messages {
-      flex: 1 !important;
-      overflow-y: auto !important;
-      padding: 14px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 8px !important;
+      flex: 1 !important; overflow-y: auto !important;
+      padding: 14px !important; display: flex !important;
+      flex-direction: column !important; gap: 8px !important;
     }
     #full-report-modal #rc-messages::-webkit-scrollbar { display: none !important; width: 0 !important; }
     #full-report-modal #rc-messages { scrollbar-width: none !important; -ms-overflow-style: none !important; }
 
     /* Burbujas */
     #full-report-modal .rc-msg {
-      font-size: 14px !important;
-      line-height: 1.5 !important;
-      padding: 10px 14px !important;
-      border-radius: 10px !important;
-      margin: 0 !important;
-      border-left: none !important;
+      font-size: 14px !important; line-height: 1.5 !important;
+      padding: 10px 14px !important; border-radius: 10px !important;
+      margin: 0 !important; border-left: none !important;
     }
-    #full-report-modal .rc-msg.user {
-      background: rgba(255,215,0,0.06) !important;
-      color: #fff !important;
-    }
-    #full-report-modal .rc-msg.assistant {
-      background: #1a1a1a !important;
-      color: rgba(215,215,215,.9) !important;
-    }
-    #full-report-modal .rc-msg.info {
-      background: transparent !important;
-      color: rgba(255,255,255,.28) !important;
-      font-size: 11px !important;
-      padding: 3px 6px !important;
-    }
+    #full-report-modal .rc-msg.user { background: rgba(255,215,0,0.06) !important; color: #fff !important; }
+    #full-report-modal .rc-msg.assistant { background: #1a1a1a !important; color: rgba(215,215,215,.9) !important; }
+    #full-report-modal .rc-msg.info { background: transparent !important; color: rgba(255,255,255,.28) !important; font-size: 11px !important; padding: 3px 6px !important; }
 
     /* Chips */
-    #full-report-modal .rc-chips {
-      background: transparent !important;
-      border-top: 1px solid rgba(255,255,255,.07) !important;
-      padding: 8px 12px !important;
-      flex-shrink: 0 !important;
-      gap: 6px !important;
-      flex-wrap: wrap !important;
-    }
+    #full-report-modal .rc-chips { background: transparent !important; border-top: 1px solid rgba(255,255,255,.07) !important; padding: 8px 12px !important; flex-shrink: 0 !important; }
+    #full-report-modal .rc-chip { font-size: 11px !important; color: rgba(255,255,255,.5) !important; border-color: rgba(255,255,255,.15) !important; }
+    #full-report-modal .rc-chip:hover { color: #E8C547 !important; border-color: #E8C547 !important; }
 
     /* Input */
-    #full-report-modal .rc-input-row {
-      background: transparent !important;
-      border-top: 1px solid rgba(255,255,255,.08) !important;
-      padding: 12px 14px !important;
-      flex-shrink: 0 !important;
-      box-sizing: border-box !important;
-      width: 100% !important;
-    }
-    #full-report-modal .rc-input {
-      background: rgba(255,255,255,.05) !important;
-      border: 1px solid rgba(255,255,255,.12) !important;
-      border-radius: 8px !important;
-      color: #fff !important;
-      font-size: 13px !important;
-      box-sizing: border-box !important;
-    }
-    #full-report-modal .rc-input:focus {
-      border-color: rgba(232,197,71,.4) !important;
-      outline: none !important;
-    }
-    #full-report-modal .rc-send {
-      background: #E8C547 !important;
-      color: #000 !important;
-      border: none !important;
-      border-radius: 8px !important;
-      width: 36px !important;
-      height: 36px !important;
-      flex-shrink: 0 !important;
-    }
+    #full-report-modal .rc-input-row { background: transparent !important; border-top: 1px solid rgba(255,255,255,.08) !important; padding: 12px 14px !important; flex-shrink: 0 !important; }
+    #full-report-modal .rc-input { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.12) !important; border-radius: 8px !important; color: #fff !important; font-size: 13px !important; }
+    #full-report-modal .rc-input:focus { border-color: rgba(232,197,71,.4) !important; outline: none !important; }
+    #full-report-modal .rc-send { background: #E8C547 !important; color: #000 !important; border: none !important; border-radius: 8px !important; width: 36px !important; height: 36px !important; flex-shrink: 0 !important; }
     #full-report-modal .rc-send:hover { opacity: .85 !important; }
 
-    /* Botón cerrar — fijo en esquina superior derecha del MODAL */
-    #full-report-modal #close-full-report {
-      position: fixed !important;
-      top: 20px !important;
-      right: 420px !important;
-      z-index: 10000 !important;
-    }
-
+    /* Responsive */
     @media(max-width:900px) {
       #full-report-modal { padding-right: 0 !important; }
+      #full-report-modal #close-full-report { right: 20px !important; }
       #full-report-modal #report-chat-container {
-        position: static !important;
-        width: 100% !important;
-        height: 320px !important;
-        border-left: none !important;
-        border-top: 1px solid #333 !important;
-        box-shadow: none !important;
+        position: static !important; width: 100% !important;
+        height: 320px !important; border-left: none !important;
+        border-top: 1px solid #333 !important; box-shadow: none !important;
       }
     }
   </style>
