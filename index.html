@@ -248,14 +248,14 @@
     .frm-hero-row{display:flex;flex-direction:row;align-items:center;gap:28px;background:linear-gradient(145deg,#1c1c1c,#0e0e0e);border:1px solid rgba(255,255,255,.07);border-top:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.55);padding:28px 32px;margin-bottom:20px;overflow:hidden}
     .frm-hero-left{flex:1 1 auto;min-width:0;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
     .frm-hero-right{flex:0 0 auto;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-map-ring{border:1.5px solid #3a3a3a!important;box-shadow:none!important;outline:none!important}
+    .frm-map-ring{border:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important;outline:none!important}
 
     /* M² CARDS: grilla 4 columnas matemáticas */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
     .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
     .frm-card.total .frm-card-val{color:var(--accent)!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important}
+    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important;min-height:2.4em!important;display:flex!important;align-items:flex-end!important}
     .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
     .frm-card-sub{font-size:10px!important;color:rgba(255,255,255,.3)!important}
 
@@ -276,7 +276,7 @@
 
     /* SCROLL: .formal-report es el contenedor — scrollbar en el borde absoluto derecho */
     .frm-with-chat{display:flex!important;align-items:flex-start!important;min-height:100vh!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important}
+    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important;margin-right:260px!important}
     /* Scrollbar fino del modal — 4px gris oscuro en borde derecho de pantalla */
     .formal-report::-webkit-scrollbar{width:4px!important}
     .formal-report::-webkit-scrollbar-track{background:transparent!important}
@@ -284,7 +284,7 @@
     .formal-report{scrollbar-width:thin!important;scrollbar-color:#2a2a2a transparent!important}
 
     /* CHAT: fondo sólido, nativo, sin bordes */
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:#0a0a0a!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:rgba(10,10,10,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;position:fixed!important;right:0!important;top:0!important;z-index:100!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
     .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.35)!important}
@@ -318,7 +318,7 @@
 
     /* RESPONSIVE */
     @media(max-width:1100px){.frm-cards-row{grid-template-columns:repeat(2,1fr)!important}.frm-calc-inputs{grid-template-columns:repeat(3,1fr)!important}}
-    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-body{padding:20px 16px 40px!important}}
+    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-main-col{margin-right:0!important}.frm-body{padding:20px 16px 40px!important}}
 
     /* ══════════════════════════════════════════════════════════
        FIN CSS DEFINITIVO
@@ -405,7 +405,7 @@
 
     /* Botón cierre */
     #close-full-report{
-      position:fixed;top:24px;right:28px;z-index:10001;
+      position:fixed;top:24px;right:288px;z-index:10001;
       font-size:24px;font-weight:200;color:rgba(255,255,255,.5);
       background:none;border:none;cursor:pointer;
       transition:color .2s;line-height:1;
@@ -2017,7 +2017,7 @@
     .frm-hero-row{display:flex!important;flex-direction:row!important;align-items:center!important;gap:28px!important;background:linear-gradient(145deg,#1c1c1c 0%,#0e0e0e 100%)!important;border:1px solid rgba(255,255,255,.07)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 8px 32px rgba(0,0,0,.55)!important;padding:28px 32px!important;margin-bottom:20px!important;overflow:hidden!important}
     .frm-hero-left{flex:1 1 auto!important;min-width:0!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
     .frm-hero-right{flex:0 0 auto!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-map-ring{border:1.5px solid #3a3a3a!important;box-shadow:none!important;outline:none!important}
+    .frm-map-ring{border:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important;outline:none!important}
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important}
     .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
@@ -2050,7 +2050,7 @@
     #btn-download-pdf{animation:pglow6 3s ease-in-out infinite!important}
     @keyframes pglow6{0%,100%{box-shadow:0 0 10px rgba(232,197,71,.2)}50%{box-shadow:0 0 22px rgba(232,197,71,.45),0 0 42px rgba(232,197,71,.12)}}
     @media(max-width:1100px){.frm-cards-row{grid-template-columns:repeat(2,1fr)!important}.frm-calc-inputs{grid-template-columns:repeat(3,1fr)!important}}
-    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-body{padding:20px 16px 40px!important}}
+    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-main-col{margin-right:0!important}.frm-body{padding:20px 16px 40px!important}}
     /* ══ FIN RIGID GRID v6 ════════════════════════════════════ */
 
 
@@ -2060,14 +2060,14 @@
     .frm-hero-row{display:flex!important;flex-direction:row!important;align-items:center!important;gap:28px!important;background:linear-gradient(145deg,#1c1c1c,#0e0e0e)!important;border:1px solid rgba(255,255,255,.07)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 8px 32px rgba(0,0,0,.55)!important;padding:28px 32px!important;margin-bottom:20px!important;overflow:hidden!important}
     .frm-hero-left{flex:1 1 auto!important;min-width:0!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
     .frm-hero-right{flex:0 0 auto!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-map-ring{border:1.5px solid #3a3a3a!important;box-shadow:none!important}
+    .frm-map-ring{border:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important}
 
     /* m² CARDS: grilla 4 columnas exactas */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
     .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
     .frm-card.total .frm-card-val{color:var(--accent)!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important}
+    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important;min-height:2.4em!important;display:flex!important;align-items:flex-end!important}
     .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
 
     /* ANÁLISIS: stretch uniforme */
@@ -2084,7 +2084,7 @@
 
     /* SCROLL: .formal-report es el contenedor — scrollbar en el borde absoluto derecho */
     .frm-with-chat{display:flex!important;align-items:flex-start!important;min-height:100vh!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important}
+    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important;margin-right:260px!important}
     /* Scrollbar fino del modal — 4px gris oscuro en borde derecho de pantalla */
     .formal-report::-webkit-scrollbar{width:4px!important}
     .formal-report::-webkit-scrollbar-track{background:transparent!important}
@@ -2092,7 +2092,7 @@
     .formal-report{scrollbar-width:thin!important;scrollbar-color:#2a2a2a transparent!important}
 
     /* CHAT: fondo sólido, nativo, sin bordes */
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:#0a0a0a!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:rgba(10,10,10,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;position:fixed!important;right:0!important;top:0!important;z-index:100!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
     .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.35)!important}
@@ -2126,7 +2126,7 @@
 
     /* RESPONSIVE */
     @media(max-width:1100px){.frm-cards-row{grid-template-columns:repeat(2,1fr)!important}.frm-calc-inputs{grid-template-columns:repeat(3,1fr)!important}}
-    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-body{padding:20px 16px 40px!important}}
+    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-main-col{margin-right:0!important}.frm-body{padding:20px 16px 40px!important}}
     /* ══ FIN FINAL v7 ══════════════════════════════════════════ */
 
     </style></defs>
