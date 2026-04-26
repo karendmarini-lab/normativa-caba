@@ -290,6 +290,16 @@
     #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
     #rc-messages::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
 
+    /* SCROLLBAR ATÓMICO — oculta cualquier barra dentro del modal */
+    .formal-report ::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+    .formal-report ::-webkit-scrollbar-track{display:none!important}
+    .formal-report ::-webkit-scrollbar-thumb{display:none!important}
+    .formal-report *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+
+    /* M² GRID — fuerza 4 columnas sin margen residual */
+    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
+    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important}
+
     /* TARJETAS GENERALES */
     .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}
 
@@ -2085,6 +2095,16 @@
     #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
     #rc-messages::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
     .rc-chips{background:transparent!important;border-top:1px solid rgba(255,255,255,.06)!important}
+
+    /* SCROLLBAR ATÓMICO — oculta cualquier barra dentro del modal */
+    .formal-report ::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+    .formal-report ::-webkit-scrollbar-track{display:none!important}
+    .formal-report ::-webkit-scrollbar-thumb{display:none!important}
+    .formal-report *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+
+    /* M² GRID — fuerza 4 columnas sin margen residual */
+    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
+    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important}
 
     /* TARJETAS GENERALES */
     .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}

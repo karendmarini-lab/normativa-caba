@@ -1071,9 +1071,11 @@ class StaticFileFilterMiddleware(BaseHTTPMiddleware):
 
             return Response(status_code=404)
         response = await call_next(request)
-        # Prevent browser caching of JS/CSS so deploys take effect immediately
-        if ext in (".js", ".css"):
-            response.headers["Cache-Control"] = "no-cache, must-revalidate"
+        # Prevent browser caching of HTML/JS/CSS so deploys take effect immediately
+        if ext in (".html", ".js", ".css") or ext == "":
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
         return response
 
 
