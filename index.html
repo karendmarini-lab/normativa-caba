@@ -252,10 +252,10 @@
 
     /* M² CARDS: grilla 4 columnas matemáticas */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
-    .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
+    .frm-card{display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-items:start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
     .frm-card.total .frm-card-val{color:var(--accent)!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important;height:36px!important;overflow:hidden!important;display:flex!important;align-items:flex-start!important}
+    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;overflow:hidden!important;display:block!important;align-self:start!important;margin:0!important}
     .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
     .frm-card-sub{font-size:10px!important;color:rgba(255,255,255,.3)!important}
 
@@ -300,7 +300,7 @@
 
     /* M² GRID — fuerza 4 columnas sin margen residual */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
-    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important}
+    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-items:start!important}
 
     /* TARJETAS GENERALES */
     .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}
@@ -2064,10 +2064,10 @@
 
     /* m² CARDS: grilla 4 columnas exactas */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
-    .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
+    .frm-card{display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-items:start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
     .frm-card.total .frm-card-val{color:var(--accent)!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important;height:36px!important;overflow:hidden!important;display:flex!important;align-items:flex-start!important}
+    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;overflow:hidden!important;display:block!important;align-self:start!important;margin:0!important}
     .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
 
     /* ANÁLISIS: stretch uniforme */
@@ -2108,7 +2108,7 @@
 
     /* M² GRID — fuerza 4 columnas sin margen residual */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
-    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:flex!important;flex-direction:column!important;align-items:flex-start!important}
+    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-items:start!important}
 
     /* TARJETAS GENERALES */
     .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}
