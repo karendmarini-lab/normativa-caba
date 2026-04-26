@@ -2688,9 +2688,9 @@
 
 
   <style>
-    /* ── NUCLEAR v3 — label 45px height fija, base alineada ── */
+    /* ── NUCLEAR v4 — chat wide + legible + labels 45px ── */
 
-    /* Cards: flex column, space-between para respirar parejo */
+    /* Cards: label altura fija 45px, texto al piso */
     #full-report-modal .frm-card,
     #full-report-modal .frm-cards-row > div {
       display: flex !important;
@@ -2700,12 +2700,7 @@
       text-align: center !important;
       min-height: 130px !important;
       padding: 20px 16px !important;
-      gap: 0 !important;
     }
-
-    /* Label: CAJA DE 45px — texto anclado al fondo (flex-end)
-       Sin importar si el título tiene 1 o 2 líneas, la base
-       de todas las letras cae exactamente en la misma coordenada Y */
     #full-report-modal .frm-card-label {
       display: flex !important;
       align-items: flex-end !important;
@@ -2720,47 +2715,164 @@
       line-height: 1.2 !important;
       overflow: hidden !important;
     }
-
-    /* Número: inmediatamente después del label, siempre alineado */
     #full-report-modal .frm-card-val {
       width: 100% !important;
       text-align: center !important;
       margin: 10px 0 0 0 !important;
     }
-
-    /* Unidad m² */
     #full-report-modal .frm-card-unit {
       width: 100% !important;
       text-align: center !important;
       margin: 4px 0 0 0 !important;
     }
 
+    /* Enrase visible */
+    #full-report-modal #frm-enrase-bloque { display: block !important; }
+    #full-report-modal #frm-enrase-contenido { color: rgba(255,255,255,.8) !important; }
+    #full-report-modal #frm-enrase-contenido span { color: rgba(255,255,255,.8) !important; }
+
     /* Scroll recovery */
     body { overflow-y: auto !important; }
 
-    /* Scrollbar chat invisible */
+    /* ── CHAT WIDE MODE ──────────────────────────────────────── */
+    .frm-with-chat {
+      display: flex !important;
+      align-items: stretch !important;
+    }
+    .frm-main-col {
+      flex: 1 1 calc(100% - 380px) !important;
+      min-width: 0 !important;
+      overflow-y: auto !important;
+    }
+    #full-report-modal #report-chat-container {
+      width: 380px !important;
+      flex: 0 0 380px !important;
+      background: #0d0d0d !important;
+      border-left: 1px solid rgba(255,255,255,0.08) !important;
+      align-self: stretch !important;
+      position: sticky !important;
+      top: 0 !important;
+      height: 100vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
+
+    /* Header del chat */
+    #full-report-modal .rc-header {
+      background: rgba(255,255,255,.04) !important;
+      border-bottom: 1px solid rgba(255,255,255,.08) !important;
+      padding: 16px 16px 14px !important;
+      flex-shrink: 0 !important;
+    }
+    #full-report-modal .rc-label {
+      color: #E8C547 !important;
+      font-size: 10px !important;
+      letter-spacing: 3px !important;
+      font-weight: 600 !important;
+    }
+    #full-report-modal .rc-sublabel {
+      color: rgba(255,255,255,.4) !important;
+      font-size: 11px !important;
+    }
+
+    /* Mensajes con fondo sutil */
     #full-report-modal #rc-messages {
+      flex: 1 !important;
+      overflow-y: auto !important;
       scrollbar-width: none !important;
       -ms-overflow-style: none !important;
-      overflow-y: auto !important;
+      padding: 12px !important;
     }
     #full-report-modal #rc-messages::-webkit-scrollbar {
       display: none !important;
       width: 0 !important;
     }
-
-    /* Enrase — texto siempre visible */
-    #full-report-modal #frm-enrase-bloque { display: block !important; color: rgba(255,255,255,.8) !important; }
-    #full-report-modal #frm-enrase-contenido { color: rgba(255,255,255,.8) !important; }
-    #full-report-modal #frm-enrase-contenido span { color: rgba(255,255,255,.8) !important; }
-    #full-report-modal .frm-analysis-item span:first-child { color: rgba(255,255,255,.45) !important; font-size: 11px !important; }
-    #full-report-modal .frm-analysis-item span:last-child { color: #fff !important; }
-
-    /* Chat transparente */
-    #full-report-modal #report-chat-container {
+    #full-report-modal .rc-msg {
+      font-size: 15px !important;
+      line-height: 1.5 !important;
+      padding: 8px 10px !important;
+      border-radius: 6px !important;
+      margin-bottom: 6px !important;
+    }
+    #full-report-modal .rc-msg.user {
+      background: rgba(255,215,0,0.05) !important;
+      color: rgba(255,255,255,.9) !important;
+      border-left: 2px solid rgba(200,169,110,.5) !important;
+      border-radius: 0 6px 6px 0 !important;
+    }
+    #full-report-modal .rc-msg.assistant {
+      background: rgba(255,255,255,0.03) !important;
+      color: rgba(200,200,200,.85) !important;
+    }
+    #full-report-modal .rc-msg.info {
       background: transparent !important;
-      border-left: 1px solid rgba(255,255,255,0.05) !important;
+      color: rgba(255,255,255,.3) !important;
+      font-size: 11px !important;
+    }
+
+    /* Chips */
+    #full-report-modal .rc-chips {
+      background: transparent !important;
+      border-top: 1px solid rgba(255,255,255,.07) !important;
+      padding: 8px 12px !important;
+      flex-shrink: 0 !important;
+    }
+    #full-report-modal .rc-chip {
+      font-size: 11px !important;
+      border-color: rgba(255,255,255,.15) !important;
+      color: rgba(255,255,255,.5) !important;
+    }
+    #full-report-modal .rc-chip:hover {
+      border-color: #E8C547 !important;
+      color: #E8C547 !important;
+    }
+
+    /* Input row */
+    #full-report-modal .rc-input-row {
+      background: transparent !important;
+      border-top: 1px solid rgba(255,255,255,.08) !important;
+      padding: 10px 12px !important;
+      flex-shrink: 0 !important;
+    }
+    #full-report-modal .rc-input {
+      background: rgba(255,255,255,.05) !important;
+      border: 1px solid rgba(255,255,255,.12) !important;
+      border-radius: 8px !important;
+      color: #fff !important;
+      font-size: 13px !important;
+    }
+    #full-report-modal .rc-input:focus {
+      border-color: rgba(232,197,71,.4) !important;
+      outline: none !important;
+    }
+    #full-report-modal .rc-input::placeholder {
+      color: rgba(255,255,255,.3) !important;
+    }
+    /* Botón enviar: flecha dorada */
+    #full-report-modal .rc-send {
+      background: #E8C547 !important;
+      color: #000 !important;
+      border: none !important;
+      border-radius: 8px !important;
+      width: 36px !important;
+      height: 36px !important;
+      font-size: 16px !important;
+    }
+    #full-report-modal .rc-send:hover {
+      opacity: .85 !important;
+    }
+
+    /* Responsive */
+    @media(max-width:900px) {
+      #full-report-modal #report-chat-container {
+        width: 100% !important;
+        flex: none !important;
+        height: 320px !important;
+        position: static !important;
+        border-left: none !important;
+        border-top: 1px solid rgba(255,255,255,.08) !important;
+      }
+      .frm-main-col { flex: 1 !important; }
     }
   </style>
 </body>
-</html>
