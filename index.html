@@ -2686,5 +2686,43 @@
 }
 </style>
 
+
+  <style>
+    /* ── NUCLEAR CARD CENTERING — especificidad ID+class ── */
+    #full-report-modal .frm-card,
+    #full-report-modal .frm-cards-row > div {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      text-align: center !important;
+      min-height: 120px !important;
+    }
+    #full-report-modal .frm-card-label,
+    #full-report-modal .frm-card-val,
+    #full-report-modal .frm-card-unit,
+    #full-report-modal .frm-card-sub {
+      width: 100% !important;
+      text-align: center !important;
+      margin: 0 auto !important;
+    }
+    /* Scroll recovery */
+    body { overflow-y: auto !important; }
+    /* Scrollbar chat invisible — última palabra */
+    #full-report-modal #rc-messages {
+      scrollbar-width: none !important;
+      -ms-overflow-style: none !important;
+      overflow-y: auto !important;
+    }
+    #full-report-modal #rc-messages::-webkit-scrollbar {
+      display: none !important;
+      width: 0 !important;
+    }
+    /* Chat fondo transparente */
+    #full-report-modal #report-chat-container {
+      background: transparent !important;
+      border-left: 1px solid rgba(255,255,255,0.05) !important;
+    }
+  </style>
 </body>
 </html>
