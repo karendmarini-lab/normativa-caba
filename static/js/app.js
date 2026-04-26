@@ -823,7 +823,7 @@ function openFullReport() {
         className: 'map-labels-layer',
       }).addTo(rmap);
       const goldIcon = L.divIcon({
-        html: '<div style="width:14px;height:14px;background:#C8A96E;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px rgba(200,169,110,.9)"></div>',
+        html: '<div style="width:14px;height:14px;background:#FFBF00;border-radius:50%;border:2px solid #fff;box-shadow:0 0 10px rgba(255,191,0,.9)"></div>',
         className:'', iconAnchor:[7,7]
       });
       L.marker([lat, lng], { icon: goldIcon }).addTo(rmap);

@@ -254,8 +254,8 @@
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
     .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
-    .frm-card.total .frm-card-val{color:#C8A96E!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:#C8A96E!important;margin-bottom:8px!important}
+    .frm-card.total .frm-card-val{color:var(--accent)!important}
+    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important}
     .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
     .frm-card-sub{font-size:10px!important;color:rgba(255,255,255,.3)!important}
 
@@ -267,34 +267,36 @@
     .frm-calc-section{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
     .frm-calc-inputs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:10px!important;align-items:start!important}
     .frm-calc-field{display:flex!important;flex-direction:column!important;gap:5px!important}
-    .frm-calc-input{height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(200,169,110,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important;line-height:44px!important}
+    .frm-calc-input{height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(255,191,0,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important;line-height:44px!important}
     .frm-calc-result-val{text-align:center!important;font-size:18px!important}
     .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
     .frm-calc-results{border-radius:12px!important;overflow:hidden!important}
     .frm-calc-result{background:linear-gradient(145deg,#161616,#0e0e0e)!important;border-top:1px solid rgba(255,255,255,.05)!important}
-    .frm-calc-result.highlight{background:linear-gradient(145deg,#1a1300,#0a0800)!important;border-top:1px solid rgba(200,169,110,.08)!important}
+    .frm-calc-result.highlight{background:linear-gradient(145deg,#1a1300,#0a0800)!important;border-top:1px solid rgba(255,191,0,.08)!important}
 
-    /* CHAT: transparente, sin scroll visible, borderless */
-    .frm-with-chat{display:flex!important;align-items:stretch!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:auto!important}
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    /* SCROLL: .formal-report es el contenedor — scrollbar en el borde absoluto derecho */
+    .frm-with-chat{display:flex!important;align-items:flex-start!important;min-height:100vh!important}
+    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important}
+    /* Scrollbar fino del modal — 4px gris oscuro en borde derecho de pantalla */
+    .formal-report::-webkit-scrollbar{width:4px!important}
+    .formal-report::-webkit-scrollbar-track{background:transparent!important}
+    .formal-report::-webkit-scrollbar-thumb{background:#2a2a2a!important;border-radius:2px!important}
+    .formal-report{scrollbar-width:thin!important;scrollbar-color:#2a2a2a transparent!important}
+
+    /* CHAT: fondo sólido, nativo, sin bordes */
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:#0a0a0a!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
-    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(200,169,110,.4)!important}
+    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.35)!important}
     .rc-msg.assistant{color:rgba(175,175,175,.8)!important}
     .rc-msg.info{color:rgba(255,255,255,.22)!important;font-size:10px!important}
     .rc-input-row{background:transparent!important;border-top:1px solid rgba(255,255,255,.07)!important}
     .rc-input{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;color:#fff!important}
-    .rc-input:focus{border-color:rgba(200,169,110,.4)!important;outline:none!important}
+    .rc-input:focus{border-color:rgba(255,191,0,.4)!important;outline:none!important}
     .rc-chips{background:transparent!important;border-top:1px solid rgba(255,255,255,.06)!important}
+    /* Scrollbar de mensajes del chat — oculto */
     #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
-    #rc-messages::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
-
-    /* SCROLLBAR ATÓMICO — oculta cualquier barra dentro del modal */
-    .formal-report ::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
-    .formal-report ::-webkit-scrollbar-track{display:none!important}
-    .formal-report ::-webkit-scrollbar-thumb{display:none!important}
-    .formal-report *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+    #rc-messages::-webkit-scrollbar{display:none!important}
 
     /* M² GRID — fuerza 4 columnas sin margen residual */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
@@ -794,12 +796,12 @@
     }
     .frm-calc-reset {
       font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-      color: rgba(200,169,110,.6); background: none; border: none;
+      color: rgba(255,191,0,.6); background: none; border: none;
       cursor: pointer; padding: 4px 10px;
-      border: 1px solid rgba(200,169,110,.2); border-radius: 100px;
+      border: 1px solid rgba(255,191,0,.2); border-radius: 100px;
       transition: all .2s;
     }
-    .frm-calc-reset:hover { color: #C8A96E; border-color: rgba(200,169,110,.5); }
+    .frm-calc-reset:hover { color: #FFBF00; border-color: rgba(255,191,0,.5); }
 
     /* Grid de inputs */
     .frm-calc-inputs {
@@ -811,17 +813,17 @@
     .frm-calc-field { display: flex; flex-direction: column; gap: 6px; }
     .frm-calc-label {
       font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-      color: #C8A96E; font-weight: 400;
+      color: #FFBF00; font-weight: 400;
     }
     .frm-calc-input {
-      background: #111; border: 1px solid rgba(200,169,110,.35); border-radius: 4px;
+      background: #111; border: 1px solid rgba(255,191,0,.35); border-radius: 4px;
       padding: 10px 12px; color: #fff;
       font-size: 14px; font-weight: 300;
       font-family: 'Inter', inherit;
       outline: none; transition: border-color .2s;
       width: 100%; box-sizing: border-box;
     }
-    .frm-calc-input:focus { border-color: rgba(200,169,110,.5); }
+    .frm-calc-input:focus { border-color: rgba(255,191,0,.5); }
     .frm-calc-input-hint {
       font-size: 12px; color: rgba(255,255,255,.3); margin-top: 2px;
     }
@@ -852,7 +854,7 @@
     .frm-calc-result-val {
       font-size: 20px; font-weight: 200; color: #fff; line-height: 1;
     }
-    .frm-calc-result.highlight .frm-calc-result-val { color: #C8A96E; }
+    .frm-calc-result.highlight .frm-calc-result-val { color: #FFBF00; }
     /* Ganancia — Level 1 Hero: blanco + 50% más grande */
     #fc-r-ganancia { color: #fff !important; font-size: clamp(1.6rem,2.4vw,2.2rem); }
     .frm-calc-result-sub {
@@ -902,7 +904,7 @@
       box-shadow: 0 0 4px rgba(74,222,128,.6);
       animation: frm-pulse 2s infinite;
     }
-    .frm-macro-dot.manual { background: #C8A96E; box-shadow: 0 0 4px rgba(200,169,110,.6); animation: none; }
+    .frm-macro-dot.manual { background: #FFBF00; box-shadow: 0 0 4px rgba(255,191,0,.6); animation: none; }
     .frm-macro-live-label { color: rgba(255,255,255,.3); }
     @keyframes frm-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     /* Flash de incidencia al cambiar margen */
@@ -931,7 +933,7 @@
     }
     .frm-calc-result.highlight {
       background: linear-gradient(145deg, #1a1300 0%, #0a0800 100%) !important;
-      border-top: 1px solid rgba(200,169,110,.1) !important;
+      border-top: 1px solid rgba(255,191,0,.1) !important;
     }
     /* grilla de calc sin gap visible */
     .frm-calc-results {
@@ -965,12 +967,12 @@
     /* 5. BOTONES CROQUIS — ghost estilo */
     .croquis-link {
       background: rgba(0,0,0,.6) !important;
-      border: 1px solid rgba(200,169,110,.5) !important;
-      color: #C8A96E !important;
+      border: 1px solid rgba(255,191,0,.5) !important;
+      color: #FFBF00 !important;
       transition: background .2s, color .2s !important;
     }
     .croquis-link:hover {
-      background: #C8A96E !important;
+      background: #FFBF00 !important;
       color: #000 !important;
     }
 
@@ -987,7 +989,7 @@
       color: rgba(255,255,255,.9) !important;
       border-radius: 0 !important;
       padding: 6px 0 !important;
-      border-left: 2px solid rgba(200,169,110,.5);
+      border-left: 2px solid rgba(255,191,0,.5);
       padding-left: 10px !important;
     }
     .rc-msg.assistant {
@@ -1047,7 +1049,7 @@
     }
     .frm-card.total {
       background: linear-gradient(160deg,#1a1200 0%,#0a0800 100%) !important;
-      border: 1px solid rgba(200,169,110,.12) !important;
+      border: 1px solid rgba(255,191,0,.12) !important;
     }
 
     /* 2. SIMULADOR — ocultar sub-textos, solo número protagonista */
@@ -1059,7 +1061,7 @@
     }
     .frm-calc-result.highlight {
       background: linear-gradient(160deg,#1a1200 0%,#0a0800 100%) !important;
-      border-top: 1px solid rgba(200,169,110,.08) !important;
+      border-top: 1px solid rgba(255,191,0,.08) !important;
     }
     .frm-calc-results {
       display: flex !important;
@@ -1130,7 +1132,7 @@
     }
     .rc-msg.user::before {
       content: "→ ";
-      color: #C8A96E;
+      color: #FFBF00;
       font-size: 11px;
     }
     /* Scroll ultra fino */
@@ -1164,12 +1166,12 @@
     /* 7. BOTONES GHOST (croquis) */
     .croquis-link {
       background: rgba(0,0,0,.6) !important;
-      border: 1px solid rgba(200,169,110,.4) !important;
-      color: #C8A96E !important;
+      border: 1px solid rgba(255,191,0,.4) !important;
+      color: #FFBF00 !important;
       transition: background .2s, color .2s !important;
     }
     .croquis-link:hover {
-      background: #C8A96E !important;
+      background: #FFBF00 !important;
       color: #000 !important;
     }
 
@@ -1355,7 +1357,7 @@
       background: transparent !important;
       border-radius: 0 !important;
       padding: 5px 0 5px 10px !important;
-      border-left: 2px solid rgba(200,169,110,.4) !important;
+      border-left: 2px solid rgba(255,191,0,.4) !important;
       color: rgba(255,255,255,.9) !important;
     }
     .rc-msg.assistant {
@@ -1564,7 +1566,7 @@
     .rc-msg.user {
       background: transparent !important; border-radius: 0 !important;
       padding: 4px 0 4px 10px !important;
-      border-left: 2px solid rgba(200,169,110,.35) !important;
+      border-left: 2px solid rgba(255,191,0,.35) !important;
       color: rgba(255,255,255,.9) !important;
     }
     .rc-msg.assistant {
@@ -1720,7 +1722,7 @@
     }
     .rc-msg.user {
       color: rgba(255,255,255,.9) !important;
-      border-left: 2px solid rgba(200,169,110,.45) !important;
+      border-left: 2px solid rgba(255,191,0,.45) !important;
       padding-left: 8px !important;
     }
     .rc-msg.assistant { color: rgba(185,185,185,.8) !important; }
@@ -1733,7 +1735,7 @@
       border: 1px solid rgba(255,255,255,.1) !important;
       border-radius: 8px !important;
     }
-    .rc-input:focus { border-color: rgba(200,169,110,.35) !important; }
+    .rc-input:focus { border-color: rgba(255,191,0,.35) !important; }
 
     /* ── 6. PLUSVALÍA — USD protagonista ────────────────────────── */
     .frm-plusvalia-usd {
@@ -1850,7 +1852,7 @@
       font-size: 9px !important;
       letter-spacing: 2.5px !important;
       text-transform: uppercase !important;
-      color: #C8A96E !important;
+      color: #FFBF00 !important;
       margin-bottom: 8px !important;
     }
     .frm-card-val {
@@ -1860,7 +1862,7 @@
       line-height: 1 !important;
       text-align: left !important;
     }
-    .frm-card.total .frm-card-val { color: #C8A96E !important; }
+    .frm-card.total .frm-card-val { color: #FFBF00 !important; }
     .frm-card-unit {
       font-size: 11px !important;
       color: rgba(255,255,255,.35) !important;
@@ -1910,7 +1912,7 @@
       box-sizing: border-box !important;
       width: 100% !important;
       background: #111 !important;
-      border: 1px solid rgba(200,169,110,.3) !important;
+      border: 1px solid rgba(255,191,0,.3) !important;
       border-radius: 6px !important;
       color: #fff !important;
       font-size: 13px !important;
@@ -1947,7 +1949,7 @@
     .rc-msg.user {
       color: rgba(255,255,255,.88) !important;
       padding-left: 10px !important;
-      border-left: 2px solid rgba(200,169,110,.4) !important;
+      border-left: 2px solid rgba(255,191,0,.4) !important;
     }
     .rc-msg.assistant { color: rgba(175,175,175,.8) !important; }
     .rc-msg.info { color: rgba(255,255,255,.22) !important; font-size: 10px !important; }
@@ -1958,7 +1960,7 @@
       border: 1px solid rgba(255,255,255,.1) !important;
       color: #fff !important;
     }
-    .rc-input:focus { border-color: rgba(200,169,110,.4) !important; outline: none !important; }
+    .rc-input:focus { border-color: rgba(255,191,0,.4) !important; outline: none !important; }
     /* Scroll completamente invisible — todos los browsers */
     #rc-messages { scrollbar-width: none !important; -ms-overflow-style: none !important; }
     #rc-messages::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
@@ -2019,13 +2021,13 @@
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important}
     .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
-    .frm-card.total .frm-card-val{color:#C8A96E!important}
+    .frm-card.total .frm-card-val{color:#FFBF00!important}
     .frm-analysis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important}
     .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important}
     .frm-calc-section{background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
     .frm-calc-inputs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:10px!important;align-items:start!important}
     .frm-calc-field{display:flex!important;flex-direction:column!important;gap:5px!important}
-    .frm-calc-input{height:44px!important;line-height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(200,169,110,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important}
+    .frm-calc-input{height:44px!important;line-height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(255,191,0,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important}
     .frm-calc-result-val{text-align:center!important;font-size:18px!important}
     .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
     .frm-with-chat{display:flex!important;align-items:stretch!important}
@@ -2033,12 +2035,12 @@
     #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
-    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(200,169,110,.4)!important}
+    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.4)!important}
     .rc-msg.assistant{color:rgba(175,175,175,.8)!important}
     .rc-msg.info{color:rgba(255,255,255,.22)!important;font-size:10px!important}
     .rc-input-row{background:transparent!important;border-top:1px solid rgba(255,255,255,.07)!important}
     .rc-input{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;color:#fff!important}
-    .rc-input:focus{border-color:rgba(200,169,110,.4)!important;outline:none!important}
+    .rc-input:focus{border-color:rgba(255,191,0,.4)!important;outline:none!important}
     #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important}
     #rc-messages::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
     .frm-plusvalia-usd{font-size:20px!important;font-weight:600!important;color:#fff!important;display:block!important}
@@ -2064,8 +2066,8 @@
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
     .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
     .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:left!important}
-    .frm-card.total .frm-card-val{color:#C8A96E!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:#C8A96E!important;margin-bottom:8px!important}
+    .frm-card.total .frm-card-val{color:var(--accent)!important}
+    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;margin-bottom:8px!important}
     .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
 
     /* ANÁLISIS: stretch uniforme */
@@ -2076,31 +2078,33 @@
     .frm-calc-section{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
     .frm-calc-inputs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:10px!important;align-items:start!important}
     .frm-calc-field{display:flex!important;flex-direction:column!important;gap:5px!important}
-    .frm-calc-input{height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(200,169,110,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important}
+    .frm-calc-input{height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(255,191,0,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important}
     .frm-calc-result-val{text-align:center!important;font-size:18px!important}
     .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
 
-    /* CHAT: transparente, sin barreras */
-    .frm-with-chat{display:flex!important;align-items:stretch!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:auto!important}
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
+    /* SCROLL: .formal-report es el contenedor — scrollbar en el borde absoluto derecho */
+    .frm-with-chat{display:flex!important;align-items:flex-start!important;min-height:100vh!important}
+    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important}
+    /* Scrollbar fino del modal — 4px gris oscuro en borde derecho de pantalla */
+    .formal-report::-webkit-scrollbar{width:4px!important}
+    .formal-report::-webkit-scrollbar-track{background:transparent!important}
+    .formal-report::-webkit-scrollbar-thumb{background:#2a2a2a!important;border-radius:2px!important}
+    .formal-report{scrollbar-width:thin!important;scrollbar-color:#2a2a2a transparent!important}
+
+    /* CHAT: fondo sólido, nativo, sin bordes */
+    #report-chat-container{width:260px!important;flex-shrink:0!important;background:#0a0a0a!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
     .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
     .rc-msg{border-radius:0!important;background:transparent!important;padding:5px 0!important;font-size:12px!important}
-    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(200,169,110,.4)!important}
+    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.35)!important}
     .rc-msg.assistant{color:rgba(175,175,175,.8)!important}
     .rc-msg.info{color:rgba(255,255,255,.22)!important;font-size:10px!important}
     .rc-input-row{background:transparent!important;border-top:1px solid rgba(255,255,255,.07)!important}
     .rc-input{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;color:#fff!important}
-    .rc-input:focus{border-color:rgba(200,169,110,.4)!important;outline:none!important}
-    #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
-    #rc-messages::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
+    .rc-input:focus{border-color:rgba(255,191,0,.4)!important;outline:none!important}
     .rc-chips{background:transparent!important;border-top:1px solid rgba(255,255,255,.06)!important}
-
-    /* SCROLLBAR ATÓMICO — oculta cualquier barra dentro del modal */
-    .formal-report ::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
-    .formal-report ::-webkit-scrollbar-track{display:none!important}
-    .formal-report ::-webkit-scrollbar-thumb{display:none!important}
-    .formal-report *{scrollbar-width:none!important;-ms-overflow-style:none!important}
+    /* Scrollbar de mensajes del chat — oculto */
+    #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
+    #rc-messages::-webkit-scrollbar{display:none!important}
 
     /* M² GRID — fuerza 4 columnas sin margen residual */
     .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
