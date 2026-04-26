@@ -2688,27 +2688,56 @@
 
 
   <style>
-    /* ── NUCLEAR CARD CENTERING — especificidad ID+class ── */
+    /* ── NUCLEAR v2 — label height fix + card centering ── */
+
+    /* Cards: flex column, centrado vertical */
     #full-report-modal .frm-card,
     #full-report-modal .frm-cards-row > div {
       display: flex !important;
       flex-direction: column !important;
-      justify-content: center !important;
+      justify-content: space-between !important;
       align-items: center !important;
       text-align: center !important;
-      min-height: 120px !important;
+      min-height: 130px !important;
+      padding: 20px 16px !important;
     }
-    #full-report-modal .frm-card-label,
-    #full-report-modal .frm-card-val,
-    #full-report-modal .frm-card-unit,
-    #full-report-modal .frm-card-sub {
+
+    /* Label: caja de altura fija alineada al fondo */
+    #full-report-modal .frm-card-label {
+      display: flex !important;
+      align-items: flex-end !important;
+      justify-content: center !important;
+      min-height: 36px !important;
+      height: 36px !important;
       width: 100% !important;
       text-align: center !important;
-      margin: 0 auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1.2 !important;
     }
+
+    /* Número: protagonista centrado */
+    #full-report-modal .frm-card-val {
+      width: 100% !important;
+      text-align: center !important;
+      margin: 8px 0 0 0 !important;
+      flex: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+
+    /* Unidad m² */
+    #full-report-modal .frm-card-unit {
+      width: 100% !important;
+      text-align: center !important;
+      margin: 4px 0 0 0 !important;
+    }
+
     /* Scroll recovery */
     body { overflow-y: auto !important; }
-    /* Scrollbar chat invisible — última palabra */
+
+    /* Scrollbar chat invisible */
     #full-report-modal #rc-messages {
       scrollbar-width: none !important;
       -ms-overflow-style: none !important;
@@ -2718,7 +2747,8 @@
       display: none !important;
       width: 0 !important;
     }
-    /* Chat fondo transparente */
+
+    /* Chat transparente */
     #full-report-modal #report-chat-container {
       background: transparent !important;
       border-left: 1px solid rgba(255,255,255,0.05) !important;
