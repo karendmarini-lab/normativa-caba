@@ -737,7 +737,7 @@ function openFullReport() {
   const enraseData = window._enraseData;
   const frmEnr = document.getElementById('frm-enrase-bloque');
   const frmEnrCont = document.getElementById('frm-enrase-contenido');
-  if (enraseData && frmEnr && frmEnrCont) {
+  if (enraseData && enraseData.aplica && frmEnr && frmEnrCont) {
     frmEnr.style.display = 'block';
     if (enraseData.aplica) {
       frmEnrCont.innerHTML =
