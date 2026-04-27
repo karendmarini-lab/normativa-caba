@@ -837,7 +837,8 @@ function openFullReport() {
     'Lote: '+getVal('c-sup')+'m²','Vendible: '+getText('full-total')+'m²'
   ].filter(Boolean).join('\n');
   modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  // El modal tiene su propio scroll — no bloquear el body
+  // document.body.style.overflow = 'hidden'; // REMOVIDO
   // Inicializar calculadora con valores de la parcela
   setTimeout(() => initFeasCalc(), 60);
 
