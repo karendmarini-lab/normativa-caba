@@ -1,0 +1,283 @@
+[
+  {
+    "smp": "47-125-28A",
+    "direccion": "Leiva 4400",
+    "m2v_real": 675,
+    "has_tile": true
+  },
+  {
+    "smp": "41-89-30A",
+    "direccion": "Conesa 2800",
+    "m2v_real": 1430,
+    "has_tile": true
+  },
+  {
+    "smp": "48-117-14",
+    "direccion": "Alberdi 2400",
+    "m2v_real": 4634,
+    "has_tile": false
+  },
+  {
+    "smp": "35-115-34",
+    "direccion": "JB Justo 755",
+    "m2v_real": 2682,
+    "has_tile": true
+  },
+  {
+    "smp": "10-8-11E",
+    "direccion": "Isabel La Católica",
+    "m2v_real": 9280,
+    "has_tile": true
+  },
+  {
+    "smp": "36-24-46",
+    "direccion": "José Mármol 767",
+    "m2v_real": 3621,
+    "has_tile": false
+  },
+  {
+    "smp": "55-216-13",
+    "direccion": "Ramallo 4200",
+    "m2v_real": 599,
+    "has_tile": false
+  },
+  {
+    "smp": "18-110-11",
+    "direccion": "Vieytes 1200",
+    "m2v_real": 1537,
+    "has_tile": true
+  },
+  {
+    "smp": "17-1-12B",
+    "direccion": "Lezica 4400",
+    "m2v_real": 3166,
+    "has_tile": true
+  },
+  {
+    "smp": "89-12-4",
+    "direccion": "Gral Paz 7300",
+    "m2v_real": 430,
+    "has_tile": true
+  },
+  {
+    "smp": "71-35-21",
+    "direccion": "Nazca 3100",
+    "m2v_real": 1400,
+    "has_tile": true
+  },
+  {
+    "smp": "12-44-21",
+    "direccion": "Belgrano 1200",
+    "m2v_real": 3326,
+    "has_tile": true
+  },
+  {
+    "smp": "22-33-32",
+    "direccion": "Cochabamba 2200",
+    "m2v_real": 5013,
+    "has_tile": true
+  },
+  {
+    "smp": "30-96-38",
+    "direccion": "Jujuy 900",
+    "m2v_real": 1465,
+    "has_tile": true
+  },
+  {
+    "smp": "66-47-2",
+    "direccion": "Castañares 5000",
+    "m2v_real": 1785,
+    "has_tile": true
+  },
+  {
+    "smp": "17-45-6",
+    "direccion": "Sarmiento 4300",
+    "m2v_real": 1676,
+    "has_tile": true
+  },
+  {
+    "smp": "22-27-27",
+    "direccion": "Humberto 1° 2300",
+    "m2v_real": 1301,
+    "has_tile": true
+  },
+  {
+    "smp": "71-53-24",
+    "direccion": "Tinogasta 2800",
+    "m2v_real": 1000,
+    "has_tile": false
+  },
+  {
+    "smp": "47-101-26",
+    "direccion": "Darwin 100",
+    "m2v_real": 874,
+    "has_tile": true
+  },
+  {
+    "smp": "43-101B-3",
+    "direccion": "Ramallo 3100",
+    "m2v_real": 592,
+    "has_tile": false
+  },
+  {
+    "smp": "83-207-2A",
+    "direccion": "Cochrane 3400",
+    "m2v_real": 982,
+    "has_tile": false
+  },
+  {
+    "smp": "5-23-1A",
+    "direccion": "Lavalle 1500",
+    "m2v_real": 1042,
+    "has_tile": true
+  },
+  {
+    "smp": "30-7-13",
+    "direccion": "Boedo 1000",
+    "m2v_real": 1055,
+    "has_tile": true
+  },
+  {
+    "smp": "5-5-33",
+    "direccion": "Rodríguez Peña 400",
+    "m2v_real": 1645,
+    "has_tile": true
+  },
+  {
+    "smp": "85-24-18",
+    "direccion": "Calderón de la Barca",
+    "m2v_real": 527,
+    "has_tile": true
+  },
+  {
+    "smp": "19-3-36",
+    "direccion": "Lavalle 3900",
+    "m2v_real": 2065,
+    "has_tile": true,
+    "source": "remax_img"
+  },
+  {
+    "smp": "25-19-2C",
+    "direccion": "",
+    "m2v_real": 1363,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "85-22-40D",
+    "direccion": "",
+    "m2v_real": 760,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "47-143-26",
+    "direccion": "",
+    "m2v_real": 690,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "17-36-23",
+    "direccion": "",
+    "m2v_real": 1425,
+    "has_tile": true,
+    "source": "factibilidad_img"
+  },
+  {
+    "smp": "12-51-36",
+    "m2v_real": 2670,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "12-54-9",
+    "m2v_real": 2890,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "12-72-8",
+    "m2v_real": 1815,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "16-37-21",
+    "m2v_real": 1619,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "17-71-11A",
+    "m2v_real": 863,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "17-94-36A",
+    "m2v_real": 4397,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "18-140-9",
+    "m2v_real": 1217,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "22-18-20",
+    "m2v_real": 5773,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "24-26-17",
+    "m2v_real": 978,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "31-63-26",
+    "m2v_real": 1285,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "37-21-13",
+    "m2v_real": 2123,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "40-134-17",
+    "m2v_real": 892,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "41-113-4",
+    "m2v_real": 1339,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "43-159-25",
+    "m2v_real": 954,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "47-101-23",
+    "m2v_real": 945,
+    "source": "factibilidad_img",
+    "has_tile": true
+  },
+  {
+    "smp": "63-125-19",
+    "m2v_real": 990,
+    "source": "factibilidad_img",
+    "has_tile": true
+  }
+]
