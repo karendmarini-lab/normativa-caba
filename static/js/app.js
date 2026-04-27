@@ -14,6 +14,7 @@
 
 import * as Map from './map.js';
 import { addParcelCard, addParcelDocs, addInfoMessage, getChatMode } from './chat.js';
+import { initializeSolarModule } from './solar-ui.js';
 
 // ── DOM helpers ──────────────────────────────────────────────────
 
@@ -268,6 +269,11 @@ function showParcelDetail(addr, parcel, lat, lng) {
   void res.offsetWidth;
   res.classList.add('on');
   setTimeout(() => res.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+
+  // Análisis solar (badge en sidebar + sección en informe)
+  if (parcel?.polygon_geojson && lat && lng) {
+    initializeSolarModule(parcel.polygon_geojson, { x: lng, y: lat });
+  }
 }
 
 function showParcelFromMap(props) {
