@@ -190,6 +190,7 @@ async function findParcel(lat, lng) {
     edif_sup_edificable_planta: data.edif_sup_edificable_planta,
     edif_plano_limite: data.edif_plano_limite,
     edif_altura_max_1: data.edif_altura_max_1,
+    polygon_geojson: data.polygon || null,   // GeoJSON parseado — usado por solar-ui.js
     source: 'server',
   };
 }
