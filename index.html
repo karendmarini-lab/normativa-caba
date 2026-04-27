@@ -2836,4 +2836,30 @@
       #full-report-modal #report-chat-container, #formal-report-modal #report-chat-container { position:static!important;width:100%!important;height:320px!important;border-left:none!important;border-top:1px solid #333!important;box-shadow:none!important; }
     }
   </style>
+
+  <!-- ══ JUAN/IA OVERRIDE — especificidad ID+Clase, último en documento ══ -->
+  <style>
+    /* ELIMINACIÓN DE CUALQUIER DESALINEACIÓN POR FUERZA BRUTA */
+    #full-report-modal .frm-card,
+    #full-report-modal .frm-cards-row > div {
+      display: flex !important;
+      flex-direction: column !important;
+      justify-content: center !important;
+      align-items: center !important;
+      text-align: center !important;
+      min-height: 120px !important;
+    }
+
+    #full-report-modal .frm-card-label,
+    #full-report-modal .frm-card-val,
+    #full-report-modal .frm-card-unit {
+      width: 100% !important;
+      text-align: center !important;
+      margin: 0 auto !important;
+    }
+
+    /* RECUPERACIÓN DEL SCROLL */
+    body { overflow-y: auto !important; }
+  </style>
+
 </body>
