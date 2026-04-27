@@ -2688,7 +2688,7 @@
 
 
   <style>
-    /* ── NUCLEAR v8 — scrollbar visible + header alineado ── */
+    /* ── NUCLEAR v9 — scrollbar 10px visible, X dorada, header align ── */
 
     /* Cards m²: label 45px altura fija */
     #full-report-modal .frm-card,
@@ -2705,50 +2705,44 @@
       margin: 0 !important; padding: 0 !important;
       line-height: 1.2 !important; overflow: hidden !important;
     }
-    #full-report-modal .frm-card-val { width: 100% !important; text-align: center !important; margin: 10px 0 0 0 !important; }
-    #full-report-modal .frm-card-unit { width: 100% !important; text-align: center !important; margin: 4px 0 0 0 !important; }
+    #full-report-modal .frm-card-val  { width:100%!important; text-align:center!important; margin:10px 0 0!important; }
+    #full-report-modal .frm-card-unit { width:100%!important; text-align:center!important; margin:4px 0 0!important; }
 
     /* Enrase visible */
-    #full-report-modal #frm-enrase-bloque { display: block !important; }
-    #full-report-modal #frm-enrase-contenido { color: rgba(255,255,255,.8) !important; }
-    #full-report-modal #frm-enrase-contenido span { color: rgba(255,255,255,.8) !important; }
+    #full-report-modal #frm-enrase-bloque { display:block!important; }
+    #full-report-modal #frm-enrase-contenido, #full-report-modal #frm-enrase-contenido span { color:rgba(255,255,255,.8)!important; }
 
-    /* ── SCROLL: modal scrolleable con scrollbar visible thin ─ */
+    /* ── SCROLLBAR VISIBLE 10px ─────────────────────────────── */
     html, body { overflow: auto !important; }
 
     #full-report-modal {
-      overflow-y: scroll !important;  /* siempre reserva el espacio */
+      overflow-y: scroll !important;
       height: 100vh !important;
-      padding-right: 400px !important;
+      padding-right: 420px !important;   /* 400px chat + 20px margen */
       box-sizing: border-box !important;
-      scrollbar-width: thin !important;          /* Firefox */
-      scrollbar-color: #444 #0a0a0a !important;  /* Firefox */
+      scrollbar-width: thin !important;
+      scrollbar-color: #444 #0a0a0a !important;
     }
-    /* Chrome/Safari/Edge — scrollbar oscuro minimalista */
     #full-report-modal::-webkit-scrollbar {
       display: block !important;
-      width: 6px !important;
+      width: 10px !important;
     }
-    #full-report-modal::-webkit-scrollbar-track {
-      background: #0a0a0a !important;
-    }
+    #full-report-modal::-webkit-scrollbar-track { background: #0a0a0a !important; }
     #full-report-modal::-webkit-scrollbar-thumb {
       background: #444 !important;
-      border-radius: 10px !important;
+      border-radius: 5px !important;
     }
-    #full-report-modal::-webkit-scrollbar-thumb:hover {
-      background: #666 !important;
-    }
+    #full-report-modal::-webkit-scrollbar-thumb:hover { background: #666 !important; }
 
     .frm-with-chat { display: block !important; }
-    .frm-main-col { display: block !important; width: 100% !important; }
+    .frm-main-col  { display: block !important; width: 100% !important; }
 
-    /* ── HEADER: logo y PDF alineados al centro vertical ───── */
+    /* ── HEADER: logo y PDF en la misma línea ───────────────── */
     .formal-report > .frm-header,
     #full-report-modal .frm-header {
       display: flex !important;
-      align-items: center !important;
-      justify-content: space-between !important;
+      align-items: flex-start !important;
+      padding-top: 25px !important;
     }
     #full-report-modal .frm-header .frm-logo,
     #full-report-modal .frm-header [class*="logo"] {
@@ -2757,93 +2751,61 @@
       margin-top: 0 !important;
     }
 
-    /* ── BOTÓN X — círculo dorado visible ───────────────────── */
+    /* ── BOTÓN X ─────────────────────────────────────────────── */
     #full-report-modal #close-full-report {
       position: fixed !important;
       top: 20px !important;
       right: 420px !important;
       z-index: 10001 !important;
       background: rgba(0,0,0,0.7) !important;
-      border: 1px solid #E8C547 !important;
+      border: 1px solid #ffcc00 !important;
       border-radius: 50% !important;
-      width: 36px !important;
-      height: 36px !important;
-      min-width: 36px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-size: 18px !important;
-      color: #E8C547 !important;
-      cursor: pointer !important;
-      padding: 0 !important;
-      line-height: 1 !important;
+      width: 36px !important; height: 36px !important; min-width: 36px !important;
+      display: flex !important; align-items: center !important; justify-content: center !important;
+      font-size: 18px !important; color: #ffcc00 !important;
+      cursor: pointer !important; padding: 0 !important;
     }
-    #full-report-modal #close-full-report:hover {
-      background: rgba(232,197,71,.25) !important;
-    }
+    #full-report-modal #close-full-report:hover { background: rgba(255,204,0,.2) !important; }
 
-    /* ── CHAT: fixed right, no bloquea scroll del informe ───── */
+    /* ── CHAT: fixed right ───────────────────────────────────── */
     #full-report-modal #report-chat-container {
       position: fixed !important;
-      right: 0 !important;
-      top: 0 !important;
-      bottom: 0 !important;
-      width: 400px !important;
-      height: 100vh !important;
+      right: 0 !important; top: 0 !important; bottom: 0 !important;
+      width: 400px !important; height: 100vh !important;
       background-color: #0d0d0d !important;
       border-left: 1px solid #333 !important;
       box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
       z-index: 1000 !important;
-      display: flex !important;
-      flex-direction: column !important;
-      overflow: hidden !important;
+      display: flex !important; flex-direction: column !important; overflow: hidden !important;
     }
 
     /* Header chat */
-    #full-report-modal .rc-header {
-      background: rgba(255,255,255,.03) !important;
-      border-bottom: 1px solid rgba(255,255,255,.08) !important;
-      padding: 18px 20px 14px !important; flex-shrink: 0 !important;
-    }
-    #full-report-modal .rc-label { color: #E8C547 !important; font-size: 10px !important; letter-spacing: 3px !important; font-weight: 600 !important; }
+    #full-report-modal .rc-header { background:rgba(255,255,255,.03)!important; border-bottom:1px solid rgba(255,255,255,.08)!important; padding:18px 20px 14px!important; flex-shrink:0!important; }
+    #full-report-modal .rc-label { color:#E8C547!important; font-size:10px!important; letter-spacing:3px!important; font-weight:600!important; }
 
     /* Mensajes */
-    #full-report-modal #rc-messages {
-      flex: 1 !important; overflow-y: auto !important;
-      padding: 14px !important; display: flex !important;
-      flex-direction: column !important; gap: 8px !important;
-      scrollbar-width: none !important; -ms-overflow-style: none !important;
-    }
-    #full-report-modal #rc-messages::-webkit-scrollbar { display: none !important; width: 0 !important; }
+    #full-report-modal #rc-messages { flex:1!important; overflow-y:auto!important; padding:14px!important; display:flex!important; flex-direction:column!important; gap:8px!important; scrollbar-width:none!important; -ms-overflow-style:none!important; }
+    #full-report-modal #rc-messages::-webkit-scrollbar { display:none!important; width:0!important; }
 
     /* Burbujas */
-    #full-report-modal .rc-msg {
-      font-size: 14px !important; line-height: 1.5 !important;
-      padding: 10px 14px !important; border-radius: 10px !important;
-      margin: 0 !important; border-left: none !important;
-    }
-    #full-report-modal .rc-msg.user { background: rgba(255,215,0,0.06) !important; color: #fff !important; }
-    #full-report-modal .rc-msg.assistant { background: #1a1a1a !important; color: rgba(215,215,215,.9) !important; }
-    #full-report-modal .rc-msg.info { background: transparent !important; color: rgba(255,255,255,.28) !important; font-size: 11px !important; padding: 3px 6px !important; }
+    #full-report-modal .rc-msg { font-size:14px!important; line-height:1.5!important; padding:10px 14px!important; border-radius:10px!important; margin:0!important; border-left:none!important; }
+    #full-report-modal .rc-msg.user { background:rgba(255,215,0,0.06)!important; color:#fff!important; }
+    #full-report-modal .rc-msg.assistant { background:#1a1a1a!important; color:rgba(215,215,215,.9)!important; }
+    #full-report-modal .rc-msg.info { background:transparent!important; color:rgba(255,255,255,.28)!important; font-size:11px!important; padding:3px 6px!important; }
 
-    /* Chips + input */
-    #full-report-modal .rc-chips { background: transparent !important; border-top: 1px solid rgba(255,255,255,.07) !important; padding: 8px 12px !important; flex-shrink: 0 !important; }
-    #full-report-modal .rc-chip { font-size: 11px !important; color: rgba(255,255,255,.5) !important; border-color: rgba(255,255,255,.15) !important; }
-    #full-report-modal .rc-chip:hover { color: #E8C547 !important; border-color: #E8C547 !important; }
-    #full-report-modal .rc-input-row { background: transparent !important; border-top: 1px solid rgba(255,255,255,.08) !important; padding: 12px 14px !important; flex-shrink: 0 !important; }
-    #full-report-modal .rc-input { background: rgba(255,255,255,.05) !important; border: 1px solid rgba(255,255,255,.12) !important; border-radius: 8px !important; color: #fff !important; font-size: 13px !important; }
-    #full-report-modal .rc-input:focus { border-color: rgba(232,197,71,.4) !important; outline: none !important; }
-    #full-report-modal .rc-send { background: #E8C547 !important; color: #000 !important; border: none !important; border-radius: 8px !important; width: 36px !important; height: 36px !important; flex-shrink: 0 !important; }
+    /* Input */
+    #full-report-modal .rc-chips { background:transparent!important; border-top:1px solid rgba(255,255,255,.07)!important; padding:8px 12px!important; flex-shrink:0!important; }
+    #full-report-modal .rc-chip { font-size:11px!important; color:rgba(255,255,255,.5)!important; border-color:rgba(255,255,255,.15)!important; }
+    #full-report-modal .rc-chip:hover { color:#E8C547!important; border-color:#E8C547!important; }
+    #full-report-modal .rc-input-row { background:transparent!important; border-top:1px solid rgba(255,255,255,.08)!important; padding:12px 14px!important; flex-shrink:0!important; }
+    #full-report-modal .rc-input { background:rgba(255,255,255,.05)!important; border:1px solid rgba(255,255,255,.12)!important; border-radius:8px!important; color:#fff!important; font-size:13px!important; }
+    #full-report-modal .rc-input:focus { border-color:rgba(232,197,71,.4)!important; outline:none!important; }
+    #full-report-modal .rc-send { background:#E8C547!important; color:#000!important; border:none!important; border-radius:8px!important; width:36px!important; height:36px!important; flex-shrink:0!important; }
 
-    /* Responsive */
     @media(max-width:900px) {
       #full-report-modal { padding-right: 0 !important; }
       #full-report-modal #close-full-report { right: 20px !important; top: 16px !important; }
-      #full-report-modal #report-chat-container {
-        position: static !important; width: 100% !important;
-        height: 320px !important; border-left: none !important;
-        border-top: 1px solid #333 !important; box-shadow: none !important;
-      }
+      #full-report-modal #report-chat-container { position:static!important; width:100%!important; height:320px!important; border-left:none!important; border-top:1px solid #333!important; box-shadow:none!important; }
     }
   </style>
 </body>
