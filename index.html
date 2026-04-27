@@ -2411,7 +2411,7 @@
 </script>
 
   <!-- FULL REPORT MODAL -->
-  <div id="full-report-modal" class="formal-report hidden">
+  <div id="full-report-modal" class="formal-report hidden" style="overflow-y:scroll!important;height:100vh!important;padding-right:420px!important;box-sizing:border-box!important;">
     <button id="close-full-report" title="Cerrar">&times;</button>
 
     <div class="frm-with-chat">
@@ -2688,146 +2688,81 @@
 
 
   <style>
-    /* ── NUCLEAR v10 — dual ID (full + formal), scrollbar 12px ── */
+    /* ── NUCLEAR v11 — inline styles + dual ID + scrollbar force ── */
 
-    /* Cubrir AMBOS IDs por si Juan usa el nombre incorrecto */
-    #full-report-modal .frm-card,
-    #formal-report-modal .frm-card,
-    #full-report-modal .frm-cards-row > div,
-    #formal-report-modal .frm-cards-row > div {
-      display: flex !important; flex-direction: column !important;
-      justify-content: flex-start !important; align-items: center !important;
-      text-align: center !important; min-height: 130px !important; padding: 20px 16px !important;
+    /* Dual ID: full + formal */
+    #full-report-modal .frm-card, #formal-report-modal .frm-card,
+    #full-report-modal .frm-cards-row > div, #formal-report-modal .frm-cards-row > div {
+      display:flex!important;flex-direction:column!important;justify-content:flex-start!important;align-items:center!important;text-align:center!important;min-height:130px!important;padding:20px 16px!important;
     }
-    #full-report-modal .frm-card-label,
-    #formal-report-modal .frm-card-label {
-      display: flex !important; align-items: flex-end !important;
-      justify-content: center !important; height: 45px !important;
-      min-height: 45px !important; max-height: 45px !important;
-      width: 100% !important; text-align: center !important;
-      margin: 0 !important; padding: 0 !important;
-      line-height: 1.2 !important; overflow: hidden !important;
+    #full-report-modal .frm-card-label, #formal-report-modal .frm-card-label {
+      display:flex!important;align-items:flex-end!important;justify-content:center!important;height:45px!important;min-height:45px!important;max-height:45px!important;width:100%!important;text-align:center!important;margin:0!important;padding:0!important;line-height:1.2!important;overflow:hidden!important;
     }
-    #full-report-modal .frm-card-val,  #formal-report-modal .frm-card-val  { width:100%!important; text-align:center!important; margin:10px 0 0!important; }
-    #full-report-modal .frm-card-unit, #formal-report-modal .frm-card-unit { width:100%!important; text-align:center!important; margin:4px 0 0!important; }
+    #full-report-modal .frm-card-val,  #formal-report-modal .frm-card-val  { width:100%!important;text-align:center!important;margin:10px 0 0!important; }
+    #full-report-modal .frm-card-unit, #formal-report-modal .frm-card-unit { width:100%!important;text-align:center!important;margin:4px 0 0!important; }
 
     /* Enrase */
-    #full-report-modal #frm-enrase-bloque,
-    #formal-report-modal #frm-enrase-bloque { display: block !important; }
-    #full-report-modal #frm-enrase-contenido,
-    #formal-report-modal #frm-enrase-contenido,
-    #full-report-modal #frm-enrase-contenido span,
-    #formal-report-modal #frm-enrase-contenido span { color: rgba(255,255,255,.8) !important; }
+    #full-report-modal #frm-enrase-bloque, #formal-report-modal #frm-enrase-bloque { display:block!important; }
+    #full-report-modal #frm-enrase-contenido, #formal-report-modal #frm-enrase-contenido { color:rgba(255,255,255,.8)!important; }
+    #full-report-modal #frm-enrase-contenido span, #formal-report-modal #frm-enrase-contenido span { color:rgba(255,255,255,.8)!important; }
 
-    /* ── SCROLL + BARRA VISIBLE ─────────────────────────────── */
+    /* Scroll global */
     html, body { overflow: auto !important; }
 
-    #full-report-modal,
-    #formal-report-modal {
-      overflow-y: scroll !important;
-      height: 100vh !important;
-      padding-right: 420px !important;
-      box-sizing: border-box !important;
-      scrollbar-width: thin !important;
-      scrollbar-color: #555 #0a0a0a !important;
-    }
-    #full-report-modal::-webkit-scrollbar,
-    #formal-report-modal::-webkit-scrollbar {
+    /* SCROLLBAR FORZADO — display:block es la clave */
+    #full-report-modal::-webkit-scrollbar, #formal-report-modal::-webkit-scrollbar {
       display: block !important;
       width: 12px !important;
     }
-    #full-report-modal::-webkit-scrollbar-track,
-    #formal-report-modal::-webkit-scrollbar-track { background: #0a0a0a !important; }
-    #full-report-modal::-webkit-scrollbar-thumb,
-    #formal-report-modal::-webkit-scrollbar-thumb {
+    #full-report-modal::-webkit-scrollbar-track, #formal-report-modal::-webkit-scrollbar-track {
+      background: #0a0a0a !important;
+    }
+    #full-report-modal::-webkit-scrollbar-thumb, #formal-report-modal::-webkit-scrollbar-thumb {
       background-color: #555 !important;
       border: 3px solid #0a0a0a !important;
       border-radius: 10px !important;
     }
-    #full-report-modal::-webkit-scrollbar-thumb:hover,
-    #formal-report-modal::-webkit-scrollbar-thumb:hover { background-color: #777 !important; }
-
-    .frm-with-chat { display: block !important; }
-    .frm-main-col  { display: block !important; width: 100% !important; }
-
-    /* ── HEADER: logo y PDF en la misma línea ───────────────── */
-    .report-header-container {
-      display: flex !important;
-      align-items: flex-start !important;
-      justify-content: space-between !important;
-      padding: 20px 40px 0 40px !important;
-      height: 80px !important;
-    }
-    .report-header-container .logo-edificia,
-    #full-report-modal .frm-header .frm-logo,
-    #formal-report-modal .frm-header .frm-logo {
-      margin-top: 0 !important;
-      padding-top: 0 !important;
-      line-height: 1 !important;
-    }
-    #full-report-modal .frm-header,
-    #formal-report-modal .frm-header {
-      display: flex !important;
-      align-items: flex-start !important;
-      padding-top: 25px !important;
+    #full-report-modal::-webkit-scrollbar-thumb:hover, #formal-report-modal::-webkit-scrollbar-thumb:hover {
+      background-color: #777 !important;
     }
 
-    /* ── BOTÓN X ─────────────────────────────────────────────── */
-    #full-report-modal #close-full-report,
-    #formal-report-modal #close-full-report {
-      position: fixed !important;
-      top: 20px !important;
-      right: 420px !important;
-      z-index: 10001 !important;
-      background: rgba(0,0,0,0.7) !important;
-      border: 1px solid #ffcc00 !important;
-      border-radius: 50% !important;
-      width: 36px !important; height: 36px !important;
-      display: flex !important; align-items: center !important; justify-content: center !important;
-      font-size: 18px !important; color: #ffcc00 !important;
-      cursor: pointer !important; padding: 0 !important;
-    }
-    #full-report-modal #close-full-report:hover,
-    #formal-report-modal #close-full-report:hover { background: rgba(255,204,0,.2) !important; }
+    .frm-with-chat { display:block!important; }
+    .frm-main-col  { display:block!important; width:100%!important; }
 
-    /* ── CHAT FIXED RIGHT ────────────────────────────────────── */
-    #full-report-modal #report-chat-container,
-    #formal-report-modal #report-chat-container {
-      position: fixed !important;
-      right: 0 !important; top: 0 !important; bottom: 0 !important;
-      width: 400px !important; height: 100vh !important;
-      background-color: #0d0d0d !important;
-      border-left: 1px solid #333 !important;
-      box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
-      z-index: 9999 !important;
-      display: flex !important; flex-direction: column !important; overflow: hidden !important;
+    /* Botón X */
+    #full-report-modal #close-full-report, #formal-report-modal #close-full-report {
+      position:fixed!important;top:20px!important;right:420px!important;z-index:10001!important;
+      background:rgba(0,0,0,0.7)!important;border:1px solid #ffcc00!important;border-radius:50%!important;
+      width:36px!important;height:36px!important;display:flex!important;align-items:center!important;justify-content:center!important;
+      font-size:18px!important;color:#ffcc00!important;cursor:pointer!important;padding:0!important;
+    }
+    #full-report-modal #close-full-report:hover, #formal-report-modal #close-full-report:hover { background:rgba(255,204,0,.2)!important; }
+
+    /* Chat fixed right */
+    #full-report-modal #report-chat-container, #formal-report-modal #report-chat-container {
+      position:fixed!important;right:0!important;top:0!important;bottom:0!important;
+      width:400px!important;height:100vh!important;background-color:#0d0d0d!important;
+      border-left:1px solid #333!important;box-shadow:-5px 0 20px rgba(0,0,0,0.6)!important;
+      z-index:9999!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;
     }
 
-    /* Header chat */
-    #full-report-modal .rc-header,  #formal-report-modal .rc-header  { background:rgba(255,255,255,.03)!important; border-bottom:1px solid rgba(255,255,255,.08)!important; padding:18px 20px 14px!important; flex-shrink:0!important; }
-    #full-report-modal .rc-label,   #formal-report-modal .rc-label   { color:#E8C547!important; font-size:10px!important; letter-spacing:3px!important; font-weight:600!important; }
-
-    /* Mensajes */
-    #full-report-modal #rc-messages, #formal-report-modal #rc-messages { flex:1!important; overflow-y:auto!important; padding:14px!important; display:flex!important; flex-direction:column!important; gap:8px!important; scrollbar-width:none!important; -ms-overflow-style:none!important; }
-    #full-report-modal #rc-messages::-webkit-scrollbar, #formal-report-modal #rc-messages::-webkit-scrollbar { display:none!important; width:0!important; }
-
-    /* Burbujas */
-    #full-report-modal .rc-msg, #formal-report-modal .rc-msg { font-size:14px!important; line-height:1.5!important; padding:10px 14px!important; border-radius:10px!important; margin:0!important; border-left:none!important; }
-    #full-report-modal .rc-msg.user, #formal-report-modal .rc-msg.user { background:rgba(255,215,0,0.06)!important; color:#fff!important; }
-    #full-report-modal .rc-msg.assistant, #formal-report-modal .rc-msg.assistant { background:#1a1a1a!important; color:rgba(215,215,215,.9)!important; }
-    #full-report-modal .rc-msg.info, #formal-report-modal .rc-msg.info { background:transparent!important; color:rgba(255,255,255,.28)!important; font-size:11px!important; padding:3px 6px!important; }
-
-    /* Input */
-    #full-report-modal .rc-chips, #formal-report-modal .rc-chips { background:transparent!important; border-top:1px solid rgba(255,255,255,.07)!important; padding:8px 12px!important; flex-shrink:0!important; }
-    #full-report-modal .rc-input-row, #formal-report-modal .rc-input-row { background:transparent!important; border-top:1px solid rgba(255,255,255,.08)!important; padding:12px 14px!important; flex-shrink:0!important; }
-    #full-report-modal .rc-input, #formal-report-modal .rc-input { background:rgba(255,255,255,.05)!important; border:1px solid rgba(255,255,255,.12)!important; border-radius:8px!important; color:#fff!important; font-size:13px!important; }
-    #full-report-modal .rc-input:focus, #formal-report-modal .rc-input:focus { border-color:rgba(232,197,71,.4)!important; outline:none!important; }
-    #full-report-modal .rc-send, #formal-report-modal .rc-send { background:#E8C547!important; color:#000!important; border:none!important; border-radius:8px!important; width:36px!important; height:36px!important; flex-shrink:0!important; }
+    #full-report-modal .rc-header, #formal-report-modal .rc-header { background:rgba(255,255,255,.03)!important;border-bottom:1px solid rgba(255,255,255,.08)!important;padding:18px 20px 14px!important;flex-shrink:0!important; }
+    #full-report-modal .rc-label, #formal-report-modal .rc-label { color:#E8C547!important;font-size:10px!important;letter-spacing:3px!important;font-weight:600!important; }
+    #full-report-modal #rc-messages, #formal-report-modal #rc-messages { flex:1!important;overflow-y:auto!important;padding:14px!important;display:flex!important;flex-direction:column!important;gap:8px!important;scrollbar-width:none!important;-ms-overflow-style:none!important; }
+    #full-report-modal #rc-messages::-webkit-scrollbar, #formal-report-modal #rc-messages::-webkit-scrollbar { display:none!important;width:0!important; }
+    #full-report-modal .rc-msg, #formal-report-modal .rc-msg { font-size:14px!important;line-height:1.5!important;padding:10px 14px!important;border-radius:10px!important;margin:0!important;border-left:none!important; }
+    #full-report-modal .rc-msg.user, #formal-report-modal .rc-msg.user { background:rgba(255,215,0,0.06)!important;color:#fff!important; }
+    #full-report-modal .rc-msg.assistant, #formal-report-modal .rc-msg.assistant { background:#1a1a1a!important;color:rgba(215,215,215,.9)!important; }
+    #full-report-modal .rc-msg.info, #formal-report-modal .rc-msg.info { background:transparent!important;color:rgba(255,255,255,.28)!important;font-size:11px!important;padding:3px 6px!important; }
+    #full-report-modal .rc-input-row, #formal-report-modal .rc-input-row { background:transparent!important;border-top:1px solid rgba(255,255,255,.08)!important;padding:12px 14px!important;flex-shrink:0!important; }
+    #full-report-modal .rc-input, #formal-report-modal .rc-input { background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:8px!important;color:#fff!important;font-size:13px!important; }
+    #full-report-modal .rc-input:focus, #formal-report-modal .rc-input:focus { border-color:rgba(232,197,71,.4)!important;outline:none!important; }
+    #full-report-modal .rc-send, #formal-report-modal .rc-send { background:#E8C547!important;color:#000!important;border:none!important;border-radius:8px!important;width:36px!important;height:36px!important;flex-shrink:0!important; }
 
     @media(max-width:900px) {
-      #full-report-modal, #formal-report-modal { padding-right: 0 !important; }
-      #full-report-modal #close-full-report, #formal-report-modal #close-full-report { right: 20px !important; }
-      #full-report-modal #report-chat-container, #formal-report-modal #report-chat-container { position:static!important; width:100%!important; height:320px!important; border-left:none!important; border-top:1px solid #333!important; box-shadow:none!important; }
+      #full-report-modal, #formal-report-modal { padding-right:0!important; }
+      #full-report-modal #close-full-report, #formal-report-modal #close-full-report { right:20px!important; }
+      #full-report-modal #report-chat-container, #formal-report-modal #report-chat-container { position:static!important;width:100%!important;height:320px!important;border-left:none!important;border-top:1px solid #333!important;box-shadow:none!important; }
     }
   </style>
 </body>
