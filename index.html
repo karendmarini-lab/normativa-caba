@@ -7,6 +7,7 @@
   <title>EdificIA · Pre-factibilidad CABA</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@turf/turf@6/turf.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap');
 
@@ -435,6 +436,53 @@
     .frm-analysis-item:last-child{border-bottom:none}
     .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:13px;letter-spacing:.5px}
     .frm-analysis-item span:last-child{color:#fff;font-weight:300;text-align:right}
+
+    /* ── SOLAR — sidebar badge ── */
+    .solar-badge-card{
+      display:flex;align-items:center;gap:12px;
+      background:linear-gradient(135deg,#1a1400,#0e0d00);
+      border:1px solid rgba(255,204,0,.22);border-radius:8px;
+      padding:11px 14px;
+    }
+    .solar-badge-emoji{font-size:22px;flex-shrink:0;line-height:1}
+    .solar-badge-info{flex:1;min-width:0}
+    .solar-badge-level{font-size:13px;font-weight:500}
+    .solar-badge-orient{font-size:11px;color:rgba(255,255,255,.42);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .solar-badge-rad{text-align:right;flex-shrink:0}
+    .solar-badge-rad-val{font-size:18px;font-weight:200;color:#ffcc00;line-height:1}
+    .solar-badge-rad-unit{font-size:9px;color:rgba(255,255,255,.35);letter-spacing:.8px;margin-top:2px}
+
+    /* ── SOLAR — sección del informe ── */
+    .frm-solar-card{background:linear-gradient(145deg,#151200,#0a0900)!important;border-color:rgba(255,204,0,.15)!important;border-top-color:rgba(255,204,0,.25)!important}
+    .solar-scores-row{
+      display:flex;align-items:center;
+      background:rgba(255,255,255,.025);border-radius:12px;
+      padding:18px 20px;margin:14px 0 22px;
+    }
+    .solar-score-item{flex:1;text-align:center}
+    .solar-score-center{flex:1.2}
+    .solar-score-divider{width:1px;height:56px;background:rgba(255,255,255,.1);flex-shrink:0;margin:0 18px}
+    .solar-score-label{font-size:8px;letter-spacing:2px;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:5px}
+    .solar-score-orient{font-size:12px;color:rgba(255,255,255,.6);margin-bottom:5px}
+    .solar-score-val{font-size:30px;font-weight:200;line-height:1;color:#ffcc00}
+    .solar-score-global{font-size:38px!important}
+    .solar-score-sub{font-size:11px;color:rgba(255,255,255,.25);margin-top:3px}
+    .solar-score-rad{font-size:10px;color:rgba(255,204,0,.55);margin-top:4px;letter-spacing:.3px}
+    .solar-score-emoji{font-size:26px;line-height:1;margin-bottom:4px}
+    .solar-score-level{font-size:11px;font-weight:500;margin-top:5px}
+    .solar-chart-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:10px}
+    .solar-chart{display:flex;gap:4px;align-items:flex-end;margin-bottom:18px;padding-bottom:1px;border-bottom:1px solid rgba(255,255,255,.07)}
+    .solar-bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+    .solar-bar-val{font-size:7px;color:rgba(255,204,0,.65);line-height:1;text-align:center}
+    .solar-bar-fill{width:100%;background:#ffcc00;border-radius:2px 2px 0 0;min-height:3px}
+    .solar-bar-label{font-size:8px;color:rgba(255,255,255,.3);line-height:1;text-align:center}
+    .solar-insight{
+      font-size:13px;color:rgba(255,255,255,.58);line-height:1.75;
+      padding:13px 16px;margin-top:2px;
+      background:rgba(255,204,0,.04);
+      border-left:2px solid rgba(255,204,0,.5);
+      border-radius:0 6px 6px 0;
+    }
 
     /* Croquis */
     .frm-croquis{
@@ -904,6 +952,9 @@
       <div class="card"><div class="card-lbl">Distrito</div><div class="card-val sm" id="res-dis">—</div><div class="card-unit">CUR</div></div>
     </div>
 
+    <!-- ── SOLAR BADGE (relleno por solar-ui.js) ── -->
+    <div id="solar-sidebar-badge" style="display:none;margin-bottom:12px"></div>
+
     <details style="margin-bottom:12px">
       <summary style="cursor:pointer;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Metodología de cálculo</summary>
       <div style="margin-top:8px;font-size:11px;color:var(--muted);line-height:1.6">
@@ -1113,6 +1164,15 @@
         <div class="frm-analysis-card" style="grid-column:span 2">
           <div class="frm-table-title">⬡ Análisis de Enrase (Completamiento de Tejido)</div>
           <div id="frm-enrase-contenido"></div>
+        </div>
+      </div>
+
+      <!-- ── SECCIÓN SOLAR (rellena por solar-ui.js) ── -->
+      <div id="frm-solar-section" style="display:none">
+        <div class="frm-analysis" style="grid-template-columns:1fr">
+          <div class="frm-analysis-card frm-solar-card" style="grid-column:span 2">
+            <div class="frm-solar-inner"></div>
+          </div>
         </div>
       </div>
 
