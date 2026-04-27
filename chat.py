@@ -65,7 +65,7 @@ MODEL_PRICING = {
 # System prompt
 # ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT_TEMPLATE = """\
 Sos el asistente de EdificIA, una plataforma de factibilidad urbanistica \
 de Buenos Aires (CABA). Ayudas a usuarios a evaluar oportunidades de \
 desarrollo inmobiliario.
@@ -78,7 +78,46 @@ desarrollo inmobiliario.
   tu razonamiento, solo ve el texto que escribis. Nunca digas "voy a hacer \
   una query" o "primero verifico" — pensa internamente y mostra solo el \
   resultado final.
+
+## Base de datos — tabla `parcelas`
+
+Columnas: {schema}
+
+Ejemplo (SELECT * FROM parcelas ORDER BY RANDOM() LIMIT 3):
+{sample}
+
+Notas clave:
+- epok_direccion = dirección completa (ej "JURAMENTO AV. 2100"). Para buscar: WHERE epok_direccion LIKE '%JURAMENTO%'
+- epok_altura = número de puerta (NO es la altura del edificio)
+- plano_san = altura máxima permitida (plano límite sanitizado)
+- delta_altura = plano_san - tejido_altura_max (subutilización)
+- smp = código catastral (ej "036-102-013"), smp_norm sin ceros (ej "36-102-13")
 """
+
+
+def _build_system_prompt() -> str:
+    """Build system prompt with live schema + 3 sample rows."""
+    try:
+        conn = sqlite3.connect(str(DB_PATH), timeout=5)
+        conn.row_factory = sqlite3.Row
+        cols = conn.execute("PRAGMA table_info(parcelas)").fetchall()
+        schema = ", ".join(f'{c["name"]} ({c["type"]})' for c in cols)
+        rows = conn.execute(
+            "SELECT * FROM parcelas WHERE epok_direccion IS NOT NULL "
+            "ORDER BY RANDOM() LIMIT 3"
+        ).fetchall()
+        sample_rows = []
+        for r in rows:
+            d = dict(r)
+            d.pop("polygon_geojson", None)
+            d.pop("edif_linderas", None)
+            sample_rows.append(d)
+        sample = json.dumps(sample_rows, ensure_ascii=False, default=str)
+        conn.close()
+        return _SYSTEM_PROMPT_TEMPLATE.format(schema=schema, sample=sample)
+    except Exception as exc:
+        logger.warning("Failed to build dynamic prompt: %s", exc)
+        return _SYSTEM_PROMPT_TEMPLATE.format(schema="(no disponible)", sample="[]")
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +363,7 @@ def create_agent(model: str = "sonnet") -> ClaudeAgentOptions:
     """
     model_id = _resolve_model(model)
     return ClaudeAgentOptions(
-        system_prompt=SYSTEM_PROMPT,
+        system_prompt=_build_system_prompt(),
         allowed_tools=["Read", "Grep", "Glob", "mcp__edificia__*"],
         disallowed_tools=[
             "Bash", "Edit", "Write", "WebSearch", "WebFetch", "Agent",
@@ -384,6 +423,10 @@ class SessionManager:
                 return entry.client
             # Model changed: close old client
             await self._close_entry(entry)
+
+        # Release warmup session when a real session starts
+        if session_id != "__warmup__" and "__warmup__" in self._sessions:
+            await self.delete("__warmup__")
 
         options = create_agent(model)
         for attempt in range(3):
