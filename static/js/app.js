@@ -13,6 +13,7 @@
  */
 
 import * as Map from './map.js';
+import { getSessionId } from './chat.js';
 import { addParcelCard, addParcelDocs, addInfoMessage, getChatMode } from './chat.js';
 import { initializeSolarModule } from './solar-ui.js';
 
@@ -994,13 +995,11 @@ document.addEventListener('DOMContentLoaded', () => {
 // NO modifica chat.js. Llama a /api/chat via SSE.
 // Event delegation: listeners en el contenedor, no en elementos clonados.
 
-let _rcSessionId = null;
 let _rcStreaming  = false;
 let _rcAbortCtrl  = null;
 let _rcBound      = false; // prevenir bindings duplicados
 
 function rcInit(parcelContext) {
-  _rcSessionId = crypto.randomUUID();
   _rcStreaming  = false;
   window._rcPendingContext = parcelContext || '';
 
@@ -1128,7 +1127,7 @@ async function rcSend(textOverride) {
     const resp = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: _rcSessionId, message: agentMessage, model }),
+      body: JSON.stringify({ session_id: getSessionId(), message: agentMessage, model }),
       signal: _rcAbortCtrl.signal,
     });
 
