@@ -8,7 +8,12 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap');
+
+    /* ══════════════════════════════════════════════════════════
+       CSS UNIFICADO — flattened from 12 revision layers
+       ══════════════════════════════════════════════════════════ */
+
     :root{
       --bg:#000;--card:#0e0e0e;--lift:#181818;
       --border:rgba(255,255,255,.08);--bh:rgba(255,255,255,.18);
@@ -46,6 +51,11 @@
 
     /* Leaflet map */
     #map{position:absolute;inset:0;z-index:2}
+
+    /* ── Leaflet overrides (need !important to beat library defaults) ── */
+    .leaflet-tile-container img{outline:1px solid transparent;border:none !important;margin:-1px;filter:brightness(1.1) contrast(1.05)}
+    .map-labels-layer img{filter:invert(1) brightness(0.91) grayscale(1) !important}
+    .leaflet-container{background:#000 !important}
 
     /* ── SEARCH PANEL (centered overlay) ── */
     .search-panel{
@@ -126,13 +136,13 @@
     .parcel-link{display:inline-block;padding:8px 14px;border-radius:999px;background:var(--accent);
       color:#000;text-decoration:none;font-size:11px;font-weight:600;letter-spacing:1px}
 
-    /* Legend — integrada en panel lateral */
+    /* Legend */
     .legend{padding:4px 0 0}
     .legend-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
     .legend-bar{width:100%;height:8px;border-radius:4px;background:linear-gradient(to right,#1a1a2e,#e8c547,#f97316)}
     .legend-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);margin-top:4px}
 
-    /* Chat pill — botón principal de acceso a IA */
+    /* Chat pill */
     #chat-toggle{
       position:fixed;bottom:20px;left:16px;z-index:500;
       display:flex;align-items:center;gap:10px;
@@ -147,10 +157,7 @@
     #chat-toggle.hidden{opacity:0;pointer-events:none;transform:translateY(8px)}
 
     /* Claude icon wobble */
-    @keyframes claude-wobble {
-      0%,100%{transform:rotate(-8deg) scale(1)}
-      50%{transform:rotate(8deg) scale(1.1)}
-    }
+    @keyframes claude-wobble{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.1)}}
     .claude-icon{animation:claude-wobble 2s ease-in-out infinite;transform-origin:center;flex-shrink:0;color:#D97757}
 
     /* ── RESULTS (scrollable detail below map) ── */
@@ -181,7 +188,7 @@
     #aph-box.on,#u-box.on,#cur-box.on{display:block;background:rgba(234,179,8,.04);
       border:1px solid rgba(234,179,8,.12);border-radius:var(--r);padding:10px 12px;font-size:12px;color:#fcd34d;margin-bottom:12px}
     #calc-block{display:none;border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;position:relative}
-    #calc-block::before{content:'CÁLCULOS DEL LOTE';position:absolute;top:-1px;right:14px;
+    #calc-block::before{content:'CALCULOS DEL LOTE';position:absolute;top:-1px;right:14px;
       font-size:7px;letter-spacing:3px;background:rgba(0,0,0,.95);color:rgba(255,255,255,.22);padding:0 6px}
     .cgrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);
       border:1px solid var(--border);border-radius:3px;overflow:hidden}
@@ -217,15 +224,7 @@
       max-height:280px;overflow-y:auto;background:rgba(18,18,18,.98);border:1px solid var(--line);
       border-radius:12px;backdrop-filter:blur(16px);z-index:100;padding:4px}
 
-    @media(max-width:640px){
-      .panel{width:calc(100% - 32px);max-height:40vh}
-      .search-panel{width:96%;max-width:none}
-      #results{width:100%}
-      header{padding:0 12px}
-      .header-nav{display:none}
-    }
-
-    /* ── MÓDULO ENRASE ──────────────────────────────────────── */
+    /* ── MODULO ENRASE ── */
     #enrase-bloque{border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;display:none}
     #enrase-bloque.visible{display:block}
     .enrase-titulo{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#E8C547;margin-bottom:10px}
@@ -240,97 +239,454 @@
     .enrase-no{font-size:11px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:8px}
     .enrase-icon{font-size:16px;color:rgba(255,255,255,.2)}
 
-    /* ══════════════════════════════════════════════════════════
-       INFORME MODAL — CSS DEFINITIVO (reemplaza todos los anteriores)
-       ══════════════════════════════════════════════════════════ */
+    /* ── "Open full report" button in results panel ── */
+    #open-full-report{
+      background:var(--accent);color:#000;border:none;border-radius:50px;
+      font-family:'Inter',sans-serif;font-weight:600;text-transform:uppercase;
+      letter-spacing:1px;padding:12px 24px;cursor:pointer;width:100%;
+      margin-top:10px;display:none;transition:all 0.3s ease;
+    }
+    #open-full-report:hover{transform:scale(1.02);opacity:0.9}
+    #open-full-report.visible{display:block}
 
-    /* HERO: dirección + mapa en un único contenedor */
-    .frm-hero-row{display:flex;flex-direction:row;align-items:center;gap:28px;background:linear-gradient(145deg,#1c1c1c,#0e0e0e);border:1px solid rgba(255,255,255,.07);border-top:1px solid rgba(255,255,255,.1);border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.55);padding:28px 32px;margin-bottom:20px;overflow:hidden}
-    .frm-hero-left{flex:1 1 auto;min-width:0;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-hero-right{flex:0 0 auto;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-map-ring{border:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important;outline:none!important}
-
-    /* M² CARDS: grilla 4 columnas matemáticas */
-    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
-    .frm-card{display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-content:center!important;justify-items:center!important;text-align:center!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
-    .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:center!important}
-    .frm-card.total .frm-card-val{color:var(--accent)!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;overflow:hidden!important;display:block!important;align-self:start!important;margin:0!important;text-align:center!important;width:100%!important}
-    .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
-    .frm-card-sub{font-size:10px!important;color:rgba(255,255,255,.3)!important}
-
-    /* ANÁLISIS: dos columnas, misma altura */
-    .frm-analysis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important}
-    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important;height:100%!important}
-
-    /* CALC: 6 columnas exactas */
-    .frm-calc-section{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
-    .frm-calc-inputs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:10px!important;align-items:start!important}
-    .frm-calc-field{display:flex!important;flex-direction:column!important;gap:5px!important}
-    .frm-calc-input{height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(255,191,0,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important;line-height:44px!important}
-    .frm-calc-result-val{text-align:center!important;font-size:18px!important}
-    .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
-    .frm-calc-results{border-radius:12px!important;overflow:hidden!important}
-    .frm-calc-result{background:linear-gradient(145deg,#161616,#0e0e0e)!important;border-top:1px solid rgba(255,255,255,.05)!important}
-    .frm-calc-result.highlight{background:linear-gradient(145deg,#1a1300,#0a0800)!important;border-top:1px solid rgba(255,191,0,.08)!important}
-
-    /* SCROLL: .formal-report es el contenedor — scrollbar en el borde absoluto derecho */
-    .frm-with-chat{display:flex!important;align-items:flex-start!important;min-height:100vh!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important}
-    /* Scrollbar fino del modal — 4px gris oscuro en borde derecho de pantalla */
-    .formal-report::-webkit-scrollbar{width:5px!important}
-    .formal-report::-webkit-scrollbar-track{background:transparent!important}
-    .formal-report::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18)!important;border-radius:3px!important}
-    .formal-report{position:fixed!important;top:0!important;left:0!important;bottom:0!important;right:260px!important;overflow-y:auto!important;scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.18) transparent!important}
-
-    /* CHAT: fondo sólido, nativo, sin bordes */
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:rgba(10,10,10,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;position:fixed!important;right:0!important;top:0!important;z-index:10000!important;height:100vh!important}
-    .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
-    .rc-msg{border-radius:0!important;background:transparent!important;padding:6px 0!important;font-size:14px!important;line-height:1.5!important}
-    .rc-msg.user{color:#fff!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.45)!important}
-    .rc-msg.assistant{color:rgba(210,210,210,.92)!important}
-    .rc-msg.info{color:rgba(255,255,255,.22)!important;font-size:10px!important}
-    .rc-input-row{background:transparent!important;border-top:1px solid rgba(255,255,255,.07)!important}
-    .rc-input{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;color:#fff!important}
-    .rc-input:focus{border-color:rgba(255,191,0,.4)!important;outline:none!important}
-    .rc-chips{background:transparent!important;border-top:1px solid rgba(255,255,255,.06)!important}
-    /* Scrollbar de mensajes del chat — oculto */
-    #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
-    #rc-messages::-webkit-scrollbar{display:none!important}
-
-    /* M² GRID — fuerza 4 columnas sin margen residual */
-    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
-    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-content:center!important;justify-items:center!important;text-align:center!important}
-
-    /* TARJETAS GENERALES */
-    .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}
-
-    /* PLUSVALÍA */
-    .frm-plusvalia-usd{font-size:20px!important;font-weight:600!important;color:#fff!important;display:block!important}
-    .frm-plusvalia-uva{font-size:10px!important;color:rgba(255,255,255,.3)!important;display:inline!important;margin-left:4px!important}
-
-    /* CUERPO Y ESPACIADO */
-    .frm-body{padding:36px 40px 64px!important}
-
-    /* BOTÓN PDF GLOW */
-    #btn-download-pdf{animation:pdffinal 3s ease-in-out infinite!important}
-    @keyframes pdffinal{0%,100%{box-shadow:0 0 10px rgba(232,197,71,.2)}50%{box-shadow:0 0 22px rgba(232,197,71,.45),0 0 40px rgba(232,197,71,.12)}}
-
-    /* RESPONSIVE */
-    @media(max-width:1100px){.frm-cards-row{grid-template-columns:repeat(2,1fr)!important}.frm-calc-inputs{grid-template-columns:repeat(3,1fr)!important}}
-    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}.formal-report{right:0!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-body{padding:20px 16px 40px!important}}
-
-    /* CENTRADO TARJETAS m² — especificidad (0,3,0) gana a cualquier regla de clase simple */
-    .frm-cards-row>.frm-card>.frm-card-label{text-align:center!important;width:100%!important;display:block!important}
-    .frm-cards-row>.frm-card>.frm-card-val{text-align:center!important;width:100%!important;display:block!important}
-    .frm-cards-row>.frm-card>.frm-card-unit{text-align:center!important;width:100%!important;display:block!important}
-    .frm-cards-row>.frm-card>.frm-card-sub{text-align:center!important;width:100%!important;display:block!important}
+    .btn-full-report{
+      display:none;width:100%;margin-top:10px;
+      background:var(--accent);color:#000;border:none;border-radius:50px;
+      padding:12px 20px;font-family:'Inter',inherit;font-size:10px;
+      font-weight:600;letter-spacing:2px;text-transform:uppercase;
+      cursor:pointer;transition:opacity .2s,transform .1s;
+    }
+    .btn-full-report:hover{opacity:.85}
+    .btn-full-report:active{transform:scale(.98)}
+    .btn-full-report.visible{display:block}
 
     /* ══════════════════════════════════════════════════════════
-       FIN CSS DEFINITIVO
+       INFORME TECNICO MODAL — final flattened styles
        ══════════════════════════════════════════════════════════ */
 
-    </style>
+    .formal-report{
+      display:none;position:fixed;top:0;left:0;bottom:0;right:260px;
+      background:#000;z-index:9999;overflow-y:auto;
+      font-family:'Inter',system-ui,sans-serif;
+      -webkit-font-smoothing:antialiased;
+      scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent;
+    }
+    .formal-report:not(.hidden){display:block}
+    .formal-report::-webkit-scrollbar{width:5px}
+    .formal-report::-webkit-scrollbar-track{background:transparent}
+    .formal-report::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:3px}
+
+    /* Close button (base — overridden inside modal via #full-report-modal context) */
+    #close-full-report{
+      position:fixed;top:24px;right:288px;z-index:10001;
+      font-size:24px;font-weight:200;color:rgba(255,255,255,.5);
+      background:none;border:none;cursor:pointer;
+      transition:color .2s;line-height:1;
+    }
+    #close-full-report:hover{color:#fff}
+
+    /* PDF button wrap */
+    #pdf-btn-wrap{
+      position:static;display:flex;align-items:center;
+      margin-right:16px;padding:0;background:transparent;
+      flex-shrink:0;pointer-events:auto;
+    }
+    #btn-download-pdf{
+      pointer-events:auto;
+      display:none;align-items:center;gap:7px;
+      padding:9px 18px;border-radius:100px;
+      background:var(--accent);color:#000;border:none;cursor:pointer;
+      font-family:'Inter',system-ui,sans-serif;font-size:9px;font-weight:700;
+      letter-spacing:2px;text-transform:uppercase;white-space:nowrap;
+      box-shadow:0 2px 14px rgba(0,0,0,.4);
+      transition:opacity .2s,transform .1s;
+      animation:pdf-glow 3s ease-in-out infinite;
+    }
+    #btn-download-pdf:hover{opacity:.85}
+    #btn-download-pdf:active{transform:scale(.97)}
+    #btn-download-pdf:disabled{cursor:default}
+    @keyframes pdf-glow{
+      0%,100%{box-shadow:0 0 10px rgba(232,197,71,.2)}
+      50%{box-shadow:0 0 22px rgba(232,197,71,.45),0 0 40px rgba(232,197,71,.12)}
+    }
+
+    /* Body wrapper */
+    .frm-body{padding:36px 40px 64px;max-width:1400px;margin:0 auto}
+
+    /* ── HERO: address left + map right ── */
+    .frm-hero-row{
+      display:flex;flex-direction:row;align-items:center;gap:28px;
+      background:linear-gradient(145deg,#1c1c1c,#0e0e0e);
+      border:1px solid rgba(255,255,255,.07);border-top:1px solid rgba(255,255,255,.1);
+      border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,.55);
+      padding:28px 32px;margin-bottom:20px;overflow:hidden;
+    }
+    .frm-hero-left{
+      flex:1 1 auto;min-width:0;
+      background:transparent;border:none;box-shadow:none;
+      border-radius:0;padding:0;margin:0;
+      display:flex;flex-direction:column;justify-content:center;
+    }
+    .frm-hero-right{
+      flex:0 0 auto;
+      background:transparent;border:none;box-shadow:none;
+      border-radius:0;padding:0;margin:0;
+    }
+    .frm-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:12px}
+    .frm-hero-address{font-size:clamp(1.9rem,3.2vw,3.4rem);font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px 0}
+    .frm-hero-badge{display:inline-block;font-size:9px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;padding:6px 16px;border-radius:100px;background:rgba(255,191,0,.1);color:var(--accent);border:1px solid rgba(255,191,0,.35)}
+
+    /* ── CIRCULAR MAP: grey ring + clip ── */
+    .frm-map-ring{
+      width:clamp(220px,26vw,290px);height:clamp(220px,26vw,290px);
+      border-radius:50%;padding:0;background:transparent;
+      border:1px solid rgba(255,255,255,.06);box-shadow:none;
+      flex-shrink:0;position:relative;overflow:hidden;outline:none;
+    }
+    .frm-map-ring::after{
+      content:'';position:absolute;inset:0;border-radius:50%;
+      background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.03) 35%,transparent 55%);
+      pointer-events:none;z-index:10;
+    }
+    .frm-map-clip{width:100%;height:100%;border-radius:50%;overflow:hidden;background:#0a0a0a;border:none;box-shadow:none}
+    #report-location-map{width:100%;height:100%;min-height:0}
+    #report-location-map .map-labels-layer img{filter:invert(1) sepia(1) saturate(2.5) hue-rotate(-15deg) brightness(.82) !important}
+    .frm-coords{font-size:11px;color:rgba(255,255,255,.2);letter-spacing:1px;padding:2px 0;background:transparent;text-align:center}
+
+    /* ── M2 CARDS: 4-column grid ── */
+    .frm-cards-row{
+      display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+      align-items:stretch;margin-bottom:20px;
+      background:transparent;padding:0;
+    }
+    .frm-card{
+      display:grid;grid-template-rows:44px auto auto;row-gap:8px;
+      align-content:center;justify-items:center;text-align:center;
+      padding:24px;margin:0;
+      background:linear-gradient(145deg,#1c1c1c,#0d0d0d);
+      border:1px solid rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.1);
+      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.45);
+    }
+    .frm-card-label{
+      font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+      color:var(--accent);overflow:hidden;display:block;align-self:start;
+      margin:0;text-align:center;width:100%;
+    }
+    .frm-card-val{
+      font-size:clamp(1.8rem,3vw,2.8rem);font-weight:200;
+      color:#fff;line-height:1;text-align:center;
+    }
+    .frm-card.total .frm-card-val{color:var(--accent)}
+    .frm-card-unit{font-size:11px;color:rgba(255,255,255,.35);margin-top:4px}
+    .frm-card-sub{font-size:10px;color:rgba(255,255,255,.3)}
+
+    /* High-specificity centering for m2 card children */
+    .frm-cards-row>.frm-card>.frm-card-label,
+    .frm-cards-row>.frm-card>.frm-card-val,
+    .frm-cards-row>.frm-card>.frm-card-unit,
+    .frm-cards-row>.frm-card>.frm-card-sub{text-align:center;width:100%;display:block}
+
+    /* ── NORMATIVE TABLE ── */
+    .frm-table-card{
+      background:linear-gradient(145deg,#1c1c1c,#0d0d0d);
+      border:1px solid rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.1);
+      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.45);
+      padding:24px 28px;margin-bottom:20px;
+    }
+    .frm-table-title{
+      font-size:20px;letter-spacing:.5px;text-transform:uppercase;
+      font-weight:800;color:var(--accent);margin-bottom:20px;
+      border-bottom:1px solid rgba(255,191,0,.2);padding-bottom:14px;
+      display:flex;align-items:center;gap:10px;
+    }
+    .frm-table-title svg,.frm-calc-title svg{width:18px;height:18px;flex-shrink:0}
+    .frm-table-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+      gap:6px;border-top:none;
+    }
+    .frm-table-item{
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.05);border-top:1px solid rgba(255,255,255,.07);
+      border-right:none;border-radius:10px;padding:14px 16px;
+    }
+    .frm-table-item:nth-child(3n){border-right:none}
+    .frm-table-item label{
+      display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+      color:var(--accent);font-weight:400;margin-bottom:6px;
+    }
+    .frm-table-item p{font-size:17px;font-weight:300;color:#fff;margin:0}
+
+    /* ── ANALYSIS ── */
+    .frm-analysis{
+      display:grid;grid-template-columns:1fr 1fr;gap:20px;
+      align-items:stretch;margin-bottom:20px;
+    }
+    .frm-analysis-card{
+      background:linear-gradient(145deg,#1c1c1c,#0d0d0d);
+      border:1px solid rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.1);
+      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.45);
+      padding:20px 24px;display:flex;flex-direction:column;height:100%;
+    }
+    .frm-analysis-card .frm-table-title{margin-bottom:12px}
+    .frm-analysis-item{
+      display:flex;justify-content:space-between;align-items:baseline;
+      padding:8px 0;border-bottom:1px solid #242424;font-size:14px;
+    }
+    .frm-analysis-item:last-child{border-bottom:none}
+    .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:13px;letter-spacing:.5px}
+    .frm-analysis-item span:last-child{color:#fff;font-weight:300;text-align:right}
+
+    /* Croquis */
+    .frm-croquis{
+      background:linear-gradient(145deg,#1c1c1c,#0d0d0d);
+      border:1px solid rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.1);
+      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.45);
+      padding:24px;margin-bottom:20px;
+    }
+    .frm-croquis-links{display:flex;gap:10px;flex-wrap:nowrap;margin-top:12px}
+    .croquis-link{
+      flex:1;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+      color:#FFBF00;text-decoration:none;text-align:center;
+      background:rgba(0,0,0,.6);border:1px solid rgba(255,191,0,.4);
+      padding:12px 16px;border-radius:8px;
+      transition:background .2s,color .2s;white-space:nowrap;
+    }
+    .croquis-link:hover{background:#FFBF00;color:#000}
+
+    /* Plusvalia */
+    .frm-plusvalia-usd{font-size:20px;font-weight:600;color:#fff;display:block}
+    .frm-plusvalia-uva{font-size:10px;color:rgba(255,255,255,.3);display:inline;margin-left:4px}
+
+    /* Footer */
+    .frm-footer-note{
+      font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
+      color:rgba(255,255,255,.15);padding-top:16px;border-top:1px solid #333;
+    }
+
+    /* ── LAYOUT: with-chat flex container ── */
+    .frm-with-chat{display:flex;align-items:flex-start;min-height:100vh}
+    .frm-main-col{flex:1;min-width:0;overflow-y:visible}
+
+    /* ── REPORT CHAT PANEL ── */
+    #report-chat-container{
+      width:260px;flex-shrink:0;
+      background:rgba(10,10,10,.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+      position:fixed;right:0;top:0;z-index:10000;height:100vh;
+      display:flex;flex-direction:column;
+    }
+    .rc-header{
+      padding:12px 16px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:space-between;
+      background:transparent;border-bottom:1px solid rgba(255,255,255,.07);
+    }
+    .rc-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,.4)}
+    .rc-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .rc-msg{border-radius:0;background:transparent;padding:6px 0;font-size:14px;line-height:1.5;max-width:90%}
+    .rc-msg.user{color:#fff;padding-left:10px;border-left:2px solid rgba(255,191,0,.45)}
+    .rc-msg.assistant{color:rgba(210,210,210,.92)}
+    .rc-msg.assistant b{color:#E8C547}
+    .rc-msg.assistant code{background:rgba(255,255,255,.06);padding:2px 6px;border-radius:4px;font-size:12px}
+    .rc-msg.assistant pre{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:12px;overflow-x:auto;font-size:12px;margin:8px 0}
+    .rc-msg.info{color:rgba(255,255,255,.22);font-size:10px}
+    .rc-msg.working{color:rgba(255,255,255,.3);font-size:11px}
+    .rc-msg.error{color:#f87171;font-size:12px;padding:8px 12px;background:rgba(220,38,38,.08);border-radius:8px;border:1px solid rgba(220,38,38,.15)}
+    .rc-chips{padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;flex-shrink:0;background:transparent;border-top:1px solid rgba(255,255,255,.06)}
+    .rc-chip{font-size:10px;letter-spacing:.5px;padding:5px 10px;border-radius:100px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);cursor:pointer;background:none;transition:border-color .2s,color .2s;white-space:nowrap}
+    .rc-chip:hover{border-color:#E8C547;color:#E8C547}
+    .rc-input-row{padding:12px;flex-shrink:0;background:transparent;border-top:1px solid rgba(255,255,255,.07)}
+    .rc-input-bar{display:flex;align-items:center;gap:8px;background:#060606;border:1px solid rgba(255,191,0,.28);border-radius:12px;padding:4px 4px 4px 16px}
+    .rc-input{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);outline:none;color:#fff;font:13px/1.4 'Inter',inherit;resize:none;min-height:20px;max-height:80px;padding:8px 0;border-radius:8px}
+    .rc-input::placeholder{color:rgba(255,255,255,.25);font-size:12px}
+    .rc-input:focus{border-color:rgba(255,191,0,.4);outline:none}
+    .rc-send{width:32px;height:32px;flex-shrink:0;background:rgba(255,191,0,.12);color:var(--accent);border:1px solid rgba(255,191,0,.25);border-radius:8px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s}
+    .rc-send:hover{background:rgba(255,191,0,.22);box-shadow:0 0 12px rgba(255,191,0,.2)}
+    .rc-send:disabled{opacity:.3;cursor:default}
+
+    /* Chat scroll invisible */
+    #rc-messages{scrollbar-width:none;-ms-overflow-style:none;overflow-y:auto}
+    #rc-messages::-webkit-scrollbar{display:none}
+
+    #report-chat-container.rc-fullscreen{position:fixed;inset:0;width:100%;height:100vh;z-index:9999;border-left:none}
+
+    /* ── FEASIBILITY CALCULATOR ── */
+    .frm-calc-section{
+      background:linear-gradient(145deg,#1c1c1c,#0d0d0d);
+      border:1px solid rgba(255,255,255,.06);border-top:1px solid rgba(255,255,255,.1);
+      border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.45);
+      padding:24px 28px;margin-bottom:20px;
+    }
+    .frm-calc-header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,191,0,.2);padding-bottom:12px;margin-bottom:20px}
+    .frm-calc-title{font-size:20px;letter-spacing:.5px;text-transform:uppercase;font-weight:800;color:var(--accent);display:flex;align-items:center;gap:10px}
+    .frm-calc-reset{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,191,0,.6);background:none;border:1px solid rgba(255,191,0,.2);cursor:pointer;padding:4px 10px;border-radius:100px;transition:all .2s}
+    .frm-calc-reset:hover{color:#FFBF00;border-color:rgba(255,191,0,.5)}
+
+    /* Calc inputs grid: 6 columns */
+    .frm-calc-inputs{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;align-items:start;margin-bottom:20px}
+    .frm-calc-field{display:flex;flex-direction:column;gap:5px}
+    .frm-calc-field *{box-sizing:border-box}
+    .frm-calc-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#FFBF00;font-weight:400}
+    .frm-calc-input{
+      height:44px;padding:0 12px;box-sizing:border-box;width:100%;
+      background:#111;border:1px solid rgba(255,191,0,.3);border-radius:6px;
+      color:#fff;font-size:13px;line-height:44px;
+      font-family:'Inter',inherit;outline:none;transition:border-color .2s;
+    }
+    .frm-calc-input:focus{border-color:rgba(255,191,0,.5)}
+    .frm-calc-input-hint{display:none}
+
+    /* Calc results */
+    .frm-calc-results{border-radius:12px;overflow:hidden;display:flex;gap:8px;background:transparent;border:none;margin-top:8px}
+    .frm-calc-result{flex:1;background:linear-gradient(145deg,#161616,#0e0e0e);border-top:1px solid rgba(255,255,255,.05);padding:16px 18px;border-radius:10px}
+    .frm-calc-result:last-child{border-right:none}
+    .frm-calc-result.highlight{background:linear-gradient(145deg,#1a1300,#0a0800);border-top:1px solid rgba(255,191,0,.08)}
+    .frm-calc-result-label{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.35);margin-bottom:8px}
+    .frm-calc-result-val{font-size:18px;font-weight:200;color:#fff;line-height:1;text-align:center}
+    .frm-calc-result.highlight .frm-calc-result-val{color:#FFBF00}
+    #fc-r-ganancia{color:#fff;font-size:clamp(1.6rem,2.4vw,2.2rem)}
+    .frm-calc-result-sub{display:none}
+    .frm-calc-nota{font-size:10px;color:rgba(255,255,255,.2);margin-top:14px;font-style:italic;line-height:1.5;display:none}
+
+    /* ── MACRO INDICATORS ── */
+    .frm-macro-bar{display:flex;align-items:center;gap:24px;padding:12px 18px;background:rgba(255,255,255,.03);border:1px solid #1e1e1e;border-radius:6px;margin-bottom:16px;flex-wrap:wrap}
+    .frm-macro-indicator{display:flex;align-items:center;gap:8px}
+    .frm-macro-label{font-size:12px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.35)}
+    .frm-macro-val{font-size:14px;font-weight:300;color:#fff}
+    .frm-macro-sep{width:1px;height:16px;background:rgba(255,255,255,.08)}
+    .frm-macro-live{display:flex;align-items:center;gap:5px;font-size:9px;letter-spacing:2px;text-transform:uppercase}
+    .frm-macro-dot{width:6px;height:6px;border-radius:50%;background:#2ECC71;box-shadow:0 0 4px rgba(74,222,128,.6);animation:frm-pulse 2s infinite}
+    .frm-macro-dot.manual{background:#FFBF00;box-shadow:0 0 4px rgba(255,191,0,.6);animation:none}
+    .frm-macro-live-label{color:rgba(255,255,255,.3)}
+    @keyframes frm-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    @keyframes incid-flash{0%{box-shadow:0 0 0 0 rgba(255,215,0,0)}30%{box-shadow:0 0 0 6px rgba(255,215,0,.35)}100%{box-shadow:0 0 0 0 rgba(255,215,0,0)}}
+    .incid-flash{animation:incid-flash .55s ease-out}
+
+    /* ── NUCLEAR v12 — full-report-modal specific overrides ── */
+
+    /* Full report modal positioning */
+    #full-report-modal{
+      position:fixed;top:0;left:0;
+      width:calc(100% - 400px);height:100vh;
+      overflow-y:scroll;box-sizing:border-box;
+      background:#000;z-index:9998;
+    }
+    /* Scrollbar visible */
+    #full-report-modal::-webkit-scrollbar{display:block;width:16px}
+    #full-report-modal::-webkit-scrollbar-track{background:#111}
+    #full-report-modal::-webkit-scrollbar-thumb{background-color:#555;border:4px solid #111;border-radius:20px}
+    #full-report-modal::-webkit-scrollbar-thumb:hover{background-color:#888}
+    #full-report-modal{scrollbar-width:thin;scrollbar-color:#555 #111}
+
+    /* Cards inside modal: label 45px fixed height */
+    #full-report-modal .frm-card,
+    #full-report-modal .frm-cards-row > div{
+      display:flex;flex-direction:column;justify-content:flex-start;
+      align-items:center;text-align:center;min-height:130px;padding:20px 16px;
+    }
+    #full-report-modal .frm-card-label{
+      display:flex;align-items:flex-end;justify-content:center;
+      height:45px;min-height:45px;max-height:45px;
+      width:100%;text-align:center;margin:0;padding:0;
+      line-height:1.2;overflow:hidden;
+    }
+    #full-report-modal .frm-card-val{width:100%;text-align:center;margin:10px 0 0}
+    #full-report-modal .frm-card-unit{width:100%;text-align:center;margin:4px 0 0}
+
+    /* Enrase in modal */
+    #full-report-modal #frm-enrase-bloque{display:block}
+    #full-report-modal #frm-enrase-contenido{color:rgba(255,255,255,.8)}
+    #full-report-modal #frm-enrase-contenido span{color:rgba(255,255,255,.8)}
+
+    /* With-chat layout in modal: block (not flex) so chat is fixed separately */
+    #full-report-modal .frm-with-chat{display:block}
+    #full-report-modal .frm-main-col{display:block;width:100%}
+
+    /* ── UNIFIED HEADER #frm-header ── */
+    #frm-header{
+      position:sticky;top:0;z-index:10001;
+      display:flex;align-items:center;
+      padding:0 20px 0 40px;height:72px;
+      background:#000;border-bottom:1px solid rgba(255,255,255,.07);
+      box-sizing:border-box;overflow:visible;
+    }
+    .frm-header-logo{
+      display:flex;flex-direction:column;justify-content:center;
+      height:auto;overflow:visible;flex-shrink:0;
+    }
+
+    /* Close button inside modal */
+    #full-report-modal #close-full-report{
+      position:static;flex-shrink:0;
+      background:rgba(0,0,0,0.7);border:1px solid #ffcc00;border-radius:50%;
+      width:36px;height:36px;
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;color:#ffcc00;cursor:pointer;padding:0;margin-left:0;
+    }
+    #full-report-modal #close-full-report:hover{background:rgba(255,204,0,.2)}
+
+    /* frm-body first child — no extra margin */
+    #full-report-modal .frm-body > div:first-child{margin-top:0;padding-bottom:0}
+
+    /* ── CHAT: fixed right panel inside modal ── */
+    #full-report-modal #report-chat-container{
+      position:fixed;right:0;top:0;bottom:0;
+      width:400px;height:100vh;background-color:#0d0d0d;
+      border-left:1px solid #333;box-shadow:-5px 0 20px rgba(0,0,0,0.6);
+      z-index:9999;display:flex;flex-direction:column;overflow:hidden;
+    }
+    #full-report-modal .rc-header{background:rgba(255,255,255,.03);border-bottom:1px solid rgba(255,255,255,.08);padding:18px 20px 14px;flex-shrink:0}
+    #full-report-modal .rc-label{color:#E8C547;font-size:10px;letter-spacing:3px;font-weight:600}
+    #full-report-modal #rc-messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none;-ms-overflow-style:none}
+    #full-report-modal #rc-messages::-webkit-scrollbar{display:none;width:0}
+    #full-report-modal .rc-msg{font-size:14px;line-height:1.5;padding:10px 14px;border-radius:10px;margin:0;border-left:none}
+    #full-report-modal .rc-msg.user{background:rgba(255,215,0,0.06);color:#fff}
+    #full-report-modal .rc-msg.assistant{background:#1a1a1a;color:rgba(215,215,215,.9)}
+    #full-report-modal .rc-msg.info{background:transparent;color:rgba(255,255,255,.28);font-size:11px;padding:3px 6px}
+    #full-report-modal .rc-input-row{background:transparent;border-top:1px solid rgba(255,255,255,.08);padding:12px 14px;flex-shrink:0}
+    #full-report-modal .rc-input{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:13px}
+    #full-report-modal .rc-input:focus{border-color:rgba(232,197,71,.4);outline:none}
+    #full-report-modal .rc-send{background:#E8C547;color:#000;border:none;border-radius:8px;width:36px;height:36px;flex-shrink:0}
+
+    /* NUCLEAR CENTER — high specificity for card centering */
+    .formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-label,
+    .formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-val,
+    .formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-unit,
+    .formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-sub{
+      text-align:center;width:100%;display:block;
+    }
+    .formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card{
+      align-content:center;justify-items:center;
+    }
+
+    /* ══════════════════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════════════════ */
+    @media(max-width:640px){
+      .panel{width:calc(100% - 32px);max-height:40vh}
+      .search-panel{width:96%;max-width:none}
+      #results{width:100%}
+      header{padding:0 12px}
+      .header-nav{display:none}
+    }
+
+    @media(max-width:1100px){
+      .frm-cards-row{grid-template-columns:repeat(2,1fr)}
+      .frm-calc-inputs{grid-template-columns:repeat(3,1fr)}
+    }
+    @media(max-width:700px){
+      .frm-hero-row{flex-direction:column;padding:20px}
+      .frm-hero-right{margin:16px 0 0}
+      .frm-analysis{grid-template-columns:1fr}
+      .frm-calc-inputs{grid-template-columns:repeat(2,1fr)}
+      .formal-report{right:0}
+      #report-chat-container{width:100%;height:300px;position:static;border-left:none;border-top:1px solid rgba(255,255,255,.07)}
+      .frm-body{padding:20px 16px 40px}
+    }
+    @media(max-width:900px){
+      #full-report-modal #close-full-report{right:20px}
+      #full-report-modal #report-chat-container{position:static;width:100%;height:320px;border-left:none;border-top:1px solid #333;box-shadow:none}
+    }
+
+  </style>
 </head>
 <body>
 
@@ -357,1790 +713,7 @@
         .av2{stroke:#fff;stroke-width:1.1;fill:none;opacity:.45}
         .lb{fill:rgba(255,255,255,.3);font-family:'Inter',sans-serif;font-size:7.5px;letter-spacing:2.5px;text-transform:uppercase}
         .lb2{fill:rgba(255,255,255,.18);font-family:'Inter',sans-serif;font-size:5.5px;letter-spacing:1.5px}
-  
-
-    .leaflet-tile-container img {
-      outline: 1px solid transparent;
-      border: none !important;
-      margin: -1px;
-      filter: brightness(1.1) contrast(1.05);
-    }
-    /* Etiquetas blanco hueso ~#E8E8E8: invert(negro→blanco) + brightness(0.91) */
-    .map-labels-layer img {
-      filter: invert(1) brightness(0.91) grayscale(1) !important;
-    }
-    .leaflet-container { background: #000 !important; }
-    #open-full-report {
-      background: var(--accent) !important;
-      color: #000 !important;
-      border: none !important;
-      border-radius: 50px !important;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 12px 24px;
-      cursor: pointer;
-      width: 100%;
-      margin-top: 10px;
-      display: none;
-      transition: all 0.3s ease;
-    }
-    #open-full-report:hover { transform: scale(1.02); opacity: 0.9; }
-    #open-full-report.visible { display: block; }
-
-    /* ── INFORME TÉCNICO MODAL v4 ────────────────────────── */
-    .btn-full-report{
-      display:none;width:100%;margin-top:10px;
-      background:var(--accent);color:#000;border:none;border-radius:50px;
-      padding:12px 20px;font-family:'Inter',inherit;font-size:10px;
-      font-weight:600;letter-spacing:2px;text-transform:uppercase;
-      cursor:pointer;transition:opacity .2s,transform .1s;
-    }
-    .btn-full-report:hover{opacity:.85}
-    .btn-full-report:active{transform:scale(.98)}
-    .btn-full-report.visible{display:block}
-
-    .formal-report{
-      display:none;position:fixed;inset:0;
-      background:#000;z-index:9999;overflow-y:auto;
-      font-family:'Inter',system-ui,sans-serif;
-      -webkit-font-smoothing:antialiased;
-    }
-    .formal-report:not(.hidden){display:block}
-
-    /* Botón cierre */
-    #close-full-report{
-      position:fixed;top:24px;right:288px;z-index:10001;
-      font-size:24px;font-weight:200;color:rgba(255,255,255,.5);
-      background:none;border:none;cursor:pointer;
-      transition:color .2s;line-height:1;
-    }
-    #close-full-report:hover{color:#fff}
-
-    /* Wrapper sticky — dentro de frm-main-col, nunca superpone el panel de chat */
-    #pdf-btn-wrap{
-      position:sticky;top:0;z-index:200;
-      display:flex;justify-content:flex-end;
-      padding:14px 20px 0;
-      background:linear-gradient(to bottom,#000 80%,transparent);
-      pointer-events:none;          /* el fondo gradiente no bloquea clics */
-    }
-    #btn-download-pdf{
-      pointer-events:auto;
-      display:none;align-items:center;gap:7px;
-      padding:9px 18px;border-radius:100px;
-      background:var(--accent);color:#000;border:none;cursor:pointer;
-      font-family:'Inter',system-ui,sans-serif;font-size:9px;font-weight:700;
-      letter-spacing:2px;text-transform:uppercase;white-space:nowrap;
-      box-shadow:0 2px 14px rgba(0,0,0,.4);
-      transition:opacity .2s,transform .1s;
-    }
-    #btn-download-pdf:hover{opacity:.85}
-    #btn-download-pdf:active{transform:scale(.97)}
-    #btn-download-pdf:disabled{cursor:default}
-
-    /* Contenedor interno con padding */
-    .frm-body{padding:40px 5vw 60px;max-width:1400px;margin:0 auto}
-
-    /* ── MÓDULO HERO: dirección izq + mapa der ─────────────── */
-    .frm-hero-row{
-      display:grid;grid-template-columns:1fr 1fr;
-      gap:2rem;align-items:stretch;
-      min-height:320px;margin-bottom:2rem;
-    }
-    .frm-hero-left{
-      background:transparent;border:none;border-radius:0;
-      padding:28px 0;display:flex;flex-direction:column;justify-content:flex-end;
-    }
-    .frm-eyebrow{
-      font-size:9px;letter-spacing:4px;text-transform:uppercase;
-      color:rgba(255,255,255,.28);margin-bottom:12px;
-    }
-    .frm-hero-address{
-      font-size:clamp(1.9rem,3.2vw,3.4rem);font-weight:800;
-      color:#fff;letter-spacing:-.02em;line-height:1.1;margin:0 0 16px 0;
-    }
-    .frm-hero-badge{
-      display:inline-block;font-size:9px;font-weight:600;letter-spacing:2.5px;
-      text-transform:uppercase;padding:6px 16px;border-radius:100px;
-      background:rgba(255,191,0,.1);color:var(--accent);
-      border:1px solid rgba(255,191,0,.35);
-    }
-    .frm-hero-right{
-      background:transparent;border:none;border-radius:0;
-      overflow:visible;
-      display:flex;flex-direction:column;align-items:center;justify-content:center;
-      gap:12px;padding:20px 0;
-    }
-    /* ── MAPA CIRCULAR: aro de bronce + clip ── */
-    .frm-map-ring{
-      width:clamp(220px,26vw,290px);
-      height:clamp(220px,26vw,290px);
-      border-radius:50%;
-      padding:0;
-      background:transparent;
-      border:1px solid #333;
-      box-shadow:0 12px 48px rgba(0,0,0,.75),0 2px 12px rgba(0,0,0,.4);
-      flex-shrink:0;
-      position:relative;
-      overflow:hidden;
-    }
-    .frm-map-ring::after{
-      content:'';
-      position:absolute;inset:0;
-      border-radius:50%;
-      background:linear-gradient(135deg,rgba(255,255,255,.09) 0%,rgba(255,255,255,.03) 35%,transparent 55%);
-      pointer-events:none;
-      z-index:10;
-    }
-    .frm-map-clip{
-      width:100%;height:100%;
-      border-radius:50%;
-      overflow:hidden;
-      background:#0a0a0a;
-    }
-    #report-location-map{width:100%;height:100%;min-height:0}
-    /* Etiquetas del mapa del informe: filtro oro */
-    #report-location-map .map-labels-layer img{
-      filter:invert(1) sepia(1) saturate(2.5) hue-rotate(-15deg) brightness(.82) !important;
-    }
-    .frm-coords{
-      font-size:11px;color:rgba(255,255,255,.2);letter-spacing:1px;
-      padding:2px 0;background:transparent;text-align:center;
-    }
-
-    /* ── MÓDULO SUPERFICIES: 4 cards en fila ──────────────── */
-    .frm-cards-row{
-      display:grid;grid-template-columns:repeat(4,1fr);
-      gap:0;background:linear-gradient(135deg,#1c1c1c,#000);border:1px solid #2a2a2a;
-      border-top:2px solid var(--accent);border-radius:16px;overflow:hidden;
-      box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
-      padding:24px 20px;margin-bottom:2rem;
-    }
-    .frm-card{
-      background:transparent;padding:24px 20px;
-      display:flex;flex-direction:column;gap:8px;
-      border-right:1px solid #2a2a2a;
-    }
-    .frm-card:first-child{padding-left:0}
-    .frm-card:last-child{border-right:none;padding-right:0}
-    .frm-card-label{
-      font-size:12px;letter-spacing:2px;text-transform:uppercase;
-      color:var(--accent);font-weight:400;
-    }
-    .frm-card-val{
-      font-size:clamp(1.8rem,3vw,2.8rem);font-weight:200;
-      color:#fff;line-height:1;
-    }
-    .frm-card-unit{font-size:13px;color:rgba(255,255,255,.4)}
-    .frm-card-sub{font-size:13px;color:rgba(255,255,255,.35);margin-top:2px}
-
-    /* Card total — Level 1 Hero */
-    .frm-card.total{background:transparent}
-    .frm-card.total .frm-card-val{color:#fff;font-size:clamp(2.7rem,4.5vw,4.2rem)}
-
-    /* ── MÓDULO NORMATIVO: tabla formal ─────────────────────── */
-    .frm-table-card{
-      background:linear-gradient(135deg,#1c1c1c,#000);border:1px solid #2a2a2a;
-      border-top:2px solid var(--accent);border-radius:16px;
-      padding:24px 28px;margin-bottom:2rem;
-      box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
-    }
-    .frm-table-title{
-      font-size:20px;letter-spacing:.5px;text-transform:uppercase;
-      font-weight:800;color:var(--accent);margin-bottom:20px;
-      border-bottom:1px solid rgba(255,191,0,.2);padding-bottom:14px;
-      display:flex;align-items:center;gap:10px;
-    }
-    .frm-table-title svg,.frm-calc-title svg{width:18px;height:18px;flex-shrink:0}
-    .frm-table-grid{
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-      gap:0;border-top:1px solid #2a2a2a;
-    }
-    .frm-table-item{
-      padding:14px 16px;border-bottom:1px solid #242424;
-      border-right:1px solid #242424;
-    }
-    .frm-table-item:nth-child(3n){border-right:none}
-    .frm-table-item label{
-      display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;
-      color:var(--accent);font-weight:400;margin-bottom:6px;
-    }
-    .frm-table-item p{
-      font-size:17px;font-weight:300;color:#fff;margin:0;
-    }
-
-    /* ── MÓDULO ANÁLISIS ECONÓMICO ──────────────────────────── */
-    .frm-analysis{
-      display:grid;grid-template-columns:1fr 1fr;
-      gap:0;margin-bottom:2rem;
-      background:linear-gradient(135deg,#1c1c1c,#000);border:1px solid #2a2a2a;
-      border-top:2px solid var(--accent);border-radius:16px;overflow:hidden;
-      padding:24px;
-      box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
-    }
-    .frm-analysis-card{
-      background:transparent;border:none;border-radius:0;padding:0 20px;
-    }
-    .frm-analysis-card:first-child{padding-left:0;border-right:1px solid #2a2a2a}
-    .frm-analysis-card:last-child{padding-right:0}
-    .frm-analysis-card .frm-table-title{margin-bottom:12px}
-    .frm-analysis-item{
-      display:flex;justify-content:space-between;align-items:baseline;
-      padding:8px 0;border-bottom:1px solid #242424;font-size:14px;
-    }
-    .frm-analysis-item:last-child{border-bottom:none}
-    .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:13px;letter-spacing:.5px}
-    .frm-analysis-item span:last-child{color:#fff;font-weight:300;text-align:right}
-
-    /* Croquis */
-    .frm-croquis{
-      background:linear-gradient(135deg,#1c1c1c,#000);border:1px solid #2a2a2a;
-      border-top:2px solid var(--accent);border-radius:16px;
-      padding:24px;margin-bottom:2rem;
-      box-shadow:0 10px 30px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.06);
-    }
-    .frm-croquis-links{display:flex;gap:10px;flex-wrap:nowrap;margin-top:12px}
-    .croquis-link{
-      flex:1;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
-      color:var(--accent);text-decoration:none;text-align:center;
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,191,0,.45);
-      padding:12px 16px;border-radius:8px;
-      transition:background .22s,box-shadow .22s,color .22s;white-space:nowrap;
-    }
-    .croquis-link:hover{
-      background:var(--accent);color:#000;
-      box-shadow:0 0 18px rgba(255,191,0,.38);
-    }
-
-    /* Footer */
-    .frm-footer-note{
-      font-size:10px;letter-spacing:1.5px;text-transform:uppercase;
-      color:rgba(255,255,255,.15);padding-top:16px;border-top:1px solid #333;
-    }
-
-    @media(max-width:900px){
-      .frm-hero-row{grid-template-columns:1fr}
-      .frm-cards-row{grid-template-columns:repeat(2,1fr)}
-      .frm-analysis{grid-template-columns:1fr}
-    }
-    @media(max-width:600px){
-      .frm-body{padding:24px 16px 48px}
-      #close-full-report{top:14px;right:16px}
-      .frm-cards-row{grid-template-columns:1fr 1fr}
-      .frm-hero-address{font-size:1.4rem}
-    }
-
-
-    /* ── REPORT CHAT PANEL ─────────────────────────────────── */
-    .frm-with-chat {
-      display: flex;
-      height: 100%;
-    }
-    .frm-main-col {
-      flex: 1;
-      min-width: 0;
-      overflow-y: auto;
-    }
-    #report-chat-container {
-      width: 320px;
-      flex-shrink: 0;
-      border-left: 1px solid rgba(255,191,0,.07);
-      background: rgba(10,10,10,.8);
-      backdrop-filter: blur(12px);
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      position: sticky;
-      top: 0;
-    }
-    .rc-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(255,191,0,.08);
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .rc-label {
-      font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
-      color: rgba(255,255,255,.4);
-    }
-    .rc-messages {
-      flex: 1;
-      overflow-y: auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .rc-msg {
-      font-size: 13px; line-height: 1.6;
-      max-width: 90%;
-    }
-    .rc-msg.user {
-      align-self: flex-end;
-      background: rgba(255,255,255,.08);
-      padding: 10px 14px;
-      border-radius: 14px 14px 4px 14px;
-      color: rgba(255,255,255,.85);
-    }
-    .rc-msg.assistant {
-      align-self: flex-start;
-      color: rgba(255,255,255,.8);
-      padding: 4px 0;
-    }
-    .rc-msg.assistant b { color: #E8C547; }
-    .rc-msg.assistant code {
-      background: rgba(255,255,255,.06);
-      padding: 2px 6px; border-radius: 4px;
-      font-size: 12px;
-    }
-    .rc-msg.assistant pre {
-      background: rgba(255,255,255,.04);
-      border: 1px solid rgba(255,255,255,.06);
-      border-radius: 8px; padding: 12px;
-      overflow-x: auto; font-size: 12px; margin: 8px 0;
-    }
-    .rc-msg.info {
-      font-size: 10px; letter-spacing: .5px;
-      color: rgba(255,255,255,.25); font-style: italic;
-    }
-    .rc-msg.working {
-      color: rgba(255,255,255,.3); font-size: 11px;
-    }
-    .rc-msg.error {
-      color: #f87171; font-size: 12px;
-      padding: 8px 12px; background: rgba(220,38,38,.08);
-      border-radius: 8px; border: 1px solid rgba(220,38,38,.15);
-    }
-
-    .rc-chips {
-      padding: 8px 12px;
-      display: flex; flex-wrap: wrap; gap: 6px;
-      border-top: 1px solid #1a1a1a;
-      flex-shrink: 0;
-    }
-    .rc-chip {
-      font-size: 10px; letter-spacing: .5px;
-      padding: 5px 10px; border-radius: 100px;
-      border: 1px solid rgba(255,255,255,.12);
-      color: rgba(255,255,255,.5);
-      cursor: pointer; background: none;
-      transition: border-color .2s, color .2s;
-      white-space: nowrap;
-    }
-    .rc-chip:hover { border-color: #E8C547; color: #E8C547; }
-
-    .rc-input-row {
-      padding: 12px;
-      border-top: 1px solid rgba(255,191,0,.07);
-      flex-shrink: 0;
-    }
-    .rc-input-bar {
-      display: flex; align-items: center; gap: 8px;
-      background: #060606;
-      border: 1px solid rgba(255,191,0,.28);
-      border-radius: 12px; padding: 4px 4px 4px 16px;
-    }
-    .rc-input {
-      flex: 1; background: transparent;
-      border: none; outline: none;
-      color: #fff; font: 13px/1.4 'Inter', inherit;
-      resize: none; min-height: 20px; max-height: 80px;
-      padding: 8px 0;
-    }
-    .rc-input::placeholder { color: rgba(255,255,255,.25); font-size: 12px; }
-    .rc-send {
-      width: 32px; height: 32px; flex-shrink: 0;
-      background: rgba(255,191,0,.12); color: var(--accent);
-      border: 1px solid rgba(255,191,0,.25);
-      border-radius: 8px; cursor: pointer; font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
-      transition: background .15s, box-shadow .15s;
-    }
-    .rc-send:hover { background: rgba(255,191,0,.22); box-shadow: 0 0 12px rgba(255,191,0,.2); }
-    .rc-send:disabled { opacity: .3; cursor: default; }
-
-    #report-chat-container.rc-fullscreen {
-      position: fixed; inset: 0; width: 100%; height: 100vh;
-      z-index: 9999; border-left: none;
-    }
-
-    @media(max-width:900px) {
-      .frm-with-chat { flex-direction: column; }
-      #report-chat-container {
-        width: 100%; height: 360px; border-left: none;
-        border-top: 1px solid #222; position: static;
-      }
-    }
-
-
-
-    /* ── CALCULADORA FACTIBILIDAD EN MODAL ──────────────────── */
-    .frm-calc-section {
-      background: linear-gradient(135deg, #1c1c1c, #000);
-      border: 1px solid #2a2a2a;
-      border-top: 2px solid var(--accent);
-      border-radius: 16px;
-      padding: 24px 28px;
-      margin-bottom: 2rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06);
-    }
-    .frm-calc-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid rgba(255,191,0,.2);
-      padding-bottom: 12px;
-      margin-bottom: 20px;
-    }
-    .frm-calc-title {
-      font-size: 20px; letter-spacing: .5px; text-transform: uppercase;
-      font-weight: 800; color: var(--accent);
-      display: flex; align-items: center; gap: 10px;
-    }
-    .frm-calc-reset {
-      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-      color: rgba(255,191,0,.6); background: none; border: none;
-      cursor: pointer; padding: 4px 10px;
-      border: 1px solid rgba(255,191,0,.2); border-radius: 100px;
-      transition: all .2s;
-    }
-    .frm-calc-reset:hover { color: #FFBF00; border-color: rgba(255,191,0,.5); }
-
-    /* Grid de inputs */
-    .frm-calc-inputs {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .frm-calc-field { display: flex; flex-direction: column; gap: 6px; }
-    .frm-calc-label {
-      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-      color: #FFBF00; font-weight: 400;
-    }
-    .frm-calc-input {
-      background: #111; border: 1px solid rgba(255,191,0,.35); border-radius: 4px;
-      padding: 10px 12px; color: #fff;
-      font-size: 14px; font-weight: 300;
-      font-family: 'Inter', inherit;
-      outline: none; transition: border-color .2s;
-      width: 100%; box-sizing: border-box;
-    }
-    .frm-calc-input:focus { border-color: rgba(255,191,0,.5); }
-    .frm-calc-input-hint {
-      font-size: 12px; color: rgba(255,255,255,.3); margin-top: 2px;
-    }
-
-    /* Resultados */
-    .frm-calc-results {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0;
-      background: transparent;
-      border: none;
-      border-top: 1px solid #2a2a2a;
-      border-radius: 0;
-      overflow: visible;
-      margin-top: 8px;
-    }
-    .frm-calc-result {
-      background: transparent;
-      padding: 16px 18px;
-      border-right: 1px solid #2a2a2a;
-    }
-    .frm-calc-result:last-child { border-right: none; }
-    .frm-calc-result.highlight { background: transparent; }
-    .frm-calc-result-label {
-      font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
-      color: rgba(255,255,255,.35); margin-bottom: 8px;
-    }
-    .frm-calc-result-val {
-      font-size: 20px; font-weight: 200; color: #fff; line-height: 1;
-    }
-    .frm-calc-result.highlight .frm-calc-result-val { color: #FFBF00; }
-    /* Ganancia — Level 1 Hero: blanco + 50% más grande */
-    #fc-r-ganancia { color: #fff !important; font-size: clamp(1.6rem,2.4vw,2.2rem); }
-    .frm-calc-result-sub {
-      font-size: 12px; color: rgba(255,255,255,.3); margin-top: 4px;
-      display: none;
-    }
-    .frm-calc-nota {
-      font-size: 10px; color: rgba(255,255,255,.2);
-      margin-top: 14px; font-style: italic; line-height: 1.5;
-      display: none;
-    }
-
-
-    /* ── INDICADORES MACRO ──────────────────────────────────── */
-    .frm-macro-bar {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      padding: 12px 18px;
-      background: rgba(255,255,255,.03);
-      border: 1px solid #1e1e1e;
-      border-radius: 6px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-    .frm-macro-indicator {
-      display: flex; align-items: center; gap: 8px;
-    }
-    .frm-macro-label {
-      font-size: 12px; letter-spacing: 1px; text-transform: uppercase;
-      color: rgba(255,255,255,.35);
-    }
-    .frm-macro-val {
-      font-size: 14px; font-weight: 300; color: #fff;
-    }
-    .frm-macro-sep {
-      width: 1px; height: 16px;
-      background: rgba(255,255,255,.08);
-    }
-    .frm-macro-live {
-      display: flex; align-items: center; gap: 5px;
-      font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
-    }
-    .frm-macro-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #2ECC71;
-      box-shadow: 0 0 4px rgba(74,222,128,.6);
-      animation: frm-pulse 2s infinite;
-    }
-    .frm-macro-dot.manual { background: #FFBF00; box-shadow: 0 0 4px rgba(255,191,0,.6); animation: none; }
-    .frm-macro-live-label { color: rgba(255,255,255,.3); }
-    @keyframes frm-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-    /* Flash de incidencia al cambiar margen */
-    @keyframes incid-flash { 0%{box-shadow:0 0 0 0 rgba(255,215,0,0)} 30%{box-shadow:0 0 0 6px rgba(255,215,0,.35)} 100%{box-shadow:0 0 0 0 rgba(255,215,0,0)} }
-    .incid-flash { animation: incid-flash .55s ease-out; }
-
-
-    /* ══ LUXURY v3 ═══════════════════════════════════════════════ */
-
-    /* 1. EFECTO CRISTAL — gradiente + sombra flotante + hilo de luz */
-    .frm-card,
-    .frm-table-card,
-    .frm-analysis-card,
-    .frm-calc-section,
-    .frm-hero-left,
-    .frm-croquis {
-      background: linear-gradient(145deg, #1c1c1c 0%, #0d0d0d 100%) !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05) inset !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-    }
-    .frm-calc-result {
-      background: linear-gradient(145deg, #161616 0%, #0e0e0e 100%) !important;
-      border-top: 1px solid rgba(255,255,255,.05) !important;
-    }
-    .frm-calc-result.highlight {
-      background: linear-gradient(145deg, #1a1300 0%, #0a0800 100%) !important;
-      border-top: 1px solid rgba(255,191,0,.1) !important;
-    }
-    /* grilla de calc sin gap visible */
-    .frm-calc-results {
-      border-radius: 12px !important;
-      overflow: hidden;
-    }
-
-    /* 2. LIMPIEZA RADICAL — ocultar subs de resultados */
-    .frm-calc-result-sub { display: none !important; }
-
-    /* 3. INPUTS — misma altura, alineados por top */
-    .frm-calc-inputs {
-      display: grid !important;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
-      gap: 12px !important;
-      align-items: start !important;
-    }
-    .frm-calc-field { display: flex; flex-direction: column; }
-    .frm-calc-input {
-      height: 44px !important;
-      padding: 0 14px !important;
-      box-sizing: border-box !important;
-    }
-
-    /* 4. MAPA CIRCULAR — borde gris plomo, sin neón */
-    .frm-map-ring {
-      border: 1.5px solid #333 !important;
-      box-shadow: none !important;
-    }
-
-    /* 5. BOTONES CROQUIS — ghost estilo */
-    .croquis-link {
-      background: rgba(0,0,0,.6) !important;
-      border: 1px solid rgba(255,191,0,.5) !important;
-      color: #FFBF00 !important;
-      transition: background .2s, color .2s !important;
-    }
-    .croquis-link:hover {
-      background: #FFBF00 !important;
-      color: #000 !important;
-    }
-
-    /* 6. CHAT — grafito + blur + scroll fino */
-    #report-chat-container {
-      background: rgba(18,18,18,.95) !important;
-      backdrop-filter: blur(12px) !important;
-      -webkit-backdrop-filter: blur(12px) !important;
-      border-left: 1px solid #333 !important;
-    }
-    /* Mensajes — timeline limpia sin burbujas */
-    .rc-msg.user {
-      background: transparent !important;
-      color: rgba(255,255,255,.9) !important;
-      border-radius: 0 !important;
-      padding: 6px 0 !important;
-      border-left: 2px solid rgba(255,191,0,.5);
-      padding-left: 10px !important;
-    }
-    .rc-msg.assistant {
-      background: transparent !important;
-      color: rgba(200,200,200,.75) !important;
-      border-radius: 0 !important;
-      padding: 6px 0 !important;
-    }
-    /* Scroll ultra fino */
-    #rc-messages::-webkit-scrollbar { width: 2px; }
-    #rc-messages::-webkit-scrollbar-track { background: transparent; }
-    #rc-messages::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,.08);
-      border-radius: 1px;
-    }
-
-    /* 7. BOTÓN PDF — glow + pulse amarillo */
-    #btn-download-pdf {
-      box-shadow: 0 0 10px rgba(232,197,71,.2), 0 0 28px rgba(232,197,71,.07) !important;
-      animation: pdf-pulse 3s ease-in-out infinite !important;
-    }
-    @keyframes pdf-pulse {
-      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2), 0 0 28px rgba(232,197,71,.07); }
-      50%      { box-shadow: 0 0 18px rgba(232,197,71,.4), 0 0 44px rgba(232,197,71,.15); }
-    }
-
-    /* 8. HEADER — eje horizontal unificado */
-    .frm-body { padding-top: 32px !important; }
-    /* ══ FIN LUXURY v3 ═══════════════════════════════════════════ */
-
-
-    .frm-plusvalia-usd { font-size:20px; font-weight:500; color:#fff; display:block; }
-    .frm-plusvalia-uva { font-size:11px; color:rgba(255,255,255,.35); display:block; margin-top:2px; }
-
-
-    /* ── LUXURY v3 ──────────────────────────────────────────── */
-
-    /* 1. TARJETAS — gradiente + sombra flotante + hilo de luz */
-    .frm-card,
-    .frm-table-card,
-    .frm-analysis-card,
-    .frm-calc-section,
-    .frm-hero-left,
-    .frm-croquis {
-      background: linear-gradient(160deg,#1c1c1c 0%,#0a0a0a 100%) !important;
-      box-shadow: 0 6px 32px rgba(0,0,0,.5), 0 1px 0 rgba(255,255,255,.05) inset !important;
-      border-top: 1px solid rgba(255,255,255,.05) !important;
-      border-radius: 16px !important;
-    }
-    .frm-cards-row {
-      gap: 10px !important;
-      background: transparent !important;
-      border: none !important;
-    }
-    .frm-card {
-      border: 1px solid rgba(255,255,255,.06) !important;
-    }
-    .frm-card.total {
-      background: linear-gradient(160deg,#1a1200 0%,#0a0800 100%) !important;
-      border: 1px solid rgba(255,191,0,.12) !important;
-    }
-
-    /* 2. SIMULADOR — ocultar sub-textos, solo número protagonista */
-    .frm-calc-result-sub { display: none !important; }
-    .frm-calc-result {
-      background: linear-gradient(160deg,#181818 0%,#0d0d0d 100%) !important;
-      border-top: 1px solid rgba(255,255,255,.04) !important;
-      border-radius: 10px !important;
-    }
-    .frm-calc-result.highlight {
-      background: linear-gradient(160deg,#1a1200 0%,#0a0800 100%) !important;
-      border-top: 1px solid rgba(255,191,0,.08) !important;
-    }
-    .frm-calc-results {
-      display: flex !important;
-      gap: 8px !important;
-      background: transparent !important;
-      border: none !important;
-    }
-    .frm-calc-result { flex: 1 !important; }
-
-    /* Inputs — grilla uniforme, misma altura */
-    .frm-calc-inputs {
-      display: flex !important;
-      flex-wrap: wrap !important;
-      gap: 10px !important;
-    }
-    .frm-calc-field {
-      flex: 1 1 160px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-start !important;
-    }
-    .frm-calc-input {
-      height: 42px !important;
-      box-sizing: border-box !important;
-    }
-
-    /* 3. TABLA NORMATIVA — adiós a las líneas grises */
-    .frm-table-grid {
-      border-top: none !important;
-      gap: 6px !important;
-      display: grid !important;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
-    }
-    .frm-table-item {
-      background: rgba(255,255,255,.03) !important;
-      border: 1px solid rgba(255,255,255,.05) !important;
-      border-top: 1px solid rgba(255,255,255,.07) !important;
-      border-right: none !important;
-      border-radius: 10px !important;
-      padding: 14px 16px !important;
-    }
-    .frm-table-item:nth-child(3n) { border-right: none !important; }
-
-    /* 4. CHAT — fondo grafito + scroll ultra fino */
-    #report-chat-container {
-      background: linear-gradient(180deg,#141414 0%,#0d0d0d 100%) !important;
-      border-left: 1px solid #1e1e1e !important;
-      backdrop-filter: blur(12px) !important;
-    }
-    .rc-header {
-      background: rgba(255,255,255,.02) !important;
-      border-bottom: 1px solid rgba(255,255,255,.05) !important;
-    }
-    /* Burbujas → línea de tiempo limpia */
-    .rc-msg.user {
-      background: transparent !important;
-      border: none !important;
-      color: rgba(255,255,255,.9) !important;
-      padding: 4px 0 !important;
-      font-size: 13px !important;
-      align-self: flex-start !important;
-    }
-    .rc-msg.assistant {
-      background: transparent !important;
-      color: rgba(200,200,200,.7) !important;
-      padding: 4px 0 !important;
-      font-size: 13px !important;
-    }
-    .rc-msg.user::before {
-      content: "→ ";
-      color: #FFBF00;
-      font-size: 11px;
-    }
-    /* Scroll ultra fino */
-    #rc-messages::-webkit-scrollbar { width: 2px; }
-    #rc-messages::-webkit-scrollbar-track { background: transparent; }
-    #rc-messages::-webkit-scrollbar-thumb {
-      background: rgba(255,255,255,.08);
-      border-radius: 1px;
-    }
-
-    /* 5. MAPA CIRCULAR — borde gris plomo, sin amarillo */
-    .frm-map-ring {
-      border: 1px solid #333 !important;
-      box-shadow: none !important;
-    }
-    .frm-map-clip {
-      border: none !important;
-      box-shadow: none !important;
-    }
-
-    /* 6. BOTÓN PDF — glow amarillo pulse */
-    #btn-download-pdf {
-      box-shadow: 0 0 14px rgba(232,197,71,.3), 0 0 40px rgba(232,197,71,.1) !important;
-      animation: pdf-pulse 3s ease-in-out infinite !important;
-    }
-    @keyframes pdf-pulse {
-      0%,100% { box-shadow: 0 0 14px rgba(232,197,71,.3), 0 0 40px rgba(232,197,71,.1); }
-      50%      { box-shadow: 0 0 22px rgba(232,197,71,.5), 0 0 60px rgba(232,197,71,.18); }
-    }
-
-    /* 7. BOTONES GHOST (croquis) */
-    .croquis-link {
-      background: rgba(0,0,0,.6) !important;
-      border: 1px solid rgba(255,191,0,.4) !important;
-      color: #FFBF00 !important;
-      transition: background .2s, color .2s !important;
-    }
-    .croquis-link:hover {
-      background: #FFBF00 !important;
-      color: #000 !important;
-    }
-
-    /* 8. PLUSVALÍA — USD grande, UVA chico */
-    .frm-plusvalia-usd {
-      font-size: 22px; font-weight: 600; color: #fff;
-      display: block; line-height: 1.2;
-    }
-    .frm-plusvalia-uva {
-      font-size: 11px; color: rgba(255,255,255,.3);
-      display: block; margin-top: 3px;
-    }
-
-    /* 9. MARGEN IZQUIERDO UNIFORME */
-    .frm-body { padding-left: 40px !important; padding-right: 40px !important; }
-
-    @media(max-width:768px) {
-      .frm-body { padding-left: 20px !important; padding-right: 20px !important; }
-      .frm-calc-results { flex-direction: column !important; }
-    }
-
-
-    /* ══ CSS AUDIT — Alineación + Scrollbar + box-sizing ══════════ */
-
-    /* box-sizing global para inputs del simulador */
-    .frm-calc-input,
-    .frm-calc-field * {
-      box-sizing: border-box !important;
-    }
-
-    /* Inputs: altura exacta idéntica, sin variaciones de 1px */
-    .frm-calc-input {
-      height: 44px !important;
-      line-height: 44px !important;
-      padding: 0 14px !important;
-    }
-
-    /* Grid simulador: gap uniforme, align top */
-    .frm-calc-inputs {
-      display: grid !important;
-      grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)) !important;
-      gap: 12px !important;
-      align-items: start !important;
-    }
-
-    /* border-top hilo de luz — confirmado visible pero sutil */
-    .frm-card,
-    .frm-table-card,
-    .frm-analysis-card,
-    .frm-calc-section,
-    .frm-hero-left {
-      border-top: 1px solid rgba(255,255,255,.08) !important;
-    }
-
-    /* Sub-textos del simulador — ocultos definitivamente */
-    .frm-calc-result-sub,
-    .frm-calc-input-hint {
-      display: none !important;
-    }
-
-    /* Scrollbar invisible — Firefox + Chrome */
-    #rc-messages {
-      scrollbar-width: none !important;        /* Firefox */
-      -ms-overflow-style: none !important;     /* IE/Edge */
-    }
-    #rc-messages::-webkit-scrollbar {
-      display: none !important;                /* Chrome/Safari */
-    }
-
-    /* Header — eje horizontal: logo + dirección + mapa en el mismo plano */
-    .frm-hero-row {
-      align-items: center !important;
-    }
-    .frm-hero-left {
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-    }
-
-    /* Mapa circular — borde gris plomo, sin ningún color vivo */
-    .frm-map-ring {
-      border: 1px solid #444 !important;
-      box-shadow: none !important;
-      outline: none !important;
-    }
-
-    /* Plusvalía: USD bold blanco grande, UVA gris secundario */
-    .frm-plusvalia-usd {
-      font-size: 20px !important;
-      font-weight: 600 !important;
-      color: #ffffff !important;
-      display: block !important;
-    }
-    .frm-plusvalia-uva {
-      font-size: 11px !important;
-      color: rgba(255,255,255,.32) !important;
-      display: block !important;
-      margin-top: 3px !important;
-    }
-    /* ══ FIN CSS AUDIT ════════════════════════════════════════════ */
-
-
-    /* ══ LAYOUT STRUCTURAL v4 ════════════════════════════════════ */
-
-    /* ── 1. HERO ROW — card única dirección + mapa alineados ──── */
-    .frm-hero-row {
-      display: grid !important;
-      grid-template-columns: 1fr auto !important;
-      align-items: center !important;
-      gap: 0 !important;
-      background: linear-gradient(145deg, #1c1c1c 0%, #0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,.5) !important;
-      padding: 28px 32px !important;
-      margin-bottom: 20px !important;
-      overflow: hidden !important;
-    }
-    .frm-hero-left {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-    }
-    .frm-hero-right {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-      margin-left: 32px !important;
-    }
-
-    /* ── 2. CALCULADORA — grilla 6 columnas exactas ──────────── */
-    .frm-calc-inputs {
-      display: grid !important;
-      grid-template-columns: repeat(6, 1fr) !important;
-      gap: 10px !important;
-      align-items: start !important;
-    }
-    .frm-calc-field {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 6px !important;
-    }
-    .frm-calc-input {
-      height: 44px !important;
-      line-height: 44px !important;
-      padding: 0 12px !important;
-      box-sizing: border-box !important;
-      width: 100% !important;
-    }
-    /* Resultados: valor centrado */
-    .frm-calc-result-val {
-      text-align: center !important;
-    }
-    .frm-calc-result-sub { display: none !important; }
-    .frm-calc-input-hint { display: none !important; }
-
-    /* ── 3. CHAT — misma altura que el cuerpo, sin empujar ────── */
-    .frm-with-chat {
-      display: flex !important;
-      align-items: stretch !important;
-    }
-    .frm-main-col {
-      flex: 1 !important;
-      min-width: 0 !important;
-    }
-    #report-chat-container {
-      width: 260px !important;
-      flex-shrink: 0 !important;
-      background: #111 !important;
-      backdrop-filter: none !important;
-      border-left: 1px solid #2a2a2a !important;
-      align-self: stretch !important;
-      position: sticky !important;
-      top: 0 !important;
-      height: 100vh !important;
-    }
-    .rc-msg.user {
-      background: transparent !important;
-      border-radius: 0 !important;
-      padding: 5px 0 5px 10px !important;
-      border-left: 2px solid rgba(255,191,0,.4) !important;
-      color: rgba(255,255,255,.9) !important;
-    }
-    .rc-msg.assistant {
-      background: transparent !important;
-      border-radius: 0 !important;
-      padding: 5px 0 !important;
-      color: rgba(180,180,180,.8) !important;
-    }
-    #rc-messages { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-    #rc-messages::-webkit-scrollbar { display: none !important; }
-
-    /* ── 4. ANALYSIS — misma altura con stretch ─────────────── */
-    .frm-analysis {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 20px !important;
-      align-items: stretch !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-analysis-card {
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    /* ── 5. PADDING ENTRE TARJETAS — que respire ─────────────── */
-    .frm-cards-row { margin-bottom: 20px !important; gap: 1px !important; }
-    .frm-table-card { margin-bottom: 20px !important; }
-    .frm-calc-section { margin-bottom: 20px !important; }
-    .frm-croquis { margin-bottom: 20px !important; }
-
-    /* Padding interno del cuerpo del informe */
-    .frm-body {
-      padding: 36px 40px 60px !important;
-    }
-
-    /* ── 6. MAPA — círculo gris plomo sin neón ─────────────── */
-    .frm-map-ring {
-      border: 1px solid #444 !important;
-      box-shadow: none !important;
-      outline: none !important;
-    }
-
-    /* ── 7. TARJETAS: cristal + border-top sutil ─────────────── */
-    .frm-card,
-    .frm-table-card,
-    .frm-analysis-card,
-    .frm-calc-section,
-    .frm-croquis {
-      background: linear-gradient(145deg, #1c1c1c 0%, #0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 6px 24px rgba(0,0,0,.45) !important;
-    }
-
-    /* ── 8. PLUSVALÍA — USD bold, UVA gris ─────────────────── */
-    .frm-plusvalia-usd {
-      font-size: 20px !important; font-weight: 600 !important;
-      color: #fff !important; display: block !important;
-    }
-    .frm-plusvalia-uva {
-      font-size: 10px !important; color: rgba(255,255,255,.3) !important;
-      display: inline !important; margin-left: 4px !important;
-    }
-
-    /* ── 9. BOTÓN PDF — glow amarillo ────────────────────── */
-    #btn-download-pdf {
-      animation: pdf-glow 3s ease-in-out infinite !important;
-    }
-    @keyframes pdf-glow {
-      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2), 0 0 28px rgba(232,197,71,.06); }
-      50%      { box-shadow: 0 0 18px rgba(232,197,71,.4), 0 0 44px rgba(232,197,71,.14); }
-    }
-
-    /* ── Responsive ─────────────────────────────────────────── */
-    @media(max-width:1100px) {
-      .frm-calc-inputs { grid-template-columns: repeat(3, 1fr) !important; }
-    }
-    @media(max-width:700px) {
-      .frm-hero-row { grid-template-columns: 1fr !important; padding: 20px !important; }
-      .frm-hero-right { margin-left: 0 !important; margin-top: 16px !important; }
-      .frm-calc-inputs { grid-template-columns: repeat(2, 1fr) !important; }
-      .frm-body { padding: 20px !important; }
-      #report-chat-container { width: 100% !important; height: 320px !important; }
-    }
-    /* ══ FIN LAYOUT STRUCTURAL v4 ════════════════════════════════ */
-
-
-    /* ══ LAYOUT v5 ════════════════════════════════════════════════ */
-
-    /* ── Cards: cristal, respira ────────────────────────────────── */
-    .frm-card,
-    .frm-table-card,
-    .frm-analysis-card,
-    .frm-calc-section,
-    .frm-croquis {
-      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 6px 24px rgba(0,0,0,.45) !important;
-      margin-bottom: 20px !important;
-    }
-
-    /* ── Hero: card única, dirección+mapa mismo eje ──────────────── */
-    .frm-hero-row {
-      display: grid !important;
-      grid-template-columns: 1fr auto !important;
-      align-items: center !important;
-      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 6px 24px rgba(0,0,0,.45) !important;
-      padding: 28px 32px !important;
-      margin-bottom: 20px !important;
-      gap: 28px !important;
-    }
-    .frm-hero-left, .frm-hero-right {
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      border-radius: 0 !important;
-    }
-
-    /* ── Cards m²: misma altura, número centrado, padding uniforme ── */
-    .frm-cards-row {
-      display: grid !important;
-      grid-template-columns: repeat(4,1fr) !important;
-      gap: 1px !important;
-      background: #222 !important;
-      border: 1px solid #222 !important;
-      border-radius: 16px !important;
-      overflow: hidden !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-card {
-      margin-bottom: 0 !important;
-      border-radius: 0 !important;
-      border: none !important;
-      padding: 22px 20px !important;
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: center !important;
-      text-align: center !important;
-    }
-    .frm-card-label { text-align: center !important; }
-    .frm-card-val   { text-align: center !important; }
-    .frm-card-unit  { text-align: center !important; }
-
-    /* ── Calculadora: 6 columnas exactas ─────────────────────────── */
-    .frm-calc-inputs {
-      display: grid !important;
-      grid-template-columns: repeat(6,1fr) !important;
-      gap: 10px !important;
-      align-items: start !important;
-    }
-    .frm-calc-input {
-      height: 44px !important;
-      line-height: 1 !important;
-      padding: 0 12px !important;
-      box-sizing: border-box !important;
-      width: 100% !important;
-    }
-    .frm-calc-result-val { text-align: center !important; }
-    .frm-calc-result-sub { display: none !important; }
-    .frm-calc-input-hint { display: none !important; }
-
-    /* ── Analysis: stretch ────────────────────────────────────────── */
-    .frm-analysis {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 20px !important;
-      align-items: stretch !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-analysis-card {
-      margin-bottom: 0 !important;
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    /* ── Plusvalía: USD bold blanco, UVA gris inline ─────────────── */
-    .frm-plusvalia-usd {
-      font-size: 20px !important; font-weight: 600 !important;
-      color: #fff !important; display: block !important;
-    }
-    .frm-plusvalia-uva {
-      font-size: 10px !important; color: rgba(255,255,255,.3) !important;
-      display: inline !important; margin-left: 4px !important;
-    }
-
-    /* ── Chat: misma superficie, sin línea blanca ─────────────────── */
-    .frm-with-chat { display: flex !important; align-items: stretch !important; }
-    .frm-main-col  { flex: 1 !important; min-width: 0 !important; }
-    #report-chat-container {
-      width: 260px !important;
-      flex-shrink: 0 !important;
-      background: #0d0d0d !important;
-      border-left: 1px solid #222 !important;
-      align-self: stretch !important;
-    }
-    .rc-header { background: transparent !important; border-bottom: 1px solid #1e1e1e !important; }
-    .rc-msg.user {
-      background: transparent !important; border-radius: 0 !important;
-      padding: 4px 0 4px 10px !important;
-      border-left: 2px solid rgba(255,191,0,.35) !important;
-      color: rgba(255,255,255,.9) !important;
-    }
-    .rc-msg.assistant {
-      background: transparent !important; border-radius: 0 !important;
-      padding: 4px 0 !important; color: rgba(180,180,180,.75) !important;
-    }
-    #rc-messages {
-      scrollbar-width: none !important; -ms-overflow-style: none !important;
-    }
-    #rc-messages::-webkit-scrollbar { display: none !important; }
-    .rc-input-bar, .rc-input-row { background: transparent !important; border-top: 1px solid #1e1e1e !important; }
-    .rc-input {
-      background: rgba(255,255,255,.04) !important;
-      border-color: rgba(255,255,255,.08) !important;
-    }
-
-    /* ── Mapa: borde gris, sin neón ──────────────────────────────── */
-    .frm-map-ring { border: 1px solid #444 !important; box-shadow: none !important; }
-
-    /* ── PDF glow pulse ──────────────────────────────────────────── */
-    #btn-download-pdf { animation: pdf-glow-v5 3s ease-in-out infinite !important; }
-    @keyframes pdf-glow-v5 {
-      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2),0 0 28px rgba(232,197,71,.06); }
-      50%      { box-shadow: 0 0 18px rgba(232,197,71,.4),0 0 44px rgba(232,197,71,.14); }
-    }
-
-    /* ── Padding cuerpo, respira ─────────────────────────────────── */
-    .frm-body { padding: 36px 40px 60px !important; }
-
-    /* ── Responsive ──────────────────────────────────────────────── */
-    @media(max-width:1100px) {
-      .frm-calc-inputs { grid-template-columns: repeat(3,1fr) !important; }
-    }
-    @media(max-width:800px) {
-      .frm-hero-row { grid-template-columns: 1fr !important; }
-      .frm-cards-row { grid-template-columns: repeat(2,1fr) !important; }
-      .frm-calc-inputs { grid-template-columns: repeat(2,1fr) !important; }
-      .frm-analysis { grid-template-columns: 1fr !important; }
-      #report-chat-container { width: 100% !important; height: 300px !important; border-left: none !important; border-top: 1px solid #222 !important; }
-      .frm-body { padding: 20px 16px 40px !important; }
-    }
-    /* ══ FIN LAYOUT v5 ════════════════════════════════════════════ */
-
-
-    /* ══ SEAMLESS v5 ══════════════════════════════════════════════ */
-
-    /* ── 1. HERO — card única dirección + mapa ─────────────────── */
-    .frm-hero-row {
-      display: flex !important;
-      align-items: center !important;
-      background: linear-gradient(145deg, #1c1c1c 0%, #0e0e0e 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,.55) !important;
-      padding: 28px 32px !important;
-      margin-bottom: 20px !important;
-      gap: 32px !important;
-    }
-    .frm-hero-left {
-      flex: 1 !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-    }
-    .frm-hero-right {
-      flex-shrink: 0 !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-
-    /* ── 2. M² CARDS — misma altura, números alineados base ────── */
-    .frm-cards-row {
-      display: grid !important;
-      grid-template-columns: repeat(4, 1fr) !important;
-      align-items: stretch !important;
-      margin-bottom: 20px !important;
-      gap: 1px !important;
-    }
-    .frm-card {
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: flex-end !important;
-      padding: 20px 20px !important;
-      background: linear-gradient(145deg, #1c1c1c 0%, #0d0d0d 100%) !important;
-      border: none !important;
-    }
-    .frm-card-val {
-      text-align: left !important;
-      align-self: flex-start !important;
-    }
-
-    /* ── 3. CALCULADORA — grilla 6 columnas ─────────────────────── */
-    .frm-calc-inputs {
-      display: grid !important;
-      grid-template-columns: repeat(6, 1fr) !important;
-      gap: 10px !important;
-      align-items: start !important;
-    }
-    @media(max-width:1100px){ .frm-calc-inputs { grid-template-columns: repeat(3,1fr) !important; } }
-    @media(max-width:700px)  { .frm-calc-inputs { grid-template-columns: repeat(2,1fr) !important; } }
-
-    .frm-calc-input {
-      height: 44px !important;
-      padding: 0 12px !important;
-      box-sizing: border-box !important;
-      width: 100% !important;
-    }
-    .frm-calc-result-val  { text-align: center !important; }
-    .frm-calc-result-sub  { display: none !important; }
-    .frm-calc-input-hint  { display: none !important; }
-
-    /* ── 4. ANÁLISIS — stretch uniform ─────────────────────────── */
-    .frm-analysis {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 16px !important;
-      align-items: stretch !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-analysis-card {
-      display: flex !important;
-      flex-direction: column !important;
-      gap: 0 !important;
-    }
-
-    /* ── 5. CHAT — seamless, sin barra blanca ───────────────────── */
-    .frm-with-chat { display: flex !important; align-items: stretch !important; }
-    .frm-main-col  { flex: 1 !important; min-width: 0 !important; overflow-y: auto !important; }
-
-    #report-chat-container {
-      width: 260px !important;
-      flex-shrink: 0 !important;
-      background: #0d0d0d !important;
-      border-left: 1px solid #222 !important;
-      align-self: stretch !important;
-      position: sticky !important;
-      top: 0 !important;
-      height: 100vh !important;
-      backdrop-filter: none !important;
-    }
-    /* Timeline sin burbujas */
-    .rc-msg {
-      border-radius: 0 !important;
-      background: transparent !important;
-      padding: 5px 2px !important;
-    }
-    .rc-msg.user {
-      color: rgba(255,255,255,.9) !important;
-      border-left: 2px solid rgba(255,191,0,.45) !important;
-      padding-left: 8px !important;
-    }
-    .rc-msg.assistant { color: rgba(185,185,185,.8) !important; }
-    /* Scroll invisible */
-    #rc-messages { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-    #rc-messages::-webkit-scrollbar { display: none !important; }
-    /* Input bar minimalista */
-    .rc-input {
-      background: rgba(255,255,255,.04) !important;
-      border: 1px solid rgba(255,255,255,.1) !important;
-      border-radius: 8px !important;
-    }
-    .rc-input:focus { border-color: rgba(255,191,0,.35) !important; }
-
-    /* ── 6. PLUSVALÍA — USD protagonista ────────────────────────── */
-    .frm-plusvalia-usd {
-      font-size: 20px !important; font-weight: 600 !important;
-      color: #fff !important; display: block !important;
-    }
-    .frm-plusvalia-uva {
-      font-size: 10px !important; color: rgba(255,255,255,.3) !important;
-      display: inline !important; margin-left: 4px !important;
-    }
-
-    /* ── 7. TARJETAS — cristal, padding generoso ────────────────── */
-    .frm-table-card,
-    .frm-analysis-card,
-    .frm-calc-section,
-    .frm-croquis {
-      background: linear-gradient(145deg, #1c1c1c 0%, #0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.09) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 6px 24px rgba(0,0,0,.45) !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-body { padding: 36px 40px 64px !important; }
-
-    /* ── 8. MAPA — círculo gris, sin neón ───────────────────────── */
-    .frm-map-ring {
-      border: 1px solid #3a3a3a !important;
-      box-shadow: none !important;
-    }
-
-    /* ── 9. BOTÓN PDF — glow amarillo ───────────────────────────── */
-    #btn-download-pdf { animation: pdf-glow5 3s ease-in-out infinite !important; }
-    @keyframes pdf-glow5 {
-      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2); }
-      50%      { box-shadow: 0 0 20px rgba(232,197,71,.45), 0 0 40px rgba(232,197,71,.12); }
-    }
-
-    /* ── Mobile ─────────────────────────────────────────────────── */
-    @media(max-width:900px){
-      .frm-hero-row  { flex-direction: column !important; }
-      .frm-cards-row { grid-template-columns: repeat(2,1fr) !important; }
-      .frm-analysis  { grid-template-columns: 1fr !important; }
-      #report-chat-container { width:100% !important; height:320px !important; position:static !important; }
-      .frm-body { padding: 20px 16px 40px !important; }
-    }
-    /* ══ FIN SEAMLESS v5 ══════════════════════════════════════════ */
-
-
-    /* ══ RIGID GRID v6 ════════════════════════════════════════════ */
-
-    /* ── HERO: un solo contenedor, dirección izq + mapa der ──── */
-    .frm-hero-row {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
-      gap: 28px !important;
-      background: linear-gradient(145deg,#1c1c1c 0%,#0e0e0e 100%) !important;
-      border: 1px solid rgba(255,255,255,.07) !important;
-      border-top: 1px solid rgba(255,255,255,.1) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 8px 32px rgba(0,0,0,.55) !important;
-      padding: 28px 32px !important;
-      margin-bottom: 20px !important;
-      overflow: hidden !important;
-    }
-    .frm-hero-left {
-      flex: 1 1 auto !important;
-      min-width: 0 !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    .frm-hero-right {
-      flex: 0 0 auto !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      border-radius: 0 !important;
-      padding: 0 !important;
-      margin: 0 !important;
-    }
-    /* Mapa: borde gris plomo, sin ningún neón */
-    .frm-map-ring {
-      border: 1.5px solid #3a3a3a !important;
-      box-shadow: none !important;
-      outline: none !important;
-    }
-
-    /* ── FILA m²: grilla matemática 4 columnas ──────────────── */
-    .frm-cards-row {
-      display: grid !important;
-      grid-template-columns: repeat(4, 1fr) !important;
-      gap: 20px !important;          /* espacio entre cards */
-      align-items: stretch !important;
-      margin-bottom: 20px !important;
-      background: transparent !important;
-    }
-    .frm-card {
-      display: flex !important;
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      padding: 24px 24px !important;
-      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.1) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,.45) !important;
-    }
-    .frm-card-label {
-      font-size: 9px !important;
-      letter-spacing: 2.5px !important;
-      text-transform: uppercase !important;
-      color: #FFBF00 !important;
-      margin-bottom: 8px !important;
-    }
-    .frm-card-val {
-      font-size: clamp(1.8rem,3vw,2.8rem) !important;
-      font-weight: 200 !important;
-      color: #fff !important;
-      line-height: 1 !important;
-      text-align: left !important;
-    }
-    .frm-card.total .frm-card-val { color: #FFBF00 !important; }
-    .frm-card-unit {
-      font-size: 11px !important;
-      color: rgba(255,255,255,.35) !important;
-      margin-top: 4px !important;
-    }
-
-    /* ── ANÁLISIS: stretch uniforme ─────────────────────────── */
-    .frm-analysis {
-      display: grid !important;
-      grid-template-columns: 1fr 1fr !important;
-      gap: 20px !important;
-      align-items: stretch !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-analysis-card {
-      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.1) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,.45) !important;
-      padding: 20px 24px !important;
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    /* ── CALC: grilla 6 col exactas ─────────────────────────── */
-    .frm-calc-section {
-      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.1) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,.45) !important;
-      padding: 24px 28px !important;
-      margin-bottom: 20px !important;
-    }
-    .frm-calc-inputs {
-      display: grid !important;
-      grid-template-columns: repeat(6,1fr) !important;
-      gap: 10px !important;
-      align-items: start !important;
-    }
-    .frm-calc-field { display: flex !important; flex-direction: column !important; gap: 5px !important; }
-    .frm-calc-input {
-      height: 44px !important;
-      line-height: 44px !important;
-      padding: 0 12px !important;
-      box-sizing: border-box !important;
-      width: 100% !important;
-      background: #111 !important;
-      border: 1px solid rgba(255,191,0,.3) !important;
-      border-radius: 6px !important;
-      color: #fff !important;
-      font-size: 13px !important;
-    }
-    .frm-calc-result-val { text-align: center !important; font-size: 18px !important; }
-    .frm-calc-result-sub { display: none !important; }
-    .frm-calc-input-hint { display: none !important; }
-
-    /* ── CHAT: fondo transparente, borderless ───────────────── */
-    .frm-with-chat { display: flex !important; align-items: stretch !important; }
-    .frm-main-col  { flex: 1 !important; min-width: 0 !important; overflow-y: auto !important; }
-
-    #report-chat-container {
-      width: 260px !important;
-      flex-shrink: 0 !important;
-      background: transparent !important;   /* FLOTAR sobre fondo negro */
-      border-left: 1px solid rgba(255,255,255,.06) !important;
-      align-self: stretch !important;
-      position: sticky !important;
-      top: 0 !important;
-      height: 100vh !important;
-    }
-    .rc-header {
-      background: transparent !important;
-      border-bottom: 1px solid rgba(255,255,255,.07) !important;
-    }
-    /* Timeline sin burbujas */
-    .rc-msg {
-      border-radius: 0 !important;
-      background: transparent !important;
-      padding: 5px 0 !important;
-      font-size: 12px !important;
-    }
-    .rc-msg.user {
-      color: rgba(255,255,255,.88) !important;
-      padding-left: 10px !important;
-      border-left: 2px solid rgba(255,191,0,.4) !important;
-    }
-    .rc-msg.assistant { color: rgba(175,175,175,.8) !important; }
-    .rc-msg.info { color: rgba(255,255,255,.22) !important; font-size: 10px !important; }
-    /* Input bar minimalista */
-    .rc-input-row { background: transparent !important; border-top: 1px solid rgba(255,255,255,.07) !important; }
-    .rc-input {
-      background: rgba(255,255,255,.04) !important;
-      border: 1px solid rgba(255,255,255,.1) !important;
-      color: #fff !important;
-    }
-    .rc-input:focus { border-color: rgba(255,191,0,.4) !important; outline: none !important; }
-    /* Scroll completamente invisible — todos los browsers */
-    #rc-messages { scrollbar-width: none !important; -ms-overflow-style: none !important; }
-    #rc-messages::-webkit-scrollbar { width: 0 !important; height: 0 !important; display: none !important; }
-
-    /* ── PLUSVALÍA: USD bold, UVA gris ──────────────────────── */
-    .frm-plusvalia-usd {
-      font-size: 20px !important; font-weight: 600 !important;
-      color: #fff !important; display: block !important;
-    }
-    .frm-plusvalia-uva {
-      font-size: 10px !important; color: rgba(255,255,255,.3) !important;
-      display: inline !important; margin-left: 4px !important;
-    }
-
-    /* ── TARJETAS GENERALES ──────────────────────────────────── */
-    .frm-table-card,
-    .frm-croquis {
-      background: linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%) !important;
-      border: 1px solid rgba(255,255,255,.06) !important;
-      border-top: 1px solid rgba(255,255,255,.1) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,.45) !important;
-      margin-bottom: 20px !important;
-    }
-
-    /* ── CUERPO: padding generoso ────────────────────────────── */
-    .frm-body { padding: 36px 40px 64px !important; }
-
-    /* ── PDF glow ────────────────────────────────────────────── */
-    #btn-download-pdf { animation: pglow 3s ease-in-out infinite !important; }
-    @keyframes pglow {
-      0%,100% { box-shadow: 0 0 10px rgba(232,197,71,.2); }
-      50%      { box-shadow: 0 0 22px rgba(232,197,71,.45), 0 0 42px rgba(232,197,71,.12); }
-    }
-
-    /* ── Responsive ──────────────────────────────────────────── */
-    @media(max-width:1100px) {
-      .frm-cards-row { grid-template-columns: repeat(2,1fr) !important; }
-      .frm-calc-inputs { grid-template-columns: repeat(3,1fr) !important; }
-    }
-    @media(max-width:700px) {
-      .frm-cards-row { grid-template-columns: 1fr 1fr !important; gap:12px !important; }
-      .frm-hero-row  { flex-direction: column !important; padding:20px !important; }
-      .frm-hero-right{ margin:16px 0 0 !important; }
-      .frm-analysis  { grid-template-columns: 1fr !important; }
-      .frm-calc-inputs { grid-template-columns: repeat(2,1fr) !important; }
-      #report-chat-container { width:100% !important; height:300px !important; position:static !important; border-left:none !important; border-top:1px solid rgba(255,255,255,.07) !important; }
-      .frm-body { padding: 20px 16px 40px !important; }
-    }
-    /* ══ FIN RIGID GRID v6 ════════════════════════════════════ */
-
-
-    /* ══ RIGID GRID v6 ════════════════════════════════════════════ */
-    .frm-hero-row{display:flex!important;flex-direction:row!important;align-items:center!important;gap:28px!important;background:linear-gradient(145deg,#1c1c1c 0%,#0e0e0e 100%)!important;border:1px solid rgba(255,255,255,.07)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 8px 32px rgba(0,0,0,.55)!important;padding:28px 32px!important;margin-bottom:20px!important;overflow:hidden!important}
-    .frm-hero-left{flex:1 1 auto!important;min-width:0!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-hero-right{flex:0 0 auto!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-map-ring{border:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important;outline:none!important}
-    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important}
-    .frm-card{display:flex!important;flex-direction:column!important;align-items:flex-start!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important}
-    .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:center!important}
-    .frm-card.total .frm-card-val{color:#FFBF00!important}
-    .frm-analysis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important}
-    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important}
-    .frm-calc-section{background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
-    .frm-calc-inputs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:10px!important;align-items:start!important}
-    .frm-calc-field{display:flex!important;flex-direction:column!important;gap:5px!important}
-    .frm-calc-input{height:44px!important;line-height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(255,191,0,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important}
-    .frm-calc-result-val{text-align:center!important;font-size:18px!important}
-    .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
-    .frm-with-chat{display:flex!important;align-items:stretch!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:auto!important}
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:transparent!important;box-shadow:inset 8px 0 28px rgba(0,0,0,.5)!important;align-self:stretch!important;position:sticky!important;top:0!important;height:100vh!important}
-    .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
-    .rc-msg{border-radius:0!important;background:transparent!important;padding:6px 0!important;font-size:14px!important;line-height:1.5!important}
-    .rc-msg.user{color:rgba(255,255,255,.88)!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.4)!important}
-    .rc-msg.assistant{color:rgba(210,210,210,.92)!important}
-    .rc-msg.info{color:rgba(255,255,255,.22)!important;font-size:10px!important}
-    .rc-input-row{background:transparent!important;border-top:1px solid rgba(255,255,255,.07)!important}
-    .rc-input{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;color:#fff!important}
-    .rc-input:focus{border-color:rgba(255,191,0,.4)!important;outline:none!important}
-    #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important}
-    #rc-messages::-webkit-scrollbar{width:0!important;height:0!important;display:none!important}
-    .frm-plusvalia-usd{font-size:20px!important;font-weight:600!important;color:#fff!important;display:block!important}
-    .frm-plusvalia-uva{font-size:10px!important;color:rgba(255,255,255,.3)!important;display:inline!important;margin-left:4px!important}
-    .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c 0%,#0d0d0d 100%)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}
-    .frm-body{padding:36px 40px 64px!important}
-    #btn-download-pdf{animation:pglow6 3s ease-in-out infinite!important}
-    @keyframes pglow6{0%,100%{box-shadow:0 0 10px rgba(232,197,71,.2)}50%{box-shadow:0 0 22px rgba(232,197,71,.45),0 0 42px rgba(232,197,71,.12)}}
-    @media(max-width:1100px){.frm-cards-row{grid-template-columns:repeat(2,1fr)!important}.frm-calc-inputs{grid-template-columns:repeat(3,1fr)!important}}
-    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}.formal-report{right:0!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-body{padding:20px 16px 40px!important}}
-    /* ══ FIN RIGID GRID v6 ════════════════════════════════════ */
-
-
-    /* ══ FINAL v7 — override absoluto ══════════════════════════ */
-
-    /* HERO: un solo contenedor con dirección + mapa */
-    .frm-hero-row{display:flex!important;flex-direction:row!important;align-items:center!important;gap:28px!important;background:linear-gradient(145deg,#1c1c1c,#0e0e0e)!important;border:1px solid rgba(255,255,255,.07)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 8px 32px rgba(0,0,0,.55)!important;padding:28px 32px!important;margin-bottom:20px!important;overflow:hidden!important}
-    .frm-hero-left{flex:1 1 auto!important;min-width:0!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-hero-right{flex:0 0 auto!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important}
-    .frm-map-ring{border:1px solid rgba(255,255,255,.06)!important;box-shadow:none!important}
-
-    /* m² CARDS: grilla 4 columnas exactas */
-    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important;background:transparent!important;padding:0!important}
-    .frm-card{display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-content:center!important;justify-items:center!important;text-align:center!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin:0!important}
-    .frm-card-val{font-size:clamp(1.8rem,3vw,2.8rem)!important;font-weight:200!important;color:#fff!important;line-height:1!important;text-align:center!important}
-    .frm-card.total .frm-card-val{color:var(--accent)!important}
-    .frm-card-label{font-size:9px!important;letter-spacing:2.5px!important;text-transform:uppercase!important;color:var(--accent)!important;overflow:hidden!important;display:block!important;align-self:start!important;margin:0!important;text-align:center!important;width:100%!important}
-    .frm-card-unit{font-size:11px!important;color:rgba(255,255,255,.35)!important;margin-top:4px!important}
-
-    /* ANÁLISIS: stretch uniforme */
-    .frm-analysis{display:grid!important;grid-template-columns:1fr 1fr!important;gap:20px!important;align-items:stretch!important;margin-bottom:20px!important}
-    .frm-analysis-card{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:20px 24px!important;display:flex!important;flex-direction:column!important;height:100%!important}
-
-    /* CALC: 6 columnas */
-    .frm-calc-section{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;padding:24px 28px!important;margin-bottom:20px!important}
-    .frm-calc-inputs{display:grid!important;grid-template-columns:repeat(6,1fr)!important;gap:10px!important;align-items:start!important}
-    .frm-calc-field{display:flex!important;flex-direction:column!important;gap:5px!important}
-    .frm-calc-input{height:44px!important;padding:0 12px!important;box-sizing:border-box!important;width:100%!important;background:#111!important;border:1px solid rgba(255,191,0,.3)!important;border-radius:6px!important;color:#fff!important;font-size:13px!important}
-    .frm-calc-result-val{text-align:center!important;font-size:18px!important}
-    .frm-calc-result-sub,.frm-calc-input-hint{display:none!important}
-
-    /* SCROLL: .formal-report es el contenedor — scrollbar en el borde absoluto derecho */
-    .frm-with-chat{display:flex!important;align-items:flex-start!important;min-height:100vh!important}
-    .frm-main-col{flex:1!important;min-width:0!important;overflow-y:visible!important}
-    /* Scrollbar fino del modal — 4px gris oscuro en borde derecho de pantalla */
-    .formal-report::-webkit-scrollbar{width:5px!important}
-    .formal-report::-webkit-scrollbar-track{background:transparent!important}
-    .formal-report::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18)!important;border-radius:3px!important}
-    .formal-report{position:fixed!important;top:0!important;left:0!important;bottom:0!important;right:260px!important;overflow-y:auto!important;scrollbar-width:thin!important;scrollbar-color:rgba(255,255,255,.18) transparent!important}
-
-    /* CHAT: fondo sólido, nativo, sin bordes */
-    #report-chat-container{width:260px!important;flex-shrink:0!important;background:rgba(10,10,10,.88)!important;backdrop-filter:blur(14px)!important;-webkit-backdrop-filter:blur(14px)!important;position:fixed!important;right:0!important;top:0!important;z-index:10000!important;height:100vh!important}
-    .rc-header{background:transparent!important;border-bottom:1px solid rgba(255,255,255,.07)!important}
-    .rc-msg{border-radius:0!important;background:transparent!important;padding:6px 0!important;font-size:14px!important;line-height:1.5!important}
-    .rc-msg.user{color:#fff!important;padding-left:10px!important;border-left:2px solid rgba(255,191,0,.45)!important}
-    .rc-msg.assistant{color:rgba(210,210,210,.92)!important}
-    .rc-msg.info{color:rgba(255,255,255,.22)!important;font-size:10px!important}
-    .rc-input-row{background:transparent!important;border-top:1px solid rgba(255,255,255,.07)!important}
-    .rc-input{background:rgba(255,255,255,.04)!important;border:1px solid rgba(255,255,255,.1)!important;color:#fff!important}
-    .rc-input:focus{border-color:rgba(255,191,0,.4)!important;outline:none!important}
-    .rc-chips{background:transparent!important;border-top:1px solid rgba(255,255,255,.06)!important}
-    /* Scrollbar de mensajes del chat — oculto */
-    #rc-messages{scrollbar-width:none!important;-ms-overflow-style:none!important;overflow-y:auto!important}
-    #rc-messages::-webkit-scrollbar{display:none!important}
-
-    /* M² GRID — fuerza 4 columnas sin margen residual */
-    .frm-cards-row{display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:20px!important;background:transparent!important;padding:0!important;margin:0 0 20px 0!important}
-    .frm-card{margin:0!important;padding:24px!important;background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;display:grid!important;grid-template-rows:44px auto auto!important;row-gap:8px!important;align-content:center!important;justify-items:center!important;text-align:center!important}
-
-    /* TARJETAS GENERALES */
-    .frm-table-card,.frm-croquis{background:linear-gradient(145deg,#1c1c1c,#0d0d0d)!important;border:1px solid rgba(255,255,255,.06)!important;border-top:1px solid rgba(255,255,255,.1)!important;border-radius:16px!important;box-shadow:0 4px 20px rgba(0,0,0,.45)!important;margin-bottom:20px!important}
-
-    /* PLUSVALÍA */
-    .frm-plusvalia-usd{font-size:20px!important;font-weight:600!important;color:#fff!important;display:block!important}
-    .frm-plusvalia-uva{font-size:10px!important;color:rgba(255,255,255,.3)!important;display:inline!important;margin-left:4px!important}
-
-    /* PDF GLOW */
-    #btn-download-pdf{animation:pglowf 3s ease-in-out infinite!important}
-    @keyframes pglowf{0%,100%{box-shadow:0 0 10px rgba(232,197,71,.2)}50%{box-shadow:0 0 22px rgba(232,197,71,.45),0 0 40px rgba(232,197,71,.12)}}
-
-    /* BODY + SPACING */
-    .frm-body{padding:36px 40px 64px!important}
-
-    /* RESPONSIVE */
-    @media(max-width:1100px){.frm-cards-row{grid-template-columns:repeat(2,1fr)!important}.frm-calc-inputs{grid-template-columns:repeat(3,1fr)!important}}
-    @media(max-width:700px){.frm-hero-row{flex-direction:column!important;padding:20px!important}.frm-hero-right{margin:16px 0 0!important}.frm-analysis{grid-template-columns:1fr!important}.frm-calc-inputs{grid-template-columns:repeat(2,1fr)!important}.formal-report{right:0!important}#report-chat-container{width:100%!important;height:300px!important;position:static!important;border-left:none!important;border-top:1px solid rgba(255,255,255,.07)!important}.frm-body{padding:20px 16px 40px!important}}
-    /* CENTRADO TARJETAS m² — especificidad (0,3,0) gana a cualquier regla de clase simple */
-    .frm-cards-row>.frm-card>.frm-card-label{text-align:center!important;width:100%!important;display:block!important}
-    .frm-cards-row>.frm-card>.frm-card-val{text-align:center!important;width:100%!important;display:block!important}
-    .frm-cards-row>.frm-card>.frm-card-unit{text-align:center!important;width:100%!important;display:block!important}
-    .frm-cards-row>.frm-card>.frm-card-sub{text-align:center!important;width:100%!important;display:block!important}
-    /* ══ FIN FINAL v7 ══════════════════════════════════════════ */
-
-    </style></defs>
+      </style></defs>
       <path class="av2" d="M80,50 L500,38 L545,100 L560,240 L540,380 L510,490 L455,590 L360,650 L240,658 L140,620 L80,550 L45,420 L35,260 L55,130 Z" opacity=".45"/>
       <path d="M500,38 L545,100 L560,240 L540,380 L510,490 L455,590" stroke="#fff" stroke-width=".3" fill="none" opacity=".1" stroke-dasharray="5,4"/>
       <path class="av" d="M80,50 L55,130 L45,260 L50,380 L80,500 L140,580"/>
@@ -2181,7 +754,7 @@
       <path class="sb" d="M403,380 L482,374 L488,465 L408,470 Z"/>
       <text class="lb"  x="158" y="108">PALERMO</text>
       <text class="lb2" x="88"  y="72">BELGRANO</text>
-      <text class="lb2" x="282" y="60">NÚÑEZ</text>
+      <text class="lb2" x="282" y="60">NUNEZ</text>
       <text class="lb2" x="166" y="183">VILLA CRESPO</text>
       <text class="lb2" x="276" y="183">RECOLETA</text>
       <text class="lb2" x="100" y="193">V. DEL PARQUE</text>
@@ -2411,7 +984,7 @@
 </script>
 
   <!-- FULL REPORT MODAL -->
-  <div id="full-report-modal" class="formal-report hidden" style="position:fixed!important;top:0!important;left:0!important;width:calc(100% - 400px)!important;height:100vh!important;overflow-y:scroll!important;box-sizing:border-box!important;background:#000!important;z-index:9998!important;">
+  <div id="full-report-modal" class="formal-report hidden">
 
     <!-- ── HEADER UNIFICADO: Logo + PDF + X en un solo flex sticky ── -->
     <div id="frm-header">
@@ -2678,162 +1251,5 @@
     </div>
   </div>
 
-<!-- ══ NUCLEAR CENTER — último en el documento, especificidad (0,6,0), gana todo ══ -->
-<style>
-.formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-label,
-.formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-val,
-.formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-unit,
-.formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card>.frm-card-sub {
-  text-align: center !important;
-  width: 100% !important;
-  display: block !important;
-}
-.formal-report .frm-with-chat .frm-main-col .frm-cards-row>.frm-card {
-  align-content: center !important;
-  justify-items: center !important;
-}
-</style>
-
-
-  <style>
-    /* ── NUCLEAR v12 — modal position:fixed en inline, scrollbar visible ── */
-
-    /* Cards m²: label 45px altura fija */
-    #full-report-modal .frm-card, #formal-report-modal .frm-card,
-    #full-report-modal .frm-cards-row > div, #formal-report-modal .frm-cards-row > div {
-      display:flex!important;flex-direction:column!important;justify-content:flex-start!important;
-      align-items:center!important;text-align:center!important;min-height:130px!important;padding:20px 16px!important;
-    }
-    #full-report-modal .frm-card-label, #formal-report-modal .frm-card-label {
-      display:flex!important;align-items:flex-end!important;justify-content:center!important;
-      height:45px!important;min-height:45px!important;max-height:45px!important;
-      width:100%!important;text-align:center!important;margin:0!important;padding:0!important;
-      line-height:1.2!important;overflow:hidden!important;
-    }
-    #full-report-modal .frm-card-val,  #formal-report-modal .frm-card-val  { width:100%!important;text-align:center!important;margin:10px 0 0!important; }
-    #full-report-modal .frm-card-unit, #formal-report-modal .frm-card-unit { width:100%!important;text-align:center!important;margin:4px 0 0!important; }
-
-    /* Enrase */
-    #full-report-modal #frm-enrase-bloque, #formal-report-modal #frm-enrase-bloque { display:block!important; }
-    #full-report-modal #frm-enrase-contenido, #formal-report-modal #frm-enrase-contenido { color:rgba(255,255,255,.8)!important; }
-    #full-report-modal #frm-enrase-contenido span, #formal-report-modal #frm-enrase-contenido span { color:rgba(255,255,255,.8)!important; }
-
-    /* html/body: no bloquear */
-    html, body { overflow: auto !important; }
-
-    /* SCROLLBAR VISIBLE — display:block forzado */
-    #full-report-modal::-webkit-scrollbar, #formal-report-modal::-webkit-scrollbar {
-      display: block !important;
-      width: 16px !important;
-    }
-    #full-report-modal::-webkit-scrollbar-track, #formal-report-modal::-webkit-scrollbar-track {
-      background: #111 !important;
-    }
-    #full-report-modal::-webkit-scrollbar-thumb, #formal-report-modal::-webkit-scrollbar-thumb {
-      background-color: #555 !important;
-      border: 4px solid #111 !important;
-      border-radius: 20px !important;
-    }
-    #full-report-modal::-webkit-scrollbar-thumb:hover, #formal-report-modal::-webkit-scrollbar-thumb:hover {
-      background-color: #888 !important;
-    }
-    /* Firefox */
-    #full-report-modal, #formal-report-modal {
-      scrollbar-width: thin !important;
-      scrollbar-color: #555 #111 !important;
-    }
-
-    .frm-with-chat { display: block !important; }
-    .frm-main-col  { display: block !important; width: 100% !important; }
-
-    /* ── HEADER UNIFICADO #frm-header ── */
-    #frm-header {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 10001 !important;
-      display: flex !important;
-      align-items: center !important;
-      padding: 0 20px 0 40px !important;
-      height: 72px !important;
-      background: #000 !important;
-      border-bottom: 1px solid rgba(255,255,255,.07) !important;
-      box-sizing: border-box !important;
-      overflow: visible !important;
-    }
-
-    /* Logo: altura libre, sin overflow hidden */
-    .frm-header-logo {
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-      height: auto !important;
-      overflow: visible !important;
-      flex-shrink: 0 !important;
-    }
-
-    /* PDF btn: dentro del header, sin sticky propio */
-    #pdf-btn-wrap {
-      position: static !important;
-      display: flex !important;
-      align-items: center !important;
-      margin-right: 16px !important;
-      padding: 0 !important;
-      background: transparent !important;
-      flex-shrink: 0 !important;
-    }
-
-    /* Botón X: último elemento del flex, separado del PDF */
-    #full-report-modal #close-full-report, #formal-report-modal #close-full-report {
-      position: static !important;
-      flex-shrink: 0 !important;
-      background: rgba(0,0,0,0.7) !important;
-      border: 1px solid #ffcc00 !important;
-      border-radius: 50% !important;
-      width: 36px !important;
-      height: 36px !important;
-      display: flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-      font-size: 18px !important;
-      color: #ffcc00 !important;
-      cursor: pointer !important;
-      padding: 0 !important;
-      margin-left: 0 !important;
-    }
-    #full-report-modal #close-full-report:hover, #formal-report-modal #close-full-report:hover {
-      background: rgba(255,204,0,.2) !important;
-    }
-
-    /* frm-body: sin margin-top negativo, el header ya ocupa su espacio */
-    #full-report-modal .frm-body > div:first-child,
-    #formal-report-modal .frm-body > div:first-child {
-      margin-top: 0 !important;
-      padding-bottom: 0 !important;
-    }
-
-    /* Chat fixed right */
-    #full-report-modal #report-chat-container, #formal-report-modal #report-chat-container {
-      position: fixed !important; right: 0 !important; top: 0 !important; bottom: 0 !important;
-      width: 400px !important; height: 100vh !important; background-color: #0d0d0d !important;
-      border-left: 1px solid #333 !important; box-shadow: -5px 0 20px rgba(0,0,0,0.6) !important;
-      z-index: 9999 !important; display: flex !important; flex-direction: column !important; overflow: hidden !important;
-    }
-    #full-report-modal .rc-header, #formal-report-modal .rc-header { background:rgba(255,255,255,.03)!important;border-bottom:1px solid rgba(255,255,255,.08)!important;padding:18px 20px 14px!important;flex-shrink:0!important; }
-    #full-report-modal .rc-label, #formal-report-modal .rc-label { color:#E8C547!important;font-size:10px!important;letter-spacing:3px!important;font-weight:600!important; }
-    #full-report-modal #rc-messages, #formal-report-modal #rc-messages { flex:1!important;overflow-y:auto!important;padding:14px!important;display:flex!important;flex-direction:column!important;gap:8px!important;scrollbar-width:none!important;-ms-overflow-style:none!important; }
-    #full-report-modal #rc-messages::-webkit-scrollbar, #formal-report-modal #rc-messages::-webkit-scrollbar { display:none!important;width:0!important; }
-    #full-report-modal .rc-msg, #formal-report-modal .rc-msg { font-size:14px!important;line-height:1.5!important;padding:10px 14px!important;border-radius:10px!important;margin:0!important;border-left:none!important; }
-    #full-report-modal .rc-msg.user, #formal-report-modal .rc-msg.user { background:rgba(255,215,0,0.06)!important;color:#fff!important; }
-    #full-report-modal .rc-msg.assistant, #formal-report-modal .rc-msg.assistant { background:#1a1a1a!important;color:rgba(215,215,215,.9)!important; }
-    #full-report-modal .rc-msg.info, #formal-report-modal .rc-msg.info { background:transparent!important;color:rgba(255,255,255,.28)!important;font-size:11px!important;padding:3px 6px!important; }
-    #full-report-modal .rc-input-row, #formal-report-modal .rc-input-row { background:transparent!important;border-top:1px solid rgba(255,255,255,.08)!important;padding:12px 14px!important;flex-shrink:0!important; }
-    #full-report-modal .rc-input, #formal-report-modal .rc-input { background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.12)!important;border-radius:8px!important;color:#fff!important;font-size:13px!important; }
-    #full-report-modal .rc-input:focus, #formal-report-modal .rc-input:focus { border-color:rgba(232,197,71,.4)!important;outline:none!important; }
-    #full-report-modal .rc-send, #formal-report-modal .rc-send { background:#E8C547!important;color:#000!important;border:none!important;border-radius:8px!important;width:36px!important;height:36px!important;flex-shrink:0!important; }
-
-    @media(max-width:900px) {
-      #full-report-modal #close-full-report, #formal-report-modal #close-full-report { right: 20px !important; }
-      #full-report-modal #report-chat-container, #formal-report-modal #report-chat-container { position:static!important;width:100%!important;height:320px!important;border-left:none!important;border-top:1px solid #333!important;box-shadow:none!important; }
-    }
-  </style>
 </body>
+</html>
