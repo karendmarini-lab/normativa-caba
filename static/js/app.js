@@ -1194,8 +1194,12 @@ async function calcularEnrase(parcel) {
 
   if (!parcel?.smp) return resultado;
 
-  // Verificar flag de enrase en los datos de la parcela
+  // Si la DB dice que no aplica enrase, no consultar linderos
   const enraseFlag = parcel.edif_enrase || window._currentParcelData?.edif_enrase;
+  if (enraseFlag === 0 || enraseFlag === false) {
+    resultado.mensaje = 'No aplica enrase para esta parcela.';
+    return resultado;
+  }
 
   const smp     = parcel.smp;
   const cpu     = parcel.cpu || '';
