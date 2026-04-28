@@ -400,27 +400,27 @@ function setupCalculator(parcel, planoSan) {
   let pisadaCalc, bandaLabel;
 
   if (edifPlanta > 0) {
-    pisadaCalc = Math.round(edifPlanta);
+    pisadaCalc = edifPlanta;
     bandaLabel = '⬡ Ciudad 3D oficial';
     _pisadaSource = 'ciudad3d';
   } else if (fr > 0 && fo > 0) {
     if (fo <= 16) {
-      pisadaCalc = Math.min(Math.round(fr * fo), Math.round(area));
+      pisadaCalc = Math.min(fr * fo, area);
       bandaLabel = `${fr.toFixed(2)} x ${fo.toFixed(2)} m (100%)`;
       _pisadaSource = 'lfi';
     } else {
-      pisadaCalc = Math.min(Math.round(fr * 22), Math.round(area));
+      pisadaCalc = Math.min(fr * 22, area);
       bandaLabel = `${fr.toFixed(2)} x 22 m (LFI)`;
       _pisadaSource = 'lfi';
     }
   } else {
-    pisadaCalc = Math.round(area * 0.65);
+    pisadaCalc = area * 0.65;
     bandaLabel = 'estimado 65%';
     _pisadaSource = 'estimado';
   }
 
   $('c-sup').value = Math.round(area);
-  $('c-pb').value = pisadaCalc;
+  $('c-pb').value = Math.round(pisadaCalc);
 
   const lblSup = $('c-sup')?.closest('.citem')?.querySelector('.cunit');
   if (lblSup) lblSup.textContent = (fr && fo) ? `m² · ${fr.toFixed(2)} x ${fo.toFixed(2)} m` : 'm² · catastro';
