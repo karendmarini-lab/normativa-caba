@@ -203,7 +203,6 @@ export function setMetric(metricId) {
 
 export function setBarrio(barrio) {
   _activeBarrio = barrio || null;
-  _activeManzana = null;
   if (_activeBarrio) return loadParcels();
   _map.setView(CABA_CENTER, CABA_ZOOM);
   return renderCircles();
