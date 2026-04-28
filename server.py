@@ -164,27 +164,22 @@ async def startup_background_tasks():
 _cleanup_task: asyncio.Task[None] | None = None
 
 
-_TOP_BARRIOS = [
-    "Palermo", "Belgrano", "Caballito", "Recoleta", "Villa Urquiza",
-    "Nuñez", "Almagro", "Villa Crespo", "Flores", "Balvanera",
-    "Saavedra", "Colegiales", "Boedo", "Villa Devoto", "Barracas",
-]
-
 async def _delayed_precache() -> None:
-    """Precache top barrios only to reduce I/O at startup."""
+    """Precache all barrios — must cache everything to avoid HDD reads on request."""
     await asyncio.sleep(3)
     log = logging.getLogger("edificia.cache")
-    log.info("precache: starting (%d barrios)", len(_TOP_BARRIOS))
     list_barrios()
-    for name in _TOP_BARRIOS:
+    barrios = _barrios_cache or []
+    log.info("precache: starting (%d barrios)", len(barrios))
+    for b in barrios:
         try:
             await asyncio.get_event_loop().run_in_executor(
-                None, lambda n=name: parcelas_geo(barrio=n, metric="delta", limit=3000)
+                None, lambda name=b["name"]: parcelas_geo(barrio=name, metric="delta", limit=3000)
             )
         except Exception:
             pass
-        await asyncio.sleep(0.5)  # More yielding to reduce I/O pressure
-    log.info("precache: done (%d barrios)", len(_TOP_BARRIOS))
+        await asyncio.sleep(0.3)
+    log.info("precache: done (%d barrios)", len(barrios))
 
 
 def _warmup_sync() -> None:
