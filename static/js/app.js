@@ -746,45 +746,55 @@ function openFullReport() {
   const getVal  = id => (document.getElementById(id)?.value || '').trim();
   const stripM2 = s => s.replace(/m²|m2/gi,'').trim();
 
-  // ── A: Cabecera ───────────────────────────────────────────
-  set('full-address',        getText('res-addr'));
-  set('full-district-badge', getText('res-badge'));
-  const rLat = window._currentLat;
-  const rLng = window._currentLng;
-  set('full-coordinates', rLat ? `${rLat.toFixed(6)}, ${rLng.toFixed(6)} · WGS84` : '');
-  set('full-dis',            getText('res-dis') || getText('res-badge'));
+  // ── Frozen snapshot from module state — NOT from DOM ──────
+  const pd = window._currentParcelData || {};
+  const snap = {
+    addr: document.getElementById('res-addr')?.textContent || pd.epok_direccion || '—',
+    badge: pd.cpu ? (CPU_TO_CUR[pd.cpu] ? `${CPU_TO_CUR[pd.cpu]} (${pd.cpu})` : pd.cpu) : '—',
+    lat: window._currentLat,
+    lng: window._currentLng,
+    h: pd.h || pd.tejido_altura_max || null,
+    plano: pd.plano_san || pd.plano || null,
+    pisos: _pisosEstimados,
+    fot: pd.fot || null,
+    area: pd.area || 0,
+    frente: _frente || pd.frente || pd.fr || 0,
+    fondo: _fondo || pd.fondo || pd.fo || 0,
+    pisada: _dbPisada || parseFloat(document.getElementById('c-pb')?.value) || 0,
+    vendible: _dbVendible || _finMetrosVendibles || 0,
+    volumen: _dbVolumen || _finMetrosTotales || 0,
+    cubierto: _finMetrosVendibles ? _finMetrosVendibles - ((_frente - 1.2) * 1.2 * 2 * Math.max(0, _pisosEstimados - 1)) : 0,
+    eficiencia: _dbVolumen > 0 && _dbVendible > 0 ? Math.round((_dbVendible / _dbVolumen) * 100) : 85,
+    balcones: _frente > 0 && _pisosEstimados > 1 ? Math.round((_frente - 1.2) * 1.2 * 2 * (_pisosEstimados - 1)) : 0,
+    distrito: pd.cpu || '—',
+  };
+  const planoSan = snap.plano && snap.h ? ((snap.h <= 14.6 || !snap.plano || snap.plano < snap.h) ? snap.h : snap.plano) : (snap.plano || snap.h || null);
+  const pisosLabel = snap.pisos > 1 ? `PB + ${snap.pisos - 1}` : (snap.pisos === 1 ? 'PB' : '—');
 
-  // ── B: Vendibles — leer data-frm spans ───────────────────
-  const cvendEl = document.getElementById('c-vend');
-  if (cvendEl) {
-    const q   = sel => cvendEl.querySelector(`[data-frm="${sel}"]`)?.innerText?.trim() || '';
-    const cub  = q('cub');
-    const balc = q('balc');
-    const tot  = q('total');
-    const ef   = q('ef');
-    set('full-total',      tot  || stripM2(getText('c-vend').split('\n')[0]));
-    set('full-cubierto',   cub  || 'No disponible');
-    set('full-balcones',   balc || 'No disponible');
-    set('full-efficiency', ef   ? 'Eficiencia: ' + ef : '');
-  }
-  set('full-volumen', stripM2(getText('c-edif')));
+  // ── A: Cabecera
+  set('full-address', snap.addr);
+  set('full-district-badge', snap.badge);
+  set('full-coordinates', snap.lat ? `${snap.lat.toFixed(6)}, ${snap.lng.toFixed(6)} · WGS84` : '');
+  set('full-dis', snap.distrito);
 
-  // ── C: Parámetros normativos ──────────────────────────────
-  set('full-h',      getText('res-alt'));
-  set('full-plano',  getText('res-plano'));
-  set('full-pisos',  getText('res-pis'));
-  set('full-fot',    getText('res-fot'));
-  set('full-lote',   getVal('c-sup') + ' m²');
-  set('full-pisada', getVal('c-pb')  + ' m²');
+  // ── B: Vendibles
+  set('full-total', snap.vendible ? fmt(snap.vendible) : '—');
+  set('full-cubierto', snap.cubierto ? fmt(snap.cubierto) : '—');
+  set('full-balcones', fmt(snap.balcones));
+  set('full-efficiency', snap.eficiencia ? `Eficiencia: ${snap.eficiencia}%` : '');
+  set('full-volumen', snap.volumen ? fmt(snap.volumen) : '—');
 
-  // ── D: Plusvalía y afectaciones desde _currentParcelData ──
-  const pd = window._currentParcelData;
+  // ── C: Parámetros normativos
+  set('full-h', snap.h || '—');
+  set('full-plano', planoSan || '—');
+  set('full-pisos', pisosLabel);
+  set('full-fot', snap.fot || '—');
+  set('full-lote', snap.area ? snap.area + ' m²' : '—');
+  set('full-pisada', snap.pisada ? Math.round(snap.pisada) + ' m²' : '—');
 
-  // Frente y fondo
-  const fr = _frente || pd?.frente || pd?.fr || 0;
-  const fo = _fondo || pd?.fondo || pd?.fo || 0;
-  set('full-frente', fr ? fr + ' m' : 'No disponible');
-  set('full-fondo',  fo ? fo + ' m' : 'No disponible');
+  // ── D: Frente y fondo
+  set('full-frente', snap.frente ? snap.frente + ' m' : 'No disponible');
+  set('full-fondo', snap.fondo ? snap.fondo + ' m' : 'No disponible');
   // ── D bis: Enrase ──────────────────────────────────────
   const enraseData = window._enraseData;
   const frmEnr = document.getElementById('frm-enrase-bloque');
