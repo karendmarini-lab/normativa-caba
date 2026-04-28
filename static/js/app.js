@@ -911,15 +911,32 @@ function openFullReport() {
   setTimeout(() => rcInit(_rcCtx2), 50);
 }
 
+// Snapshot the pristine modal body HTML once at load time
+let _reportBodyTemplate = '';
+document.addEventListener('DOMContentLoaded', () => {
+  const body = document.querySelector('#full-report-modal .frm-body');
+  if (body) _reportBodyTemplate = body.innerHTML;
+});
+
 function closeFullReport() {
+  // Abort everything in flight
+  if (_rcAbortCtrl) { _rcAbortCtrl.abort(); _rcAbortCtrl = null; }
+  _rcStreaming = false;
+
+  // Destroy Leaflet map
+  if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
+
+  // Nuclear reset: restore pristine HTML — kills all listeners, dirty state, stale DOM
+  const body = document.querySelector('#full-report-modal .frm-body');
+  if (body && _reportBodyTemplate) body.innerHTML = _reportBodyTemplate;
+
+  // Reset all initialization flags
+  _rcBound = false;
+
+  // Hide modal and PDF button
   const modal = document.getElementById('full-report-modal');
   if (modal) modal.classList.add('hidden');
   document.body.style.overflow = '';
-  // Destruir mapa del reporte y limpiar el div completamente
-  if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
-  const mapContainer = document.getElementById('report-location-map');
-  if (mapContainer) { mapContainer.innerHTML = ''; mapContainer.removeAttribute('class'); mapContainer.style.cssText = ''; }
-  // Ocultar botón PDF
   const dlBtn = document.getElementById('btn-download-pdf');
   if (dlBtn) dlBtn.style.display = 'none';
 }
