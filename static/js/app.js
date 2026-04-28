@@ -35,6 +35,7 @@ let _pisosEstimados = 1;
 let _planoSanitizado = 0;
 let _frente = 0;
 let _fondo = 0;
+let _pisadaSource = 'lfi'; // 'ciudad3d' | 'lfi' | 'estimado'
 
 // ── CPU → CUR mapping ───────────────────────────────────────────
 
@@ -395,19 +396,27 @@ function setupCalculator(parcel, planoSan) {
 
   const fr = parcel.fr || 0;
   const fo = parcel.fo || 0;
+  const edifPlanta = parcel.edif_sup_edificable_planta || 0;
   let pisadaCalc, bandaLabel;
 
-  if (fr > 0 && fo > 0) {
+  if (edifPlanta > 0) {
+    pisadaCalc = Math.round(edifPlanta);
+    bandaLabel = '⬡ Ciudad 3D oficial';
+    _pisadaSource = 'ciudad3d';
+  } else if (fr > 0 && fo > 0) {
     if (fo <= 16) {
       pisadaCalc = Math.min(Math.round(fr * fo), Math.round(area));
       bandaLabel = `${fr.toFixed(2)} x ${fo.toFixed(2)} m (100%)`;
+      _pisadaSource = 'lfi';
     } else {
       pisadaCalc = Math.min(Math.round(fr * 22), Math.round(area));
       bandaLabel = `${fr.toFixed(2)} x 22 m (LFI)`;
+      _pisadaSource = 'lfi';
     }
   } else {
     pisadaCalc = Math.round(area * 0.65);
     bandaLabel = 'estimado 65%';
+    _pisadaSource = 'estimado';
   }
 
   $('c-sup').value = Math.round(area);
@@ -448,7 +457,8 @@ export function recalculate() {
   if (nuevaPisada <= 0 || _pisosEstimados <= 0) return;
 
   const lblPisada = $('c-pb')?.closest('.citem')?.querySelector('.cunit');
-  if (lblPisada) lblPisada.textContent = modoAtipica ? '⬡ Dato Oficial: Manzana Atípica' : '✦ Calculado: LFI a 22m';
+  const pisadaLabels = { ciudad3d: '⬡ Ciudad 3D oficial', lfi: '✦ Calculado: LFI a 22m', estimado: '~ Estimado 65%' };
+  if (lblPisada) lblPisada.textContent = modoAtipica ? '⬡ Dato Oficial: Manzana Atípica' : (pisadaLabels[_pisadaSource] || '✦ Calculado');
 
   const profEdificio = _frente > 0 ? nuevaPisada / _frente : 20;
 
@@ -464,10 +474,11 @@ export function recalculate() {
     volumen = nuevaPisada * _pisosEstimados;
   }
 
-  // Dynamic efficiency
-  let eficiencia = 0.85;
-  if (profEdificio <= 13) eficiencia = 0.88;
-  else if (profEdificio > 18) eficiencia = 0.82;
+  // 2-feature efficiency: density + frente (calibrated on 150 professional studies, 85% combined)
+  const density = areaLote > 0 ? volumen / areaLote : 5;
+  const fr_eff = _frente || 8.7;
+  let eficiencia = 0.78 - 0.02 * Math.max(0, density - 5) + 0.002 * Math.max(0, fr_eff - 8);
+  eficiencia = Math.max(0.55, Math.min(0.95, eficiencia));
 
   const vendibleCubierto = volumen * eficiencia;
 
