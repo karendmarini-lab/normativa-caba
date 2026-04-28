@@ -33,6 +33,16 @@ export function initializeSolarModule(geometry, coords) {
     return;
   }
 
+  // La DB almacena polygon_geojson como array crudo de [lng, lat] pairs.
+  // Normalizar a GeoJSON Feature antes de pasarlo a computeSolarAnalysis.
+  if (Array.isArray(geometry)) {
+    geometry = {
+      type: 'Feature',
+      geometry: { type: 'Polygon', coordinates: [geometry] },
+      properties: {},
+    };
+  }
+
   try {
     const data = computeSolarAnalysis(geometry, coords);
     if (!data) {
