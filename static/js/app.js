@@ -1317,9 +1317,11 @@ function initFeasCalc() {
   const barrio = pd?.barrio || '';
   const pisos  = window._pisosEstimados || 0;
 
-  // M² vendibles: del cálculo normativo
-  const m2v = parseFloat(document.getElementById('full-total')?.innerText) ||
-              window._finMetrosVendibles || 0;
+  // M² vendibles: del cálculo normativo (parse locale-aware: "2.055" → 2055)
+  const parseLocale = s => parseFloat((s || '').replace(/\./g, '').replace(',', '.')) || 0;
+  const m2v = window._finMetrosVendibles
+    || parseLocale(document.getElementById('full-total')?.innerText)
+    || 0;
 
   // Costo obra tiered por pisos
   const costoObra = pisos > 0 ? getCostoObra(pisos) : 1100;
@@ -1337,7 +1339,8 @@ function initFeasCalc() {
 
   // M² totales obra: del volumen edificable calculado
   const m2total = window._finMetrosTotales
-    || parseFloat(document.getElementById('full-volumen')?.innerText) || 0;
+    || parseLocale(document.getElementById('full-volumen')?.innerText)
+    || 0;
   if (m2total > 0) window._finMetrosTotales = m2total;
 
   _fcDefaults = { m2Vendibles: m2v, m2Totales: m2total, costoObra, precioVenta, honorarios: 10, comerc: 5, margen: 20 };
