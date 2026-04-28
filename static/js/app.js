@@ -488,7 +488,7 @@ export function recalculate() {
   let eficiencia = 0.78 - 0.02 * Math.max(0, density - 5) + 0.002 * Math.max(0, fr_eff - 8);
   eficiencia = Math.max(0.55, Math.min(0.95, eficiencia));
 
-  const vendibleCubierto = volumen * eficiencia;
+  let vendibleCubierto = volumen * eficiencia;
 
   // Balconies
   const anchoBalcon = Math.max(0, (_frente || 0) - 1.20);
