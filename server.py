@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import time
 import logging
 import os
 import re
@@ -517,39 +518,44 @@ def root() -> RedirectResponse:
     return RedirectResponse(url="/index.html")
 
 
+_health_cache: dict[str, Any] | None = None
+_health_cache_time: float = 0
+
+
 @app.get("/api/health")
 def health() -> dict[str, Any]:
-    with db_connect() as conn:
-        total = conn.execute("SELECT COUNT(*) FROM parcelas").fetchone()[0]
-        cur3d = conn.execute(
-            "SELECT COUNT(*) FROM parcelas WHERE COALESCE(cur3d_enriched, 0) = 1"
-        ).fetchone()[0]
-        epok = conn.execute(
-            "SELECT COUNT(*) FROM parcelas WHERE COALESCE(epok_enriched, 0) = 1"
-        ).fetchone()[0]
+    global _health_cache, _health_cache_time
+    now = time.time()
 
-    # Lightweight system metrics from /proc (no psutil)
+    # Cache DB counts for 5 minutes (avoid slow COUNT(*) on HDD)
+    if _health_cache is None or now - _health_cache_time > 300:
+        try:
+            with db_connect() as conn:
+                total = conn.execute("SELECT COUNT(*) FROM parcelas").fetchone()[0]
+                cur3d = conn.execute(
+                    "SELECT COUNT(*) FROM parcelas WHERE COALESCE(cur3d_enriched, 0) = 1"
+                ).fetchone()[0]
+                epok = conn.execute(
+                    "SELECT COUNT(*) FROM parcelas WHERE COALESCE(epok_enriched, 0) = 1"
+                ).fetchone()[0]
+            _health_cache = {"total": total, "epok": epok, "cur3d": cur3d}
+            _health_cache_time = now
+        except Exception:
+            if _health_cache is None:
+                _health_cache = {"total": 0, "epok": 0, "cur3d": 0}
+
+    # System metrics from /proc (instant, no DB)
     system: dict[str, Any] = {
-        "precache_keys": len(_parcelas_geo_cache),
+        "geo_files": len(list((Path(__file__).parent / "static" / "geo").glob("*.json"))) if (Path(__file__).parent / "static" / "geo").exists() else 0,
         "chat_sessions": sessions.active_count,
     }
     try:
-        with open("/proc/meminfo") as f:
-            mi = {}
-            for line in f:
-                parts = line.split()
-                if len(parts) >= 2:
-                    mi[parts[0].rstrip(":")] = int(parts[1])
-            system["ram_total_mb"] = mi.get("MemTotal", 0) // 1024
-            system["ram_available_mb"] = mi.get("MemAvailable", 0) // 1024
-            system["swap_used_mb"] = (mi.get("SwapTotal", 0) - mi.get("SwapFree", 0)) // 1024
         with open("/proc/loadavg") as f:
-            parts = f.read().split()
-            system["load_1m"] = float(parts[0])
+            system["load_1m"] = float(f.read().split()[0])
     except Exception:
         pass
 
-    return {"ok": True, "total": total, "epok": epok, "cur3d": cur3d, "system": system}
+    return {"ok": True, **_health_cache, "system": system}
 
 
 @app.get("/api/search", response_model=list[SearchResult])
