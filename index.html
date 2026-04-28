@@ -688,6 +688,167 @@
       #full-report-modal #report-chat-container{position:static;width:100%;height:320px;border-left:none;border-top:1px solid #333;box-shadow:none}
     }
 
+    /* ══════════════════════════════════════════════════════════
+       PRINT STYLES — Ctrl+P / Save as PDF
+       ══════════════════════════════════════════════════════════ */
+    @media print{
+      /* Hide non-printable elements */
+      header,
+      .viewport,
+      .search-panel,
+      #results,
+      .panel,
+      #chat-toggle,
+      #report-chat-container,
+      #pdf-btn-wrap,
+      #btn-download-pdf,
+      #close-full-report,
+      .frm-calc-reset,
+      #rc-model{display:none !important}
+
+      /* Reset body for print */
+      body{background:#fff !important;color:#1a1a1a !important;overflow:visible !important;height:auto !important}
+
+      /* Modal becomes the full page */
+      #full-report-modal,
+      #full-report-modal.formal-report,
+      .formal-report{
+        display:block !important;position:static !important;
+        width:100% !important;height:auto !important;
+        overflow:visible !important;background:#fff !important;
+        z-index:auto !important;
+      }
+
+      /* Header bar in report */
+      #frm-header{
+        position:static !important;background:#fff !important;
+        border-bottom:2px solid #1a1a1a !important;
+        padding:12px 20px !important;
+      }
+      .frm-header-logo div{color:#1a1a1a !important}
+      .frm-header-logo svg rect{stroke:#1a1a1a !important}
+      .frm-header-logo svg path{stroke:#1a1a1a !important}
+      .frm-header-logo small{color:#555 !important}
+
+      /* Body padding */
+      .frm-body{padding:20px !important;max-width:100% !important}
+      .frm-with-chat{display:block !important}
+      .frm-main-col{width:100% !important}
+
+      /* Hero section */
+      .frm-hero-row{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;border-radius:8px !important;
+        padding:20px 24px !important;break-inside:avoid;
+      }
+      .frm-eyebrow{color:#777 !important}
+      .frm-hero-address{color:#1a1a1a !important}
+      .frm-hero-badge{
+        background:rgba(255,191,0,.12) !important;color:#996f00 !important;
+        border:1px solid #FFBF00 !important;
+      }
+
+      /* Circular map — preserve for print */
+      .frm-map-ring{border:1px solid #ccc !important;box-shadow:none !important}
+      .frm-map-ring::after{display:none !important}
+      .frm-map-clip{background:#eee !important}
+      .frm-coords{color:#999 !important}
+
+      /* M2 cards */
+      .frm-cards-row{gap:12px !important;margin-bottom:16px !important}
+      .frm-card{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;border-radius:8px !important;
+        break-inside:avoid;
+      }
+      .frm-card-label{color:#996f00 !important}
+      .frm-card-val{color:#1a1a1a !important}
+      .frm-card.total .frm-card-val{color:#996f00 !important}
+      .frm-card-unit,.frm-card-sub{color:#777 !important}
+
+      /* Normative table */
+      .frm-table-card{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;border-radius:8px !important;
+        break-inside:avoid;
+      }
+      .frm-table-title{color:#996f00 !important;border-bottom:1px solid #FFBF00 !important}
+      .frm-table-title svg{stroke:#996f00 !important}
+      .frm-table-item{
+        background:#fff !important;border:1px solid #eee !important;
+      }
+      .frm-table-item label{color:#996f00 !important}
+      .frm-table-item p{color:#1a1a1a !important}
+
+      /* Analysis cards */
+      .frm-analysis{break-inside:avoid}
+      .frm-analysis-card{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;border-radius:8px !important;
+        break-inside:avoid;
+      }
+      .frm-analysis-item{border-bottom:1px solid #eee !important}
+      .frm-analysis-item span:first-child{color:#777 !important}
+      .frm-analysis-item span:last-child{color:#1a1a1a !important}
+      .frm-plusvalia-usd{color:#1a1a1a !important}
+      .frm-plusvalia-uva{color:#999 !important}
+
+      /* Croquis */
+      .frm-croquis{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;border-radius:8px !important;
+        break-inside:avoid;
+      }
+      .croquis-link{
+        color:#996f00 !important;border:1px solid #FFBF00 !important;
+        background:#fff !important;
+      }
+
+      /* Enrase */
+      #frm-enrase-bloque .frm-analysis-card{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;
+      }
+      #frm-enrase-contenido,#frm-enrase-contenido span{color:#1a1a1a !important}
+
+      /* Feasibility calculator */
+      .frm-calc-section{
+        background:#f8f8f8 !important;border:1px solid #ddd !important;
+        box-shadow:none !important;border-radius:8px !important;
+        break-inside:avoid;
+      }
+      .frm-calc-title{color:#996f00 !important}
+      .frm-calc-title svg{stroke:#996f00 !important}
+      .frm-calc-label{color:#996f00 !important}
+      .frm-calc-input{
+        background:#fff !important;border:1px solid #ccc !important;
+        color:#1a1a1a !important;
+      }
+      .frm-macro-bar{background:#f0f0f0 !important;border:1px solid #ddd !important}
+      .frm-macro-label{color:#777 !important}
+      .frm-macro-val{color:#1a1a1a !important}
+      .frm-macro-sep{background:#ccc !important}
+      .frm-macro-live-label{color:#777 !important}
+      .frm-calc-result{
+        background:#fff !important;border:1px solid #eee !important;
+        border-radius:8px !important;
+      }
+      .frm-calc-result-label{color:#777 !important}
+      .frm-calc-result-val{color:#1a1a1a !important}
+      .frm-calc-result.highlight{background:#fffbeb !important;border:1px solid #FFBF00 !important}
+      .frm-calc-result.highlight .frm-calc-result-val{color:#996f00 !important}
+      #fc-r-ganancia{color:#1a1a1a !important}
+
+      /* Footer */
+      .frm-footer-note{color:#999 !important;border-top:1px solid #ddd !important}
+
+      /* Global print resets */
+      *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+
+      /* Leaflet tiles — force print */
+      .leaflet-tile-container img{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}
+    }
+
   </style>
 </head>
 <body>
