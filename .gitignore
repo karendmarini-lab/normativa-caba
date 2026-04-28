@@ -27,3 +27,4 @@ demo_3d*.html
 
 # OS
 .DS_Store
+static/geo/
