@@ -526,6 +526,8 @@ def root() -> RedirectResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
+    import psutil
+
     with db_connect() as conn:
         total = conn.execute("SELECT COUNT(*) FROM parcelas").fetchone()[0]
         cur3d = conn.execute(
@@ -535,7 +537,35 @@ def health() -> dict[str, Any]:
             "SELECT COUNT(*) FROM parcelas WHERE COALESCE(epok_enriched, 0) = 1"
         ).fetchone()[0]
 
-    return {"ok": True, "total": total, "epok": epok, "cur3d": cur3d}
+    # System metrics
+    mem = psutil.virtual_memory()
+    swap = psutil.swap_memory()
+    proc = psutil.Process()
+    cli_procs = []
+    for child in proc.children(recursive=True):
+        try:
+            cmd = " ".join(child.cmdline())
+            if "claude" in cmd:
+                cli_procs.append({"pid": child.pid, "rss_mb": round(child.memory_info().rss / 1e6, 1), "status": child.status()})
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+    return {
+        "ok": True,
+        "total": total,
+        "epok": epok,
+        "cur3d": cur3d,
+        "system": {
+            "ram_total_mb": round(mem.total / 1e6),
+            "ram_used_mb": round(mem.used / 1e6),
+            "ram_available_mb": round(mem.available / 1e6),
+            "swap_used_mb": round(swap.used / 1e6),
+            "server_rss_mb": round(proc.memory_info().rss / 1e6, 1),
+            "cli_processes": cli_procs,
+            "precache_keys": len(_parcelas_geo_cache),
+            "chat_sessions": sessions.active_count,
+        },
+    }
 
 
 @app.get("/api/search", response_model=list[SearchResult])
