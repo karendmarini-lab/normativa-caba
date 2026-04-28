@@ -238,8 +238,7 @@ function showParcelDetail(addr, parcel, lat, lng) {
     $('res-pis').textContent = '—';
   }
 
-  const fotCalc = fot || (parcel?.vol_edificable && parcel?.area ? (parcel.vol_edificable / parcel.area).toFixed(2) : null);
-  $('res-fot').textContent = fotCalc || '—';
+  $('res-fot').textContent = fot || '—';
   $('res-fos').textContent = '—';
   $('res-dis').textContent = cpu || '?';
 
