@@ -770,14 +770,14 @@ function openFullReport() {
   set('full-lote',   getVal('c-sup') + ' m²');
   set('full-pisada', getVal('c-pb')  + ' m²');
 
-  // Frente y fondo desde módulo o globales
-  const fr = _frente || window._frente || pd?.frente || pd?.fr || 0;
-  const fo = _fondo || window._fondo || pd?.fondo || pd?.fo || 0;
-  set('full-frente', fr ? fr + ' m' : 'No disponible');
-  set('full-fondo',  fo ? fo + ' m' : 'No disponible');
-
   // ── D: Plusvalía y afectaciones desde _currentParcelData ──
   const pd = window._currentParcelData;
+
+  // Frente y fondo
+  const fr = _frente || pd?.frente || pd?.fr || 0;
+  const fo = _fondo || pd?.fondo || pd?.fo || 0;
+  set('full-frente', fr ? fr + ' m' : 'No disponible');
+  set('full-fondo',  fo ? fo + ' m' : 'No disponible');
   // ── D bis: Enrase ──────────────────────────────────────
   const enraseData = window._enraseData;
   const frmEnr = document.getElementById('frm-enrase-bloque');
@@ -899,8 +899,10 @@ function closeFullReport() {
   const modal = document.getElementById('full-report-modal');
   if (modal) modal.classList.add('hidden');
   document.body.style.overflow = '';
-  // Destruir mapa del reporte para liberar memoria
+  // Destruir mapa del reporte y limpiar el div completamente
   if (window._reportMap) { window._reportMap.remove(); window._reportMap = null; }
+  const mapContainer = document.getElementById('report-location-map');
+  if (mapContainer) { mapContainer.innerHTML = ''; mapContainer.removeAttribute('class'); mapContainer.style.cssText = ''; }
   // Ocultar botón PDF
   const dlBtn = document.getElementById('btn-download-pdf');
   if (dlBtn) dlBtn.style.display = 'none';
