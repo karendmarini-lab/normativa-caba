@@ -1160,9 +1160,19 @@ async function rcSend(textOverride) {
               .replace(/\n/g,'<br>');
             rcScrollBottom();
           } else if (ev.type === 'working') {
-            if (ev.data && !accumulated) {
-              assistEl.innerHTML = '<span style="color:rgba(255,255,255,.3);font-size:11px">⟳ Consultando datos…</span>';
+            if (ev.data) {
+              // Show thinking indicator (append after any text already shown)
+              if (!assistEl.querySelector('.rc-thinking')) {
+                const dot = document.createElement('div');
+                dot.className = 'rc-thinking';
+                dot.innerHTML = 'Pensando…';
+                assistEl.appendChild(dot);
+              }
               rcScrollBottom();
+            } else {
+              // Remove thinking indicator when done
+              const dot = assistEl.querySelector('.rc-thinking');
+              if (dot) dot.remove();
             }
           } else if (ev.type === 'error') {
             assistEl.className = 'rc-msg error';
