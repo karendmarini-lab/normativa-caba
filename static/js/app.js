@@ -31,6 +31,9 @@ let _gridArr = null;
 
 let _finMetrosVendibles = 0;
 let _finMetrosTotales = 0;
+let _dbVendible = 0;  // precomputed from DB (source of truth)
+let _dbVolumen = 0;
+let _dbPisada = 0;
 let _pisosEstimados = 1;
 let _planoSanitizado = 0;
 let _frente = 0;
@@ -381,6 +384,11 @@ function setupCalculator(parcel, planoSan) {
   const cb = $('calc-block');
   const area = parcel?.area || 0;
 
+  // Store DB precomputed values as source of truth
+  _dbVendible = parcel?.sup_vendible || 0;
+  _dbVolumen = parcel?.vol_edificable || 0;
+  _dbPisada = parcel?.pisada || parcel?.edif_sup_edificable_planta || 0;
+
   if (!area || area <= 0) {
     if (cb) cb.style.display = 'none';
     const fb = $('fin-block');
@@ -489,7 +497,16 @@ export function recalculate() {
     totalBalcones = (anchoBalcon * 1.20) * 2 * (_pisosEstimados - 1);
   }
 
-  const vendibleTotal = vendibleCubierto + totalBalcones;
+  let vendibleTotal = vendibleCubierto + totalBalcones;
+
+  // Use DB precomputed values when user hasn't edited inputs
+  const pbUnchanged = Math.abs(nuevaPisada - (_dbPisada || 0)) < 1;
+  if (pbUnchanged && _dbVolumen > 0 && _dbVendible > 0) {
+    volumen = _dbVolumen;
+    vendibleTotal = _dbVendible;
+    vendibleCubierto = vendibleTotal - totalBalcones;
+    eficiencia = volumen > 0 ? vendibleCubierto / volumen : 0.85;
+  }
 
   // Display
   $('c-edif').textContent = fmt(volumen);
