@@ -28,7 +28,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -165,21 +165,14 @@ _cleanup_task: asyncio.Task[None] | None = None
 
 
 async def _delayed_precache() -> None:
-    """Precache all barrios — must cache everything to avoid HDD reads on request."""
-    await asyncio.sleep(3)
+    """No-op — GeoJSON served from static files now."""
+    await asyncio.sleep(1)
     log = logging.getLogger("edificia.cache")
+    geo_dir = Path(__file__).parent / "static" / "geo"
+    n_files = len(list(geo_dir.glob("*.json"))) if geo_dir.exists() else 0
+    log.info("precache: static mode (%d files in static/geo/)", n_files)
+    # Still load barrios list for the dropdown
     list_barrios()
-    barrios = _barrios_cache or []
-    log.info("precache: starting (%d barrios)", len(barrios))
-    for b in barrios:
-        try:
-            await asyncio.get_event_loop().run_in_executor(
-                None, lambda name=b["name"]: parcelas_geo(barrio=name, metric="delta", limit=3000)
-            )
-        except Exception:
-            pass
-        await asyncio.sleep(0.3)
-    log.info("precache: done (%d barrios)", len(barrios))
 
 
 def _warmup_sync() -> None:
@@ -716,8 +709,19 @@ def parcelas_geo(
     enrase: str | None = Query(None),
 ) -> dict[str, Any]:
     """Return GeoJSON of top parcels by metric, with optional filters."""
-    # Cache for common case: barrio + metric, no extra filters
+    # Try static pre-computed file first (fastest path — no Python, no SQL)
     has_filters = any(v is not None for v in [pisos_min, pisos_max, area_min, area_max, fot_min, pl_min, uso, aph, riesgo_hidrico, enrase])
+    if barrio and not has_filters and limit >= 3000:
+        safe_name = barrio.replace(" ", "_").replace(".", "")
+        static_path = Path(__file__).parent / "static" / "geo" / f"{safe_name}_{metric}.json"
+        if static_path.exists():
+            return Response(
+                content=static_path.read_bytes(),
+                media_type="application/json",
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+
+    # Fallback: in-memory cache
     if barrio and not has_filters:
         cache_key = f"{barrio}:{metric}:{limit}"
         if cache_key in _parcelas_geo_cache:
