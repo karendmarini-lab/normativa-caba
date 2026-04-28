@@ -767,9 +767,9 @@ function openFullReport() {
   set('full-lote',   getVal('c-sup') + ' m²');
   set('full-pisada', getVal('c-pb')  + ' m²');
 
-  // Frente y fondo desde globales
-  const fr = window._frente;
-  const fo = window._fondo;
+  // Frente y fondo desde módulo o globales
+  const fr = _frente || window._frente || pd?.frente || pd?.fr || 0;
+  const fo = _fondo || window._fondo || pd?.fondo || pd?.fo || 0;
   set('full-frente', fr ? fr + ' m' : 'No disponible');
   set('full-fondo',  fo ? fo + ' m' : 'No disponible');
 
