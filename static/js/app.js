@@ -279,24 +279,37 @@ function showParcelFromMap(props) {
   const lng  = props.lng  || null;
 
   // Mapear campos del GeoJSON al formato que espera showParcelDetail
+  // Soporta tanto nombres compactos (pl, tj) como completos (plano_san, tejido)
   const parcel = {
     cpu:    props.cpu,
-    h:      props.tj  || props.pl || null,   // tejido (altura real) o plano
-    plano:  props.pl  || null,               // plano límite normativo
+    h:      props.tejido || props.tj || props.plano_san || props.pl || null,
+    plano:  props.plano_san || props.pl || null,
+    plano_san: props.plano_san || props.pl || null,
     fot:    props.fot || null,
     fos:    props.fos || null,
     area:   props.area || props.ta || 0,
     fr:     props.fr  || 0,
     fo:     props.fo  || 0,
+    frente: props.fr || 0,
+    fondo:  props.fo || 0,
     pisos:  props.pisos || null,
     smp:    props.smp,
     barrio: props.barrio,
-    // Para el informe completo
-    edif_plusvalia_incidencia_uva: props.plusvalia_uva   || null,
-    edif_plusvalia_alicuota:       props.plusvalia_alic  || null,
-    edif_riesgo_hidrico:           props.riesgo          || null,
-    edif_enrase:                   props.enrase          || null,
-    edif_catalogacion_proteccion:  props.catalogacion    || null,
+    tejido_altura_max: props.tejido || props.tj || null,
+    delta_altura: props.score || null,
+    vol_edificable: props.vol || null,
+    sup_vendible: props.vendible || null,
+    uso_tipo1: props.uso1 || null,
+    uso_tipo2: props.uso2 || null,
+    epok_direccion: props.dir || null,
+    epok_pisos_sobre: props.pisos_e || null,
+    edif_plusvalia_incidencia_uva: props.plusv_uva || props.plusvalia_uva || null,
+    edif_plusvalia_alicuota:       props.plusv_al  || props.plusvalia_alic || null,
+    edif_riesgo_hidrico:           props.rh || props.riesgo || null,
+    edif_enrase:                   props.enrase || null,
+    edif_catalogacion_proteccion:  props.cat || props.catalogacion || null,
+    es_aph: props.aph || null,
+    delta_pisos: props.dp || null,
   };
 
   // Guardar lat/lng y datos de parcela globalmente
