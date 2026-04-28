@@ -85,13 +85,13 @@ def main():
         source = "ciudad3d" if edif_planta > 0 else "normativa"
 
         updates.append((
-            round(pisada, 1), round(vol, 1), round(total_vendible, 1),
+            pisos, round(pisada, 1), round(vol, 1), round(total_vendible, 1),
             source, r["id"]
         ))
 
     # Batch update
     conn.executemany(
-        "UPDATE parcelas SET pisada=?, vol_edificable=?, sup_vendible=?, "
+        "UPDATE parcelas SET pisos=?, pisada=?, vol_edificable=?, sup_vendible=?, "
         "m2_vendibles_source=? WHERE id=?",
         updates,
     )
@@ -99,7 +99,7 @@ def main():
     conn.close()
 
     elapsed = time.time() - start
-    ciudad3d = sum(1 for u in updates if u[3] == "ciudad3d")
+    ciudad3d = sum(1 for u in updates if u[4] == "ciudad3d")
     print(f"Done: {len(updates)} parcels updated in {elapsed:.1f}s")
     print(f"  Ciudad 3D pisada: {ciudad3d} ({100*ciudad3d/len(updates):.1f}%)")
     print(f"  LFI fallback: {len(updates) - ciudad3d}")
