@@ -164,22 +164,27 @@ async def startup_background_tasks():
 _cleanup_task: asyncio.Task[None] | None = None
 
 
+_TOP_BARRIOS = [
+    "Palermo", "Belgrano", "Caballito", "Recoleta", "Villa Urquiza",
+    "Nuñez", "Almagro", "Villa Crespo", "Flores", "Balvanera",
+    "Saavedra", "Colegiales", "Boedo", "Villa Devoto", "Barracas",
+]
+
 async def _delayed_precache() -> None:
-    """Precache parcelas_geo one barrio at a time, yielding between each."""
+    """Precache top barrios only to reduce I/O at startup."""
     await asyncio.sleep(3)
     log = logging.getLogger("edificia.cache")
-    log.info("precache: starting")
+    log.info("precache: starting (%d barrios)", len(_TOP_BARRIOS))
     list_barrios()
-    barrios = _barrios_cache or []
-    for b in barrios:
+    for name in _TOP_BARRIOS:
         try:
             await asyncio.get_event_loop().run_in_executor(
-                None, lambda name=b["name"]: parcelas_geo(barrio=name, metric="delta", limit=3000)
+                None, lambda n=name: parcelas_geo(barrio=n, metric="delta", limit=3000)
             )
         except Exception:
             pass
-        await asyncio.sleep(0.1)  # Yield to event loop between barrios
-    log.info("precache: done (%d barrios)", len(barrios))
+        await asyncio.sleep(0.5)  # More yielding to reduce I/O pressure
+    log.info("precache: done (%d barrios)", len(_TOP_BARRIOS))
 
 
 def _warmup_sync() -> None:
@@ -526,8 +531,6 @@ def root() -> RedirectResponse:
 
 @app.get("/api/health")
 def health() -> dict[str, Any]:
-    import psutil
-
     with db_connect() as conn:
         total = conn.execute("SELECT COUNT(*) FROM parcelas").fetchone()[0]
         cur3d = conn.execute(
@@ -537,35 +540,28 @@ def health() -> dict[str, Any]:
             "SELECT COUNT(*) FROM parcelas WHERE COALESCE(epok_enriched, 0) = 1"
         ).fetchone()[0]
 
-    # System metrics
-    mem = psutil.virtual_memory()
-    swap = psutil.swap_memory()
-    proc = psutil.Process()
-    cli_procs = []
-    for child in proc.children(recursive=True):
-        try:
-            cmd = " ".join(child.cmdline())
-            if "claude" in cmd:
-                cli_procs.append({"pid": child.pid, "rss_mb": round(child.memory_info().rss / 1e6, 1), "status": child.status()})
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-
-    return {
-        "ok": True,
-        "total": total,
-        "epok": epok,
-        "cur3d": cur3d,
-        "system": {
-            "ram_total_mb": round(mem.total / 1e6),
-            "ram_used_mb": round(mem.used / 1e6),
-            "ram_available_mb": round(mem.available / 1e6),
-            "swap_used_mb": round(swap.used / 1e6),
-            "server_rss_mb": round(proc.memory_info().rss / 1e6, 1),
-            "cli_processes": cli_procs,
-            "precache_keys": len(_parcelas_geo_cache),
-            "chat_sessions": sessions.active_count,
-        },
+    # Lightweight system metrics from /proc (no psutil)
+    system: dict[str, Any] = {
+        "precache_keys": len(_parcelas_geo_cache),
+        "chat_sessions": sessions.active_count,
     }
+    try:
+        with open("/proc/meminfo") as f:
+            mi = {}
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 2:
+                    mi[parts[0].rstrip(":")] = int(parts[1])
+            system["ram_total_mb"] = mi.get("MemTotal", 0) // 1024
+            system["ram_available_mb"] = mi.get("MemAvailable", 0) // 1024
+            system["swap_used_mb"] = (mi.get("SwapTotal", 0) - mi.get("SwapFree", 0)) // 1024
+        with open("/proc/loadavg") as f:
+            parts = f.read().split()
+            system["load_1m"] = float(parts[0])
+    except Exception:
+        pass
+
+    return {"ok": True, "total": total, "epok": epok, "cur3d": cur3d, "system": system}
 
 
 @app.get("/api/search", response_model=list[SearchResult])

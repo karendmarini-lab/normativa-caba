@@ -79,45 +79,34 @@ desarrollo inmobiliario.
   una query" o "primero verifico" — pensa internamente y mostra solo el \
   resultado final.
 
-## Base de datos — tabla `parcelas`
+## Base de datos — tabla `parcelas` (280k rows)
 
 Columnas: {schema}
 
-Ejemplo (SELECT * FROM parcelas ORDER BY RANDOM() LIMIT 3):
-{sample}
-
-Notas clave:
-- epok_direccion = dirección completa (ej "JURAMENTO AV. 2100"). Para buscar: WHERE epok_direccion LIKE '%JURAMENTO%'
-- epok_altura = número de puerta (NO es la altura del edificio)
-- plano_san = altura máxima permitida (plano límite sanitizado)
-- delta_altura = plano_san - tejido_altura_max (subutilización)
-- smp = código catastral (ej "036-102-013"), smp_norm sin ceros (ej "36-102-13")
+Notas clave para queries SQL:
+- Buscar por dirección: WHERE epok_direccion LIKE '%JURAMENTO%' (ej "JURAMENTO AV. 2100")
+- epok_altura = número de puerta, NO es la altura del edificio
+- plano_san = plano límite sanitizado (altura máxima permitida en metros)
+- delta_altura = plano_san - tejido_altura_max (brecha de subutilización)
+- smp = código catastral (ej "016-044-038"), smp_norm sin ceros (ej "16-44-38")
+- Buscar por SMP: WHERE smp_norm = '16-44-38'
+- NO uses SELECT * — seleccioná solo las columnas que necesitás
+- polygon_geojson es muy pesado — no lo incluyas en queries
 """
 
 
 def _build_system_prompt() -> str:
-    """Build system prompt with live schema + 3 sample rows."""
+    """Build system prompt with DB column names."""
     try:
         conn = sqlite3.connect(str(DB_PATH), timeout=5)
         conn.row_factory = sqlite3.Row
         cols = conn.execute("PRAGMA table_info(parcelas)").fetchall()
         schema = ", ".join(f'{c["name"]} ({c["type"]})' for c in cols)
-        rows = conn.execute(
-            "SELECT * FROM parcelas WHERE epok_direccion IS NOT NULL "
-            "ORDER BY RANDOM() LIMIT 3"
-        ).fetchall()
-        sample_rows = []
-        for r in rows:
-            d = dict(r)
-            d.pop("polygon_geojson", None)
-            d.pop("edif_linderas", None)
-            sample_rows.append(d)
-        sample = json.dumps(sample_rows, ensure_ascii=False, default=str)
         conn.close()
-        return _SYSTEM_PROMPT_TEMPLATE.format(schema=schema, sample=sample)
+        return _SYSTEM_PROMPT_TEMPLATE.format(schema=schema)
     except Exception as exc:
         logger.warning("Failed to build dynamic prompt: %s", exc)
-        return _SYSTEM_PROMPT_TEMPLATE.format(schema="(no disponible)", sample="[]")
+        return _SYSTEM_PROMPT_TEMPLATE.format(schema="(no disponible)")
 
 
 # ---------------------------------------------------------------------------
@@ -470,14 +459,8 @@ class SessionManager:
             pass  # Best-effort cleanup
 
     async def warmup(self) -> None:
-        """Pre-initialize the SDK CLI subprocess so first query is fast."""
-        logger.info("warmup: pre-initializing agent SDK")
-        warmup_id = "__warmup__"
-        try:
-            await self.get_or_create(warmup_id, "haiku")
-            logger.info("warmup: SDK ready")
-        except Exception as exc:
-            logger.warning("warmup failed: %s", exc)
+        """No-op. CLI initializes lazily on first chat request."""
+        logger.info("warmup: lazy mode (no CLI subprocess at startup)")
 
     @property
     def active_count(self) -> int:
