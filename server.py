@@ -839,6 +839,56 @@ _barrios_cache: list[dict[str, Any]] | None = None
 _parcelas_geo_cache: dict[str, dict[str, Any]] = {}  # barrio -> geojson
 
 
+@app.get("/api/manzana_geo/{seccion_mzna}")
+def manzana_geo(seccion_mzna: str, metric: str = Query("delta")) -> dict[str, Any]:
+    """Return GeoJSON of all parcels in a single manzana (block)."""
+    metric_col = {
+        "delta": "CASE WHEN tejido_altura_max IS NOT NULL THEN plano_san - tejido_altura_max ELSE 0 END",
+        "vol": "COALESCE(vol_edificable, 0)",
+        "pisos": "COALESCE(pisos, 0)",
+        "area": "COALESCE(area, 0)",
+    }.get(metric, "COALESCE(plano_san - COALESCE(tejido_altura_max, 0), 0)")
+
+    with db_connect() as conn:
+        rows = conn.execute(
+            f"""SELECT smp, lat, lng, polygon_geojson,
+                cpu, barrio, area, pisos, plano_san, tejido_altura_max,
+                vol_edificable, sup_vendible, fot, uso_tipo1, uso_tipo2, epok_direccion,
+                frente, fondo, delta_pisos, epok_pisos_sobre,
+                es_aph, edif_catalogacion_proteccion, edif_riesgo_hidrico,
+                edif_enrase, edif_plusvalia_incidencia_uva, edif_plusvalia_alicuota,
+                {metric_col} as score
+            FROM parcelas
+            WHERE seccion_mzna = :sm AND polygon_geojson IS NOT NULL
+            ORDER BY {metric_col} DESC""",
+            {"sm": seccion_mzna},
+        ).fetchall()
+
+    features = []
+    for r in rows:
+        coords = json.loads(r["polygon_geojson"])
+        features.append({
+            "type": "Feature",
+            "geometry": {"type": "Polygon", "coordinates": [coords]},
+            "properties": {
+                "smp": r["smp"], "score": r["score"],
+                "barrio": r["barrio"], "cpu": r["cpu"],
+                "area": r["area"], "pisos": r["pisos"],
+                "plano_san": r["plano_san"], "tejido": r["tejido_altura_max"],
+                "vol": r["vol_edificable"], "vendible": r["sup_vendible"],
+                "fot": r["fot"], "uso1": r["uso_tipo1"], "uso2": r["uso_tipo2"],
+                "dir": r["epok_direccion"], "fr": r["frente"], "fo": r["fondo"],
+                "dp": r["delta_pisos"], "pisos_e": r["epok_pisos_sobre"],
+                "aph": r["es_aph"], "cat": r["edif_catalogacion_proteccion"],
+                "rh": r["edif_riesgo_hidrico"], "enrase": r["edif_enrase"],
+                "plusv_uva": r["edif_plusvalia_incidencia_uva"],
+                "plusv_al": r["edif_plusvalia_alicuota"],
+            },
+        })
+
+    return {"type": "FeatureCollection", "features": features}
+
+
 @app.get("/api/barrios")
 def list_barrios() -> list[dict[str, Any]]:
     global _barrios_cache

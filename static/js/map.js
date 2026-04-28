@@ -25,6 +25,7 @@ let _activeBarrio = null;
 let _selectedSmp = null;
 let _filters = {};
 let _callbacks = {};
+let _activeManzana = null;  // seccion_mzna when zoomed into a block
 
 // ── Constants ────────────────────────────────────────────────────
 
@@ -138,16 +139,16 @@ export function renderCircles() {
 
   _circleLayer.addTo(_map);
 
-  // Single click handler on map for barrio selection (instead of per-marker)
+  // Click on heatmap → zoom to manzana → show individual parcels
   _map.off('click.heatmap');
   _map.on('click.heatmap', (e) => {
-    if (_activeBarrio || !_callbacks.onBarrioClick) return;
+    if (_activeBarrio) return;
     let best = null, bestD = Infinity;
     for (const mz of _manzanasData) {
       const d = (mz.lt - e.latlng.lat) ** 2 + (mz.ln - e.latlng.lng) ** 2;
       if (d < bestD) { bestD = d; best = mz; }
     }
-    if (best) _callbacks.onBarrioClick(best.b);
+    if (best) _zoomToManzana(best);
   });
 
   return { count, totalVol, avgDelta: dCount ? totalDelta / dCount : 0 };
@@ -205,6 +206,7 @@ export function setMetric(metricId) {
 
 export function setBarrio(barrio) {
   _activeBarrio = barrio || null;
+  _activeManzana = null;
   if (_activeBarrio) return loadParcels();
   _map.setView(CABA_CENTER, CABA_ZOOM);
   return renderCircles();
@@ -276,6 +278,66 @@ function _selectParcel(feature, layer) {
   if (_geoLayer) _geoLayer.resetStyle();
   layer.setStyle({ fillOpacity: 0.9, color: '#fff', weight: 2 });
   if (_callbacks.onParcelClick) _callbacks.onParcelClick(feature.properties);
+}
+
+async function _zoomToManzana(mz) {
+  _activeManzana = mz.sm;
+
+  // Smooth zoom to manzana centroid
+  _map.flyTo([mz.lt, mz.ln], 18, { duration: 1.0 });
+
+  // Fade out circles during zoom
+  if (_circleLayer) {
+    const el = _circleLayer.getPane?.()?.parentElement || _map.getPane('overlayPane');
+    if (el) {
+      el.style.transition = 'opacity 0.8s ease';
+      el.style.opacity = '0';
+    }
+  }
+
+  // Wait for zoom animation to settle
+  await new Promise(r => setTimeout(r, 900));
+
+  // Remove circles, load manzana parcels
+  if (_circleLayer) { _map.removeLayer(_circleLayer); _circleLayer = null; }
+  const el2 = _map.getPane('overlayPane');
+  if (el2) { el2.style.transition = ''; el2.style.opacity = '1'; }
+
+  try {
+    const resp = await fetch(`/api/manzana_geo/${encodeURIComponent(mz.sm)}?metric=${_activeMetric}`);
+    if (!resp.ok) throw new Error(`${resp.status}`);
+    const geojson = await resp.json();
+
+    const { p5, p95 } = percentileBounds(geojson.features.map(f => f.properties.score));
+    _geoLayer = L.geoJSON(geojson, {
+      style: feature => _parcelStyle(feature, p5, p95),
+      onEachFeature: (feature, layer) => {
+        layer.on('click', () => _selectParcel(feature, layer));
+        layer.on('mouseover', () => {
+          if (feature.properties.smp !== _selectedSmp)
+            layer.setStyle({ fillOpacity: 0.75, color: 'rgba(255,255,255,0.5)', weight: 1 });
+        });
+        layer.on('mouseout', () => {
+          if (feature.properties.smp !== _selectedSmp) _geoLayer.resetStyle(layer);
+        });
+      },
+    }).addTo(_map);
+
+    if (geojson.features.length) {
+      _map.fitBounds(_geoLayer.getBounds(), { padding: [60, 60], maxZoom: 19 });
+    }
+  } catch (e) {
+    console.warn('Manzana load failed:', e);
+    // Fallback: load full barrio
+    if (_callbacks.onBarrioClick) _callbacks.onBarrioClick(mz.b);
+  }
+}
+
+function _exitManzana() {
+  _activeManzana = null;
+  _clearLayers();
+  _map.setView(CABA_CENTER, CABA_ZOOM, { duration: 0.8 });
+  setTimeout(() => renderCircles(), 300);
 }
 
 function _computeStats(features) {
