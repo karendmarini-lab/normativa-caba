@@ -757,7 +757,13 @@ function openFullReport() {
     vendible: _dbVendible || _finMetrosVendibles || 0,
     volumen: _dbVolumen || _finMetrosTotales || 0,
     cubierto: _finMetrosVendibles ? _finMetrosVendibles - ((_frente - 1.2) * 1.2 * 2 * Math.max(0, _pisosEstimados - 1)) : 0,
-    eficiencia: _dbVolumen > 0 && _dbVendible > 0 ? Math.round((_dbVendible / _dbVolumen) * 100) : 85,
+    eficiencia: (() => {
+      const v = _dbVolumen || _finMetrosTotales || 1;
+      const a = pd.area || 1;
+      const f = _frente || pd.frente || pd.fr || 8.7;
+      const d = v / a;
+      return Math.round(Math.max(0.55, Math.min(0.95, 0.78 - 0.02 * Math.max(0, d - 5) + 0.002 * Math.max(0, f - 8))) * 100);
+    })(),
     balcones: _frente > 0 && _pisosEstimados > 1 ? Math.round((_frente - 1.2) * 1.2 * 2 * (_pisosEstimados - 1)) : 0,
     distrito: pd.cpu || '—',
   };
@@ -1509,8 +1515,8 @@ function recalcFeas() {
 
 
 // ── INDICADORES MACRO EN VIVO ─────────────────────────────────────
-const FC_FALLBACK_DOLAR = 1410;
-const FC_FALLBACK_UVA   = 1100;
+const FC_FALLBACK_DOLAR = 1430;
+const FC_FALLBACK_UVA   = 1908;
 
 let _fcDolarBlue = FC_FALLBACK_DOLAR;
 let _fcUVA       = FC_FALLBACK_UVA;
@@ -1544,7 +1550,10 @@ async function fetchMacroIndicators() {
   try {
     const [rDolar, rUVA] = await Promise.allSettled([
       fetch('https://dolarapi.com/v1/dolares/blue'),
-      fetch('https://dolarapi.com/v1/cotizaciones/uva'),
+      fetch('https://api.argentinadatos.com/v1/finanzas/indices/uva').then(r => {
+        if (!r.ok) throw new Error(r.status);
+        return r.json().then(arr => new Response(JSON.stringify(arr[arr.length - 1])));
+      }),
     ]);
 
     let dolarOk = false, uvaOk = false;
