@@ -106,7 +106,7 @@ async function searchParcel() {
     }
 
     const { lat, lng } = norm.coords;
-    const parcel = await findParcel(lat, lng);
+    const parcel = await findParcel(lat, lng, norm.direccion);
 
     if (!parcel || parcel.dist > 30) {
       const msg = parcel && parcel.dist === 0
@@ -157,8 +157,9 @@ async function geocodeAddress(dir) {
 
 // ── Parcel lookup ────────────────────────────────────────────────
 
-async function findParcel(lat, lng) {
-  const resp = await fetch(`/api/parcela_nearest?lat=${lat}&lng=${lng}`);
+async function findParcel(lat, lng, addr) {
+  const params = `lat=${lat}&lng=${lng}` + (addr ? `&addr=${encodeURIComponent(addr)}` : '');
+  const resp = await fetch(`/api/parcela_nearest?${params}`);
   if (!resp.ok) return null;
   const data = await resp.json();
   // Map DB column names to the field names showParcelDetail expects

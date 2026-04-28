@@ -586,12 +586,31 @@ def search(
 @app.get("/api/parcela_nearest")
 async def get_nearest_parcel(
     lat: float = Query(...), lng: float = Query(...),
+    addr: str | None = Query(None, description="Normalized address for exact DB match"),
 ) -> dict[str, Any]:
     """Find the parcel at a lat/lng coordinate.
 
-    First tries USIG reverse geocoding for exact SMP, then falls back to
-    nearest-neighbor SQL.
+    First tries address match in DB, then USIG reverse geocoding for exact
+    SMP, then falls back to nearest-neighbor SQL.
     """
+    # Step 0: Try address match in DB
+    if addr:
+        clean = addr.upper().replace(",", "").strip()
+        if "CABA" in clean:
+            clean = clean.split("CABA")[0].strip().rstrip(",").strip()
+        # Remove AV./AVDA. and try LIKE match
+        import re
+        clean_no_av = re.sub(r'\b(AV\.?|AVDA\.?|GRAL\.?|DR\.?|PRES\.?)\s*', '', clean).strip()
+        with db_connect() as conn:
+            row = conn.execute(
+                "SELECT * FROM parcelas WHERE upper(epok_direccion) = ? OR upper(epok_direccion) = ?",
+                (clean, clean_no_av),
+            ).fetchone()
+            if row:
+                data = serialize_row(row)
+                data["polygon"] = get_polygon(data)
+                return data
+
     # Step 1: USIG reverse geocoding for exact SMP
     exact_smp = None
     try:
