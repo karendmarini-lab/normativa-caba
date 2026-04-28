@@ -749,7 +749,9 @@ function openFullReport() {
   // ── A: Cabecera ───────────────────────────────────────────
   set('full-address',        getText('res-addr'));
   set('full-district-badge', getText('res-badge'));
-  set('full-coordinates',    getText('res-coords'));
+  const rLat = window._currentLat;
+  const rLng = window._currentLng;
+  set('full-coordinates', rLat ? `${rLat.toFixed(6)}, ${rLng.toFixed(6)} · WGS84` : '');
   set('full-dis',            getText('res-dis') || getText('res-badge'));
 
   // ── B: Vendibles — leer data-frm spans ───────────────────
