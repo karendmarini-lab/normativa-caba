@@ -276,7 +276,14 @@ function _selectParcel(feature, layer) {
   _selectedSmp = feature.properties.smp;
   if (_geoLayer) _geoLayer.resetStyle();
   layer.setStyle({ fillOpacity: 0.9, color: '#fff', weight: 2 });
-  if (_callbacks.onParcelClick) _callbacks.onParcelClick(feature.properties);
+  if (_callbacks.onParcelClick) {
+    const props = { ...feature.properties };
+    // Add lat/lng from polygon centroid
+    const center = layer.getBounds().getCenter();
+    props.lat = center.lat;
+    props.lng = center.lng;
+    _callbacks.onParcelClick(props);
+  }
 }
 
 async function _showManzanaParcels(mz) {
