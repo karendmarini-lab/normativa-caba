@@ -547,11 +547,24 @@ async def create_sse_stream(
         await client.query(message)
         working = False
 
+        last_event_time = time.monotonic()
+        turn = 0
         async for msg in client.receive_response():
+            now = time.monotonic()
+            gap = now - last_event_time
+            last_event_time = now
+
             if isinstance(msg, AssistantMessage):
+                turn += 1
                 if msg.usage:
                     total_input_tokens += msg.usage.get("input_tokens", 0)
                     total_output_tokens += msg.usage.get("output_tokens", 0)
+                    logger.info(
+                        "chat_turn session=%s turn=%d gap=%.1fs in=%d out=%d",
+                        session_id[:8], turn, gap,
+                        msg.usage.get("input_tokens", 0),
+                        msg.usage.get("output_tokens", 0),
+                    )
 
                 has_text = False
                 has_tool = False
