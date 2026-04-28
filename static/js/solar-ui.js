@@ -11,7 +11,6 @@
  */
 
 import { computeSolarAnalysis } from './solar.js';
-import { initSolarClock } from './solar-clock.js';
 
 // Altura máxima en px para las barras del chart (área de barras = 80px)
 const BAR_MAX_H = 80;
@@ -52,10 +51,6 @@ export function initializeSolarModule(geometry, coords) {
     }
     _updateSolarBadge(data);
     _renderSolarReportSection(data);
-    // Reloj solar dinámico en el mapa circular del informe
-    if (typeof SunCalc !== 'undefined') {
-      initSolarClock(coords.y, coords.x, data); // coords = { x: lng, y: lat }
-    }
   } catch (err) {
     console.error('[solar-ui] Error en initializeSolarModule:', err);
   }
