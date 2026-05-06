@@ -10,6 +10,7 @@ Usage:
     python3 precompute_geojson.py --barrio Palermo  # Single barrio
 """
 
+import gzip
 import json
 import sqlite3
 import sys
@@ -106,12 +107,13 @@ def main():
             geojson = build_geojson(conn, barrio, metric)
             # Sanitize barrio name for filename
             safe_name = barrio.replace(" ", "_").replace(".", "")
-            path = OUT_DIR / f"{safe_name}_{metric}.json"
-            data = json.dumps(geojson, ensure_ascii=False, separators=(",", ":"))
-            path.write_text(data)
+            path = OUT_DIR / f"{safe_name}_{metric}.json.gz"
+            data = json.dumps(geojson, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            with gzip.open(path, "wb", compresslevel=9) as f:
+                f.write(data)
             total_files += 1
-            total_bytes += len(data)
-            print(f"  {path.name}: {len(geojson['features'])} features, {len(data) // 1024}KB")
+            total_bytes += path.stat().st_size
+            print(f"  {path.name}: {len(geojson['features'])} features, {path.stat().st_size // 1024}KB gz")
 
     conn.close()
     elapsed = time.time() - start

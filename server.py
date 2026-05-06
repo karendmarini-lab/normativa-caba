@@ -134,6 +134,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+_timing_logger = logging.getLogger("edificia.timing")
+
+
+@app.middleware("http")
+async def log_request_timing(request: Request, call_next):
+    t0 = time.perf_counter()
+    try:
+        response = await call_next(request)
+        status = response.status_code
+    except Exception:
+        status = 500
+        raise
+    finally:
+        dt_ms = (time.perf_counter() - t0) * 1000
+        _timing_logger.info(
+            'method=%s path=%s status=%d ms=%.0f',
+            request.method, request.url.path, status, dt_ms,
+        )
+    return response
+
 
 sessions = SessionManager()
 
@@ -738,12 +758,15 @@ def parcelas_geo(
     has_filters = any(v is not None for v in [pisos_min, pisos_max, area_min, area_max, fot_min, pl_min, uso, aph, riesgo_hidrico, enrase])
     if barrio and not has_filters and limit >= 3000:
         safe_name = barrio.replace(" ", "_").replace(".", "")
-        static_path = Path(__file__).parent / "static" / "geo" / f"{safe_name}_{metric}.json"
-        if static_path.exists():
+        geo_dir = Path(__file__).parent / "static" / "geo"
+        if (geo_dir / f"{safe_name}_{metric}.json.gz").exists() or (geo_dir / f"{safe_name}_{metric}.json").exists():
             return Response(
-                content=static_path.read_bytes(),
+                content=b"",
                 media_type="application/json",
-                headers={"Cache-Control": "public, max-age=3600"},
+                headers={
+                    "X-Accel-Redirect": f"/_internal_geo/{safe_name}_{metric}.json",
+                    "Cache-Control": "public, max-age=3600",
+                },
             )
 
     # Fallback: in-memory cache
