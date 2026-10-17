@@ -736,6 +736,20 @@ window.recalcFinancials = recalcFinancials;
 let _pvTimer = null;
 let _pvReq = 0;
 
+// Estimación del proyecto con lo que EdificIA ya calcula en el informe:
+// "Volumen edificable" = m² construidos sobre rasante; los balcones se suman aparte
+// (semicubiertos); subsuelos 0. Así a = totales − subsuelos − balcones = volumen edificable.
+// En U.S.A.B. además se descuenta la planta baja (pisada edificable).
+function pvEstimate() {
+  const vol = Number((typeof _dbVolumen !== 'undefined' && _dbVolumen) || (typeof _finMetrosTotales !== 'undefined' && _finMetrosTotales) || 0);
+  if (!(vol > 0)) return null;
+  const frente = typeof _frente !== 'undefined' ? _frente : 0;
+  const pisos = typeof _pisosEstimados !== 'undefined' ? _pisosEstimados : 1;
+  const balc = frente > 0 && pisos > 1 ? Math.round((frente - 1.2) * 1.2 * 2 * (pisos - 1)) : 0;
+  const pisada = Number((typeof _dbPisada !== 'undefined' && _dbPisada) || parseFloat(document.getElementById('c-pb')?.value) || 0);
+  return { totales: Math.round(vol + balc), subsuelos: 0, balcones: balc, pb: Math.round(pisada) };
+}
+
 function setupPlusvaliaSimulator(pd) {
   const ids = ['pv-m2-totales', 'pv-m2-subsuelos', 'pv-m2-balcones', 'pv-m2-pb'];
   const inputs = ids.map(id => document.getElementById(id));
@@ -748,9 +762,18 @@ function setupPlusvaliaSimulator(pd) {
   // Parcela distinta a la anterior → empezar de cero
   const box = document.getElementById('frm-pv');
   if (box && box.dataset.smp !== pd.smp) {
-    inputs.forEach(el => { el.value = ''; });
+    inputs.forEach(el => { el.value = ''; el.dataset.touched = ''; });
     box.dataset.smp = pd.smp;
   }
+
+  // Se calcula sola: los campos arrancan con la estimación de EdificIA y se pueden editar
+  const est = pvEstimate();
+  const autoNote = document.getElementById('pv-auto-note');
+  if (est) {
+    const defaults = [est.totales, est.subsuelos, est.balcones, est.pb];
+    inputs.forEach((el, i) => { if (!el.dataset.touched) el.value = String(defaults[i]); });
+  }
+  if (autoNote) autoNote.style.display = est ? '' : 'none';
 
   const run = async () => {
     const smp = (window._currentParcelData || pd).smp;
@@ -797,7 +820,7 @@ function setupPlusvaliaSimulator(pd) {
   if (!inputs[0].dataset.bound) {
     inputs.forEach(el => {
       el.dataset.bound = '1';
-      el.addEventListener('input', () => { clearTimeout(_pvTimer); _pvTimer = setTimeout(run, 300); });
+      el.addEventListener('input', () => { el.dataset.touched = '1'; clearTimeout(_pvTimer); _pvTimer = setTimeout(run, 300); });
     });
   }
   run();
