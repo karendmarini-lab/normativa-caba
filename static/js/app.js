@@ -770,6 +770,7 @@ function setupPlusvaliaSimulator(pd) {
       if (pbRow) pbRow.style.display = d.requiere_pb ? '' : 'none';
       if (!d.calculable) {
         ['pv-a', 'pv-a1', 'pv-a2', 'pv-b', 'pv-total'].forEach(id => txt(id, '—'));
+        txt('pv-a2-lbl', 'A2 = FOT × sup. parcela');
         note(d.faltantes.includes('FOT del CPU anterior')
           ? 'Sin FOT del CPU anterior para esta parcela: no se puede estimar la plusvalía. Ciudad 3D indica solicitar una interpretación morfológica para determinar la capacidad constructiva según el CPU.'
           : 'No se puede calcular: falta ' + d.faltantes.join(', ') + ' para esta parcela.');
@@ -778,6 +779,7 @@ function setupPlusvaliaSimulator(pd) {
       txt('pv-a',  fmt(d.a)  + ' m²');
       txt('pv-a1', fmt(d.a1) + ' m²');
       txt('pv-a2', fmt(d.a2) + ' m²');
+      txt('pv-a2-lbl', 'A2 = FOT ' + fmt(d.fot) + ' × ' + fmt(d.sup_parcela) + ' m²');
       txt('pv-b',  fmt(d.b)  + ' UVA/m²');
       const ars = d.uvas * _fcUVA;
       const usd = _fcDolarBlue > 0 ? ars / _fcDolarBlue : null;
