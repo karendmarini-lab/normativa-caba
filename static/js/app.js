@@ -737,7 +737,7 @@ let _pvTimer = null;
 let _pvReq = 0;
 
 function setupPlusvaliaSimulator(pd) {
-  const ids = ['pv-m2-totales', 'pv-m2-subsuelos', 'pv-m2-balcones'];
+  const ids = ['pv-m2-totales', 'pv-m2-subsuelos', 'pv-m2-balcones', 'pv-m2-pb'];
   const inputs = ids.map(id => document.getElementById(id));
   if (inputs.some(el => !el) || !pd || !pd.smp) return;
 
@@ -758,6 +758,7 @@ function setupPlusvaliaSimulator(pd) {
       m2_totales:   parseFloat(inputs[0].value) || 0,
       m2_subsuelos: parseFloat(inputs[1].value) || 0,
       m2_balcones:  parseFloat(inputs[2].value) || 0,
+      m2_pb:        parseFloat(inputs[3].value) || 0,
     });
     const reqId = ++_pvReq;
     try {
@@ -765,9 +766,13 @@ function setupPlusvaliaSimulator(pd) {
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       if (reqId !== _pvReq) return; // llegó una respuesta más nueva
+      const pbRow = document.getElementById('pv-pb-row');
+      if (pbRow) pbRow.style.display = d.requiere_pb ? '' : 'none';
       if (!d.calculable) {
         ['pv-a', 'pv-a1', 'pv-a2', 'pv-b', 'pv-total'].forEach(id => txt(id, '—'));
-        note('No se puede calcular: falta ' + d.faltantes.join(', ') + ' para esta parcela.');
+        note(d.faltantes.includes('FOT del CPU anterior')
+          ? 'Sin FOT del CPU anterior para esta parcela: no se puede estimar la plusvalía. Ciudad 3D indica solicitar una interpretación morfológica para determinar la capacidad constructiva según el CPU.'
+          : 'No se puede calcular: falta ' + d.faltantes.join(', ') + ' para esta parcela.');
         return;
       }
       txt('pv-a',  fmt(d.a)  + ' m²');

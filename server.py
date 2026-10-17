@@ -695,6 +695,7 @@ def get_plusvalia(
     m2_totales: float = Query(0, ge=0, le=1_000_000),
     m2_subsuelos: float = Query(0, ge=0, le=1_000_000),
     m2_balcones: float = Query(0, ge=0, le=1_000_000),
+    m2_pb: float = Query(0, ge=0, le=1_000_000),
 ) -> dict[str, Any]:
     """Plusvalía (DDHUS) de una parcela según los m² del proyecto.
 
@@ -707,6 +708,8 @@ def get_plusvalia(
         raise HTTPException(status_code=404, detail="Parcel not found")
 
     data = serialize_row(row)
+    distrito = (data.get("cur_distrito") or "").upper()
+    es_usab = "U.S.A.B" in distrito or "USAB" in distrito
     result = calcular_plusvalia(
         # FOT del CPU anterior (cur_optimizado.json). `fot` lo pisa update_vendibles.py
         fot=data.get("fot_cpu"),
@@ -717,7 +720,10 @@ def get_plusvalia(
         m2_totales=m2_totales,
         m2_subsuelos=m2_subsuelos,
         m2_balcones=m2_balcones,
+        # La PB solo se descuenta en U.S.A.B. (como pide Ciudad 3D)
+        m2_pb=m2_pb if es_usab else 0.0,
     )
+    result["requiere_pb"] = es_usab
     result["smp"] = data.get("smp")
     result["cpu"] = data.get("cpu")
     return result

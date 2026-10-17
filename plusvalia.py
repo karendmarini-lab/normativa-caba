@@ -3,7 +3,9 @@ Cálculo de plusvalía (Derecho para el Desarrollo Urbano y el Hábitat Sustenta
 DDHUS — Ley 6062) con el mismo criterio que el simulador de Ciudad 3D.
 
     a  = m² sobre rasante susceptibles de DDHUS
-         (m² totales del proyecto − subsuelos − balcones)
+         (m² totales del proyecto − subsuelos − balcones − planta baja)
+         La planta baja solo se descuenta en los U.S.A.B. (Ciudad 3D pide ese dato
+         únicamente ahí); en el resto de los distritos queda en 0.
     A1 = a × 0.8
     A2 = FOT del CPU anterior × superficie de la parcela
     A  = A1 − A2
@@ -46,6 +48,7 @@ def calcular_plusvalia(
     m2_totales: float = 0.0,
     m2_subsuelos: float = 0.0,
     m2_balcones: float = 0.0,
+    m2_pb: float = 0.0,
 ) -> dict[str, Any]:
     """Devuelve el desglose del cálculo. Si falta algún dato de la parcela,
     `calculable` es False y `faltantes` lista qué falta."""
@@ -67,7 +70,7 @@ def calcular_plusvalia(
     if faltantes:
         return {"calculable": False, "faltantes": faltantes}
 
-    a = max(0.0, m2_totales - m2_subsuelos - m2_balcones)
+    a = max(0.0, m2_totales - m2_subsuelos - m2_balcones - m2_pb)
     a1 = a * FACTOR_A1
     a2 = fot_n * sup_n
     diferencia = a1 - a2
