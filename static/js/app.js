@@ -782,7 +782,7 @@ function setupPlusvaliaSimulator(pd) {
       const ars = d.uvas * _fcUVA;
       const usd = _fcDolarBlue > 0 ? ars / _fcDolarBlue : null;
       txt('pv-total', d.uvas > 0
-        ? fmt(d.uvas) + ' UVA · $' + fmt(Math.round(ars)) + (usd ? ' · USD ' + fmt(Math.round(usd)) : '')
+        ? fmt(d.uvas) + ' UVA\n$' + fmt(Math.round(ars)) + (usd ? ' · USD ' + fmt(Math.round(usd)) : '')
         : '0 UVA');
       note(d.aplica
         ? 'Estimación con UVA y dólar blue de hoy; el monto final depende de la fecha de pago.'
