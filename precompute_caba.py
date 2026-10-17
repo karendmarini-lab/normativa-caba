@@ -163,6 +163,7 @@ def main() -> None:
             cur_distrito  TEXT,
             h             REAL,
             fot           REAL,
+            fot_cpu       REAL,
             plano_raw     REAL,
             plano_san     REAL,
             pisos         INTEGER,
@@ -213,6 +214,7 @@ def main() -> None:
             h, fot, plano_raw, plano_san, pisos,
             area, fr, fo, pisada_pct,
             pisada, vol_edif, sup_vend, es_aph,
+            fot,
         ))
 
         if (i + 1) % 50000 == 0:
@@ -225,8 +227,8 @@ def main() -> None:
             cpu, cur_distrito,
             h, fot, plano_raw, plano_san, pisos,
             area, frente, fondo, pisada_pct,
-            pisada, vol_edificable, sup_vendible, es_aph
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            pisada, vol_edificable, sup_vendible, es_aph, fot_cpu
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
     """, rows)
 
     # Indexes for common queries

@@ -60,7 +60,7 @@ No tests, no linter, no CI configured.
 
 Single table `parcelas` with 100+ columns. Key groups:
 
-- **CUR normative**: `smp`, `smp_norm`, `cpu`, `cur_distrito`, `h`, `fot`, `plano_san` (sanitized height limit), `pisos`, `area`, `frente`, `fondo`, `pisada`, `vol_edificable`
+- **CUR normative**: `smp`, `smp_norm`, `cpu`, `cur_distrito`, `h`, `fot` (OJO: `update_vendibles.py` lo pisa con vol_edificable/area), `fot_cpu` (FOT del CPU anterior, de `cur_optimizado.json`; lo usa la plusvalía), `plano_san` (sanitized height limit), `pisos`, `area`, `frente`, `fondo`, `pisada`, `vol_edificable`
 - **EPOK catastro**: `epok_direccion`, `epok_sup_cubierta`, `epok_pisos_sobre`, `epok_frente`, `epok_fondo` (`epok_enriched`: 0=pending, 1=done, -1=failed)
 - **CUR3D edificabilidad**: `edif_sup_edificable_planta`, `edif_altura_max_1..4`, `edif_plano_limite`, `edif_croquis_url`, `edif_perimetro_url`, `polygon_geojson` (`cur3d_enriched`: same flags)
 - **Tejido**: `tejido_altura_max`, `tejido_altura_avg`, `delta_altura` (plano_san - tejido = subutilization gap)

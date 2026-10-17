@@ -708,7 +708,8 @@ def get_plusvalia(
 
     data = serialize_row(row)
     result = calcular_plusvalia(
-        fot=data.get("fot"),
+        # FOT del CPU anterior (cur_optimizado.json). `fot` lo pisa update_vendibles.py
+        fot=data.get("fot_cpu"),
         # CUR3D trae la superficie con decimales; si falta, la del catastro base
         sup_parcela=data.get("edif_superficie_parcela") or data.get("area"),
         incidencia_uva=data.get("edif_plusvalia_incidencia_uva"),
