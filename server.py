@@ -710,9 +710,16 @@ def get_plusvalia(
     data = serialize_row(row)
     distrito = (data.get("cur_distrito") or "").upper()
     es_usab = "U.S.A.B" in distrito or "USAB" in distrito
+    # FOT del CPU anterior: primero el que informa Ciudad 3D (edif_fot_medianera,
+    # igual al que muestra su simulador; ≤0 significa "sin dato"), y si no está,
+    # el de cur_optimizado.json (fot_cpu). `fot` NO sirve: update_vendibles.py lo pisa.
+    fot_cpu_anterior = next(
+        (v for v in (data.get("edif_fot_medianera"), data.get("fot_cpu"))
+         if isinstance(v, (int, float)) and v > 0),
+        None,
+    )
     result = calcular_plusvalia(
-        # FOT del CPU anterior (cur_optimizado.json). `fot` lo pisa update_vendibles.py
-        fot=data.get("fot_cpu"),
+        fot=fot_cpu_anterior,
         # CUR3D trae la superficie con decimales; si falta, la del catastro base
         sup_parcela=data.get("edif_superficie_parcela") or data.get("area"),
         incidencia_uva=data.get("edif_plusvalia_incidencia_uva"),
