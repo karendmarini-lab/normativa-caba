@@ -57,7 +57,7 @@ Usar `COLLATE NOCASE` en WHERE con barrio, uso, etc. para evitar problemas de ma
 - `plano_san` (REAL) — Plano Limite sanitizado (metros)
 - `plano_raw` (REAL) — PL raw antes de sanitizacion
 - `h` (REAL) — Altura segun CUR
-- `fot` (REAL) — Factor de Ocupacion Total
+- `fot` (REAL) — FOT modelado por EdificIA (m² construibles / superficie). NO es el FOT del CPU: no usarlo para plusvalía
 - `pisos` (INTEGER) — Pisos permitidos: 1 + floor((plano_san - 3.30) / 2.90)
 - `es_aph` (INTEGER) — Area de Proteccion Historica (0/1)
 
@@ -108,11 +108,18 @@ Usar `COLLATE NOCASE` en WHERE con barrio, uso, etc. para evitar problemas de ma
 - `edif_sup_edificable_planta` (REAL) — Sup. edificable por planta
 - `edif_plano_limite` (REAL) — PL oficial CUR3D
 - `edif_altura_max_1` a `edif_altura_max_4` (REAL) — Alturas por seccion
-- `edif_fot_medianera` (REAL) — FOT entre medianeras
+- `edif_fot_medianera` (REAL) — FOT del CPU anterior que informa Ciudad 3D (el que usa la plusvalía). 0 o -1 = sin dato
 - `edif_fot_perim_libre` (REAL) — FOT perimetro libre
 - `edif_fot_semi_libre` (REAL) — FOT semi libre
 - `edif_plusvalia_incidencia_uva` (REAL) — Plusvalia: incidencia UVA
 - `edif_plusvalia_alicuota` (REAL) — Plusvalia: alicuota
+
+**Plusvalía (DDHUS, Ley 6062) — mismo criterio que Ciudad 3D:**
+- a = m² sobre rasante = totales − subsuelos − balcones fuera de LO/LFI (en U.S.A.B. 1/2, U.S.A.M. y AE 26 también − planta baja: no computa)
+- A1 = a × 0,8 · A2 = `edif_fot_medianera` × `edif_superficie_parcela` · A = A1 − A2
+- B = `edif_plusvalia_alicuota` × `edif_plusvalia_incidencia_uva` · UVAs = A × B (0 si A ≤ 0)
+- Sin FOT (`edif_fot_medianera` ≤ 0): no se puede estimar; corresponde pedir interpretación morfológica
+- Alícuota viene como fracción (0,35 = 35 %). Distrito U.S.A.B. se detecta por `edif_altura_max_1`: 12 / 14,6 / 17,2 (y 9 AE 26); `cur_distrito` es una traducción aproximada del CPU
 - `edif_tipica` (TEXT) — Tipologia edificatoria
 - `edif_irregular` (INTEGER) — Parcela irregular (0/1)
 - `edif_superficie_parcela` (REAL) — Superficie segun CUR3D

@@ -490,10 +490,12 @@ def serialize_row(row: sqlite3.Row) -> dict[str, Any]:
 
 
 def fetch_parcel_by_smp(conn: sqlite3.Connection, value: str) -> sqlite3.Row | None:
-    norm = smp_norm(value)
+    # Solo por smp_norm (indexado). Con `smp = ? OR smp_norm = ?` SQLite recorría la
+    # tabla entera (sin índice en smp): hasta ~46 s en producción sin caché.
+    # En las 280.873 parcelas smp_norm == smp_norm(smp), así que el resultado es el mismo.
     return conn.execute(
-        "SELECT * FROM parcelas WHERE smp = ? OR smp_norm = ? LIMIT 1",
-        (value, norm),
+        "SELECT * FROM parcelas WHERE smp_norm = ? LIMIT 1",
+        (smp_norm(value),),
     ).fetchone()
 
 

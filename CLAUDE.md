@@ -54,13 +54,14 @@ No tests, no linter, no CI configured.
 | `/api/parcelas_geo?barrio=...&metric=delta` | GeoJSON for map (metrics: delta, vol, pisos, area, reconversion) |
 | `/api/barrios` | List barrios with parcel counts |
 | `/api/envelope/{smp}` | Compute 3-section stepped envelope geometry |
+| `/api/plusvalia/{smp}?m2_totales&m2_subsuelos&m2_balcones&m2_pb` | Plusvalía DDHUS (criterio Ciudad 3D, ver `plusvalia.py`) |
 | `/api/health` | Enrichment progress stats |
 
 ## Database Schema
 
 Single table `parcelas` with 100+ columns. Key groups:
 
-- **CUR normative**: `smp`, `smp_norm`, `cpu`, `cur_distrito`, `h`, `fot` (OJO: `update_vendibles.py` lo pisa con vol_edificable/area), `fot_cpu` (FOT del CPU anterior, de `cur_optimizado.json`; lo usa la plusvalía), `plano_san` (sanitized height limit), `pisos`, `area`, `frente`, `fondo`, `pisada`, `vol_edificable`
+- **CUR normative**: `smp`, `smp_norm`, `cpu`, `cur_distrito`, `h`, `fot` (OJO: `update_vendibles.py` lo pisa con vol_edificable/area), `fot_cpu` (FOT del CPU anterior, de `cur_optimizado.json`; respaldo de la plusvalía si falta `edif_fot_medianera`), `plano_san` (sanitized height limit), `pisos`, `area`, `frente`, `fondo`, `pisada`, `vol_edificable`
 - **EPOK catastro**: `epok_direccion`, `epok_sup_cubierta`, `epok_pisos_sobre`, `epok_frente`, `epok_fondo` (`epok_enriched`: 0=pending, 1=done, -1=failed)
 - **CUR3D edificabilidad**: `edif_sup_edificable_planta`, `edif_altura_max_1..4`, `edif_plano_limite`, `edif_croquis_url`, `edif_perimetro_url`, `polygon_geojson` (`cur3d_enriched`: same flags)
 - **Tejido**: `tejido_altura_max`, `tejido_altura_avg`, `delta_altura` (plano_san - tejido = subutilization gap)
