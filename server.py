@@ -708,16 +708,18 @@ def get_plusvalia(
         raise HTTPException(status_code=404, detail="Parcel not found")
 
     data = serialize_row(row)
-    distrito = (data.get("cur_distrito") or "").upper()
-    es_usab = "U.S.A.B" in distrito or "USAB" in distrito
-    # FOT del CPU anterior: primero el que informa Ciudad 3D (edif_fot_medianera,
-    # igual al que muestra su simulador; ≤0 significa "sin dato"), y si no está,
-    # el de cur_optimizado.json (fot_cpu). `fot` NO sirve: update_vendibles.py lo pisa.
-    fot_cpu_anterior = next(
-        (v for v in (data.get("edif_fot_medianera"), data.get("fot_cpu"))
-         if isinstance(v, (int, float)) and v > 0),
-        None,
-    )
+    # Ciudad 3D decide el tipo de simulador por la altura edificable de la parcela
+    # (unidad_edificabilidad[0]): 12 = U.S.A.B. 1, 14,6 = U.S.A.B. 2, 17,2 = U.S.A.M.
+    # piden además la superficie de planta baja. `cur_distrito` NO sirve para esto:
+    # es una traducción aproximada del CPU, no el distrito CUR real.
+    altura = data.get("edif_altura_max_1") or data.get("h")
+    es_usab = isinstance(altura, (int, float)) and round(altura, 1) in (12.0, 14.6, 17.2)
+    # FOT del CPU anterior. Si EdificIA ya trajo el de Ciudad 3D (edif_fot_medianera),
+    # ese manda: <= 0 es "sin dato" (0 y -1 en Ciudad 3D). Si la parcela todavía no
+    # se enriqueció, se usa el de cur_optimizado.json (fot_cpu). `fot` NO sirve:
+    # update_vendibles.py lo pisa.
+    fot_c3d = data.get("edif_fot_medianera")
+    fot_cpu_anterior = fot_c3d if isinstance(fot_c3d, (int, float)) else data.get("fot_cpu")
     result = calcular_plusvalia(
         fot=fot_cpu_anterior,
         # CUR3D trae la superficie con decimales; si falta, la del catastro base
