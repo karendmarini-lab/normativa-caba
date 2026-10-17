@@ -731,6 +731,71 @@ window.recalcFinancials = recalcFinancials;
 
 // ── FULL REPORT MODAL ────────────────────────────────────────────
 
+// ── SIMULADOR DE PLUSVALÍA (DDHUS) ────────────────────────────────
+// El cálculo vive en el backend (plusvalia.py → /api/plusvalia/{smp}).
+let _pvTimer = null;
+let _pvReq = 0;
+
+function setupPlusvaliaSimulator(pd) {
+  const ids = ['pv-m2-totales', 'pv-m2-subsuelos', 'pv-m2-balcones'];
+  const inputs = ids.map(id => document.getElementById(id));
+  if (inputs.some(el => !el) || !pd || !pd.smp) return;
+
+  const txt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const fmt = n => Number(n).toLocaleString('es-AR', { maximumFractionDigits: 2 });
+  const note = msg => txt('pv-note', msg || '');
+
+  // Parcela distinta a la anterior → empezar de cero
+  const box = document.getElementById('frm-pv');
+  if (box && box.dataset.smp !== pd.smp) {
+    inputs.forEach(el => { el.value = ''; });
+    box.dataset.smp = pd.smp;
+  }
+
+  const run = async () => {
+    const smp = (window._currentParcelData || pd).smp;
+    const params = new URLSearchParams({
+      m2_totales:   parseFloat(inputs[0].value) || 0,
+      m2_subsuelos: parseFloat(inputs[1].value) || 0,
+      m2_balcones:  parseFloat(inputs[2].value) || 0,
+    });
+    const reqId = ++_pvReq;
+    try {
+      const r = await fetch(`/api/plusvalia/${encodeURIComponent(smp)}?${params}`);
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      if (reqId !== _pvReq) return; // llegó una respuesta más nueva
+      if (!d.calculable) {
+        ['pv-a', 'pv-a1', 'pv-a2', 'pv-b', 'pv-total'].forEach(id => txt(id, '—'));
+        note('No se puede calcular: falta ' + d.faltantes.join(', ') + ' para esta parcela.');
+        return;
+      }
+      txt('pv-a',  fmt(d.a)  + ' m²');
+      txt('pv-a1', fmt(d.a1) + ' m²');
+      txt('pv-a2', fmt(d.a2) + ' m²');
+      txt('pv-b',  fmt(d.b)  + ' UVA/m²');
+      const ars = d.uvas * _fcUVA;
+      const usd = _fcDolarBlue > 0 ? ars / _fcDolarBlue : null;
+      txt('pv-total', d.uvas > 0
+        ? fmt(d.uvas) + ' UVA · $' + fmt(Math.round(ars)) + (usd ? ' · USD ' + fmt(Math.round(usd)) : '')
+        : '0 UVA');
+      note(d.aplica
+        ? 'Estimación con UVA y dólar blue de hoy; el monto final depende de la fecha de pago.'
+        : 'Sin plusvalía mientras A1 no supere A2: hay que superar ' + fmt(d.umbral_m2) + ' m² sobre rasante.');
+    } catch (e) {
+      if (reqId === _pvReq) note('No se pudo calcular la plusvalía en este momento.');
+    }
+  };
+
+  if (!inputs[0].dataset.bound) {
+    inputs.forEach(el => {
+      el.dataset.bound = '1';
+      el.addEventListener('input', () => { clearTimeout(_pvTimer); _pvTimer = setTimeout(run, 300); });
+    });
+  }
+  run();
+}
+
 function openFullReport() {
   const modal = document.getElementById('full-report-modal');
   if (!modal) return;
@@ -841,7 +906,10 @@ function openFullReport() {
     } else {
       set('full-plusvalia-incidencia', 'No disponible');
     }
-    set('full-plusvalia-alicuota', al ? al + '%' : 'No disponible');
+    // La alícuota viene como fracción (0,35) → mostrarla como 35%
+    const alPct = al ? (al <= 1 ? Math.round(al * 10000) / 100 : al) : null;
+    set('full-plusvalia-alicuota', alPct ? alPct + '%' : 'No disponible');
+    setupPlusvaliaSimulator(pd);
 
     // Afectaciones
     const cat = pd.edif_catalogacion_proteccion;

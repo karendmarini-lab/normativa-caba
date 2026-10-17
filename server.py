@@ -35,6 +35,8 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from plusvalia import calcular_plusvalia
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "caba_normativa.db"
 
@@ -685,6 +687,39 @@ def get_parcel(parcel_smp: str) -> dict[str, Any]:
     data["has_cur3d"] = bool(data.get("cur3d_enriched"))
     data["has_epok"] = bool(data.get("epok_enriched"))
     return data
+
+
+@app.get("/api/plusvalia/{parcel_smp}")
+def get_plusvalia(
+    parcel_smp: str,
+    m2_totales: float = Query(0, ge=0, le=1_000_000),
+    m2_subsuelos: float = Query(0, ge=0, le=1_000_000),
+    m2_balcones: float = Query(0, ge=0, le=1_000_000),
+) -> dict[str, Any]:
+    """Plusvalía (DDHUS) de una parcela según los m² del proyecto.
+
+    Mismo criterio que el simulador de Ciudad 3D: ver plusvalia.py.
+    """
+    with db_connect() as conn:
+        row = fetch_parcel_by_smp(conn, parcel_smp)
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Parcel not found")
+
+    data = serialize_row(row)
+    result = calcular_plusvalia(
+        fot=data.get("fot"),
+        # CUR3D trae la superficie con decimales; si falta, la del catastro base
+        sup_parcela=data.get("edif_superficie_parcela") or data.get("area"),
+        incidencia_uva=data.get("edif_plusvalia_incidencia_uva"),
+        alicuota=data.get("edif_plusvalia_alicuota"),
+        m2_totales=m2_totales,
+        m2_subsuelos=m2_subsuelos,
+        m2_balcones=m2_balcones,
+    )
+    result["smp"] = data.get("smp")
+    result["cpu"] = data.get("cpu")
+    return result
 
 
 @app.get("/api/parcela")

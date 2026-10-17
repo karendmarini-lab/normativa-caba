@@ -435,6 +435,14 @@
       padding:8px 0;border-bottom:1px solid #242424;font-size:14px;
     }
     .frm-analysis-item:last-child{border-bottom:none}
+    /* Simulador de plusvalía (DDHUS) */
+    .frm-pv{margin-top:14px;padding-top:14px;border-top:1px solid #242424}
+    .frm-pv-title{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px}
+    .frm-pv-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:13px;color:rgba(255,255,255,.45)}
+    .frm-pv-row input{width:110px;background:#111;border:1px solid #2c2c2c;border-radius:6px;color:#fff;font-size:13px;padding:6px 8px;text-align:right}
+    .frm-pv-row input:focus{outline:none;border-color:#FFCC00}
+    .frm-pv-total{color:#FFCC00 !important;font-weight:600 !important}
+    .frm-pv-note{font-size:10px;color:rgba(255,255,255,.3);margin-top:8px;font-style:italic;line-height:1.4}
     .frm-analysis-item span:first-child{color:rgba(255,255,255,.45);font-size:13px;letter-spacing:.5px}
     .frm-analysis-item span:last-child{color:#fff;font-weight:300;text-align:right}
 
@@ -1176,6 +1184,19 @@
           <div class="frm-analysis-item">
             <span>Alícuota</span>
             <span id="full-plusvalia-alicuota">No disponible</span>
+          </div>
+          <!-- Simulador DDHUS (mismo criterio que Ciudad 3D) — plusvalia.py -->
+          <div class="frm-pv" id="frm-pv">
+            <div class="frm-pv-title">Simulador de plusvalía (DDHUS)</div>
+            <label class="frm-pv-row"><span>m² totales del proyecto</span><input type="number" id="pv-m2-totales" min="0" step="any" inputmode="decimal" placeholder="0"></label>
+            <label class="frm-pv-row"><span>m² de subsuelos</span><input type="number" id="pv-m2-subsuelos" min="0" step="any" inputmode="decimal" placeholder="0"></label>
+            <label class="frm-pv-row"><span>m² de balcones fuera de LO / LFI</span><input type="number" id="pv-m2-balcones" min="0" step="any" inputmode="decimal" placeholder="0"></label>
+            <div class="frm-analysis-item"><span>Sup. sobre rasante (a)</span><span id="pv-a">—</span></div>
+            <div class="frm-analysis-item"><span>A1 = a × 0,8</span><span id="pv-a1">—</span></div>
+            <div class="frm-analysis-item"><span>A2 = FOT × sup. parcela</span><span id="pv-a2">—</span></div>
+            <div class="frm-analysis-item"><span>B = alícuota × incidencia</span><span id="pv-b">—</span></div>
+            <div class="frm-analysis-item"><span>Plusvalía estimada</span><span id="pv-total" class="frm-pv-total">—</span></div>
+            <div class="frm-pv-note" id="pv-note"></div>
           </div>
         </div>
         <div class="frm-analysis-card">
