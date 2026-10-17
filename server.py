@@ -35,6 +35,8 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from plusvalia import calcular_plusvalia
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "caba_normativa.db"
 
@@ -685,6 +687,56 @@ def get_parcel(parcel_smp: str) -> dict[str, Any]:
     data["has_cur3d"] = bool(data.get("cur3d_enriched"))
     data["has_epok"] = bool(data.get("epok_enriched"))
     return data
+
+
+@app.get("/api/plusvalia/{parcel_smp}")
+def get_plusvalia(
+    parcel_smp: str,
+    m2_totales: float = Query(0, ge=0, le=1_000_000),
+    m2_subsuelos: float = Query(0, ge=0, le=1_000_000),
+    m2_balcones: float = Query(0, ge=0, le=1_000_000),
+    m2_pb: float = Query(0, ge=0, le=1_000_000),
+) -> dict[str, Any]:
+    """Plusvalía (DDHUS) de una parcela según los m² del proyecto.
+
+    Mismo criterio que el simulador de Ciudad 3D: ver plusvalia.py.
+    """
+    with db_connect() as conn:
+        row = fetch_parcel_by_smp(conn, parcel_smp)
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Parcel not found")
+
+    data = serialize_row(row)
+    # Ciudad 3D decide el tipo de simulador por la altura edificable de la parcela
+    # (unidad_edificabilidad[0]): 12 = U.S.A.B. 1, 14,6 = U.S.A.B. 2, 17,2 = U.S.A.M.
+    # piden además la superficie de planta baja. También lo piden las parcelas AE 26
+    # (altura 9, el dato `distrito_especial` no se guarda en la base: se aproxima por la
+    # altura). `cur_distrito` NO sirve para esto: es una traducción aproximada del CPU.
+    altura = data.get("edif_altura_max_1") or data.get("h")
+    es_usab = isinstance(altura, (int, float)) and round(altura, 1) in (9.0, 12.0, 14.6, 17.2)
+    # FOT del CPU anterior. Si EdificIA ya trajo el de Ciudad 3D (edif_fot_medianera),
+    # ese manda: <= 0 es "sin dato" (0 y -1 en Ciudad 3D). Si la parcela todavía no
+    # se enriqueció, se usa el de cur_optimizado.json (fot_cpu). `fot` NO sirve:
+    # update_vendibles.py lo pisa.
+    fot_c3d = data.get("edif_fot_medianera")
+    fot_cpu_anterior = fot_c3d if isinstance(fot_c3d, (int, float)) else data.get("fot_cpu")
+    result = calcular_plusvalia(
+        fot=fot_cpu_anterior,
+        # CUR3D trae la superficie con decimales; si falta, la del catastro base
+        sup_parcela=data.get("edif_superficie_parcela") or data.get("area"),
+        incidencia_uva=data.get("edif_plusvalia_incidencia_uva"),
+        alicuota=data.get("edif_plusvalia_alicuota"),
+        m2_totales=m2_totales,
+        m2_subsuelos=m2_subsuelos,
+        m2_balcones=m2_balcones,
+        # La PB solo se descuenta en U.S.A.B. (como pide Ciudad 3D)
+        m2_pb=m2_pb if es_usab else 0.0,
+    )
+    result["requiere_pb"] = es_usab
+    result["smp"] = data.get("smp")
+    result["cpu"] = data.get("cpu")
+    return result
 
 
 @app.get("/api/parcela")
