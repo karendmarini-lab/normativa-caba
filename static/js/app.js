@@ -40,17 +40,46 @@ let _frente = 0;
 let _fondo = 0;
 let _pisadaSource = 'lfi'; // 'ciudad3d' | 'lfi' | 'estimado'
 
-// ── CPU → CUR mapping ───────────────────────────────────────────
-
-const CPU_TO_CUR = {
-  'R2a I': 'U.S.A.A.', 'R2a II': 'U.S.A.A.',
-  'C3 I': 'Corredor Medio', 'C3 II': 'Corredor Medio',
-  'C2': 'Corredor Alto', 'C1': 'Corredor Alto',
-  'R2b I': 'U.S.A.B. 2', 'R2b I 1': 'U.S.A.B. 2',
-  'R2b II': 'U.S.A.B. 1', 'R2b III': 'U.S.A.B. 1',
-  'R1b I': 'U.S.A.B. 2', 'R1b II': 'U.S.A.B. 2',
-  'E1': 'E1', 'E2': 'E2', 'E3': 'E3',
+// ── Distrito CUR ─────────────────────────────────────────────────
+// Mismo criterio que Ciudad 3D: el distrito CUR sale de la altura edificable
+// (unidad de edificabilidad). El distrito CPU (código anterior) solo sirve para la
+// plusvalía. La vieja tabla fija CPU→CUR fallaba, p. ej. R2a I sobre un corredor.
+const CUR_POR_ALTURA = {
+  '12.0': 'U.S.A.B. 1', '14.6': 'U.S.A.B. 2', '17.2': 'U.S.A.M.',
+  '22.8': 'U.S.A.A.', '31.2': 'Corredor Medio', '38.0': 'Corredor Alto',
 };
+
+function curDistrito(p) {
+  if (!p) return null;
+  // edif_altura_max_1 = dato de Ciudad 3D. `h` solo es la altura CUR cuando la
+  // parcela viene del servidor; desde el mapa trae la altura real (tejido).
+  let h = Number(p.edif_altura_max_1);
+  if (!(h > 0) && p.source === 'server') h = Number(p.h);
+  return h > 0 ? (CUR_POR_ALTURA[h.toFixed(1)] || null) : null;
+}
+
+// F.O.T. coherente con el "Volumen edificable" que muestra EdificIA (volumen / lote).
+// La columna `fot` de la base es de un modelo viejo y ya no coincide con el volumen.
+function fotEquivalente(vol, area) {
+  vol = Number(vol); area = Number(area);
+  return vol > 0 && area > 0 ? Math.round(vol / area * 100) / 100 : null;
+}
+
+function setResDistrito(p) {
+  const el = document.getElementById('res-dis');
+  if (!el) return;
+  const cur = curDistrito(p);
+  el.textContent = cur || p?.cpu || '?';
+  const unit = el.closest('.card')?.querySelector('.card-unit');
+  if (unit) unit.textContent = cur ? 'CUR' : (p?.cpu ? 'CPU' : 'CUR');
+}
+
+function distritoLabel(p) {
+  const cur = curDistrito(p);
+  const cpu = p?.cpu;
+  if (cur) return cpu ? `${cur} (CPU ${cpu})` : cur;
+  return cpu ? `CPU ${cpu}` : 'Distrito no det.';
+}
 
 // ── Init ─────────────────────────────────────────────────────────
 
@@ -214,9 +243,7 @@ function showParcelDetail(addr, parcel, lat, lng) {
   const plano = parcel?.plano;
 
   // Badge
-  const cpuLabel = cpu
-    ? (CPU_TO_CUR[cpu] ? `${CPU_TO_CUR[cpu]} (${cpu})` : cpu)
-    : 'Distrito no det.';
+  const cpuLabel = distritoLabel(parcel);
   const badge = $('res-badge');
   badge.textContent = cpuLabel;
   badge.className = 'dbadge ' + (cpu ? 'residential' : 'unknown');
@@ -240,9 +267,9 @@ function showParcelDetail(addr, parcel, lat, lng) {
     $('res-pis').textContent = '—';
   }
 
-  $('res-fot').textContent = fot || '—';
+  $('res-fot').textContent = fotEquivalente(parcel?.vol_edificable, parcel?.area) || fot || '—';
   $('res-fos').textContent = '—';
-  $('res-dis').textContent = cpu || '?';
+  setResDistrito(parcel);
 
   // Calculator
   setupCalculator(parcel, planoSan);
@@ -357,9 +384,13 @@ function showParcelFromMap(props) {
         edif_enrase:                data.edif_enrase,
         edif_sup_edificable_planta: data.edif_sup_edificable_planta,
         edif_plano_limite:          data.edif_plano_limite,
+        edif_altura_max_1:          data.edif_altura_max_1,
         lat: data.lat || lat,
         lng: data.lng || lng,
       };
+      const resBadge = document.getElementById('res-badge');
+      if (resBadge) resBadge.textContent = distritoLabel(window._currentParcelData);
+      setResDistrito(window._currentParcelData);
       // Actualizar coordenadas si el backend las tiene
       if (data.lat) window._currentLat = data.lat;
       if (data.lng) window._currentLng = data.lng;
@@ -794,6 +825,7 @@ function setupPlusvaliaSimulator(pd) {
       if (!d.calculable) {
         ['pv-a', 'pv-a1', 'pv-a2', 'pv-b', 'pv-total'].forEach(id => txt(id, '—'));
         txt('pv-a2-lbl', 'A2 = FOT × sup. parcela');
+        txt('full-plusvalia-cpu', (d.cpu || pd.cpu || '—') + ' · sin FOT');
         note(d.faltantes.includes('FOT del CPU anterior')
           ? 'Sin FOT del CPU anterior para esta parcela: no se puede estimar la plusvalía. Ciudad 3D indica solicitar una interpretación morfológica para determinar la capacidad constructiva según el CPU.'
           : 'No se puede calcular: falta ' + d.faltantes.join(', ') + ' para esta parcela.');
@@ -803,6 +835,7 @@ function setupPlusvaliaSimulator(pd) {
       txt('pv-a1', fmt(d.a1) + ' m²');
       txt('pv-a2', fmt(d.a2) + ' m²');
       txt('pv-a2-lbl', 'A2 = FOT ' + fmt(d.fot) + ' × ' + fmt(d.sup_parcela) + ' m²');
+      txt('full-plusvalia-cpu', (d.cpu || pd.cpu || '—') + ' · FOT ' + fmt(d.fot));
       txt('pv-b',  fmt(d.b)  + ' UVA/m²');
       const ars = d.uvas * _fcUVA;
       const usd = _fcDolarBlue > 0 ? ars / _fcDolarBlue : null;
@@ -845,7 +878,7 @@ function openFullReport() {
   const pd = window._currentParcelData || {};
   const snap = {
     addr: document.getElementById('res-addr')?.textContent || pd.epok_direccion || '—',
-    badge: pd.cpu ? (CPU_TO_CUR[pd.cpu] ? `${CPU_TO_CUR[pd.cpu]} (${pd.cpu})` : pd.cpu) : '—',
+    badge: distritoLabel(pd),
     lat: window._currentLat,
     lng: window._currentLng,
     h: pd.h || pd.tejido_altura_max || null,
@@ -867,7 +900,7 @@ function openFullReport() {
       return Math.round(Math.max(0.55, Math.min(0.95, 0.78 - 0.02 * Math.max(0, d - 5) + 0.002 * Math.max(0, f - 8))) * 100);
     })(),
     balcones: _frente > 0 && _pisosEstimados > 1 ? Math.round((_frente - 1.2) * 1.2 * 2 * (_pisosEstimados - 1)) : 0,
-    distrito: pd.cpu || '—',
+    distrito: curDistrito(pd) || 'No determinado',
   };
   const planoSan = snap.plano && snap.h ? ((snap.h <= 14.6 || !snap.plano || snap.plano < snap.h) ? snap.h : snap.plano) : (snap.plano || snap.h || null);
   const pisosLabel = snap.pisos > 1 ? `PB + ${snap.pisos - 1}` : (snap.pisos === 1 ? 'PB' : '—');
@@ -889,7 +922,7 @@ function openFullReport() {
   set('full-h', snap.h || '—');
   set('full-plano', planoSan || '—');
   set('full-pisos', pisosLabel);
-  set('full-fot', snap.fot || '—');
+  set('full-fot', fotEquivalente(snap.volumen, snap.area) || snap.fot || '—');
   set('full-lote', snap.area ? snap.area + ' m²' : '—');
   set('full-pisada', snap.pisada ? Math.round(snap.pisada) + ' m²' : '—');
 
@@ -939,6 +972,7 @@ function openFullReport() {
     // La alícuota viene como fracción (0,35) → mostrarla como 35%
     const alPct = al ? (al <= 1 ? Math.round(al * 10000) / 100 : al) : null;
     set('full-plusvalia-alicuota', alPct ? alPct + '%' : 'No disponible');
+    set('full-plusvalia-cpu', pd.cpu || '');
     setupPlusvaliaSimulator(pd);
 
     // Afectaciones

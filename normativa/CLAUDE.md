@@ -57,7 +57,7 @@ Usar `COLLATE NOCASE` en WHERE con barrio, uso, etc. para evitar problemas de ma
 - `plano_san` (REAL) — Plano Limite sanitizado (metros)
 - `plano_raw` (REAL) — PL raw antes de sanitizacion
 - `h` (REAL) — Altura segun CUR
-- `fot` (REAL) — FOT modelado por EdificIA (m² construibles / superficie). NO es el FOT del CPU: no usarlo para plusvalía
+- `fot` (REAL) — FOT de un modelo viejo de EdificIA (m² construibles / superficie); en la mayoría de las parcelas ya no coincide con `vol_edificable`. NO es el FOT del CPU: no usarlo para plusvalía ni como dato normativo
 - `pisos` (INTEGER) — Pisos permitidos: 1 + floor((plano_san - 3.30) / 2.90)
 - `es_aph` (INTEGER) — Area de Proteccion Historica (0/1)
 
