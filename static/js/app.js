@@ -58,6 +58,22 @@ function curDistrito(p) {
   return h > 0 ? (CUR_POR_ALTURA[h.toFixed(1)] || null) : null;
 }
 
+// F.O.T. coherente con el "Volumen edificable" que muestra EdificIA (volumen / lote).
+// La columna `fot` de la base es de un modelo viejo y ya no coincide con el volumen.
+function fotEquivalente(vol, area) {
+  vol = Number(vol); area = Number(area);
+  return vol > 0 && area > 0 ? Math.round(vol / area * 100) / 100 : null;
+}
+
+function setResDistrito(p) {
+  const el = document.getElementById('res-dis');
+  if (!el) return;
+  const cur = curDistrito(p);
+  el.textContent = cur || p?.cpu || '?';
+  const unit = el.closest('.card')?.querySelector('.card-unit');
+  if (unit) unit.textContent = cur ? 'CUR' : (p?.cpu ? 'CPU' : 'CUR');
+}
+
 function distritoLabel(p) {
   const cur = curDistrito(p);
   const cpu = p?.cpu;
@@ -251,9 +267,9 @@ function showParcelDetail(addr, parcel, lat, lng) {
     $('res-pis').textContent = '—';
   }
 
-  $('res-fot').textContent = fot || '—';
+  $('res-fot').textContent = fotEquivalente(parcel?.vol_edificable, parcel?.area) || fot || '—';
   $('res-fos').textContent = '—';
-  $('res-dis').textContent = cpu || '?';
+  setResDistrito(parcel);
 
   // Calculator
   setupCalculator(parcel, planoSan);
@@ -374,6 +390,7 @@ function showParcelFromMap(props) {
       };
       const resBadge = document.getElementById('res-badge');
       if (resBadge) resBadge.textContent = distritoLabel(window._currentParcelData);
+      setResDistrito(window._currentParcelData);
       // Actualizar coordenadas si el backend las tiene
       if (data.lat) window._currentLat = data.lat;
       if (data.lng) window._currentLng = data.lng;
@@ -905,7 +922,7 @@ function openFullReport() {
   set('full-h', snap.h || '—');
   set('full-plano', planoSan || '—');
   set('full-pisos', pisosLabel);
-  set('full-fot', snap.fot || '—');
+  set('full-fot', fotEquivalente(snap.volumen, snap.area) || snap.fot || '—');
   set('full-lote', snap.area ? snap.area + ' m²' : '—');
   set('full-pisada', snap.pisada ? Math.round(snap.pisada) + ' m²' : '—');
 
